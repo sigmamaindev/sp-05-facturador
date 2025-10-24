@@ -1,0 +1,73 @@
+import { useState, useEffect } from "react";
+
+import { useAuth } from "@/contexts/AuthContext";
+
+import type { Role } from "@/types/role.types";
+import type { Establishment } from "@/types/establishment.types";
+import type { EmissionPoint } from "@/types/emissionPoint.types";
+
+import { getRoles } from "@/api/role";
+import { getEstablishments } from "@/api/establishment";
+import { getEmissionPoints } from "@/api/emissionPoint";
+
+import { Card, CardContent } from "@/components/ui/card";
+
+import Loading from "@/components/shared/Loading";
+import AlertMessage from "@/components/shared/AlertMessage";
+
+import UserCreateForm from "./UserCreateForm";
+import UserCreateHeader from "./UserCreateHeader";
+
+export default function UserCreateView() {
+  const { token } = useAuth();
+
+  const [roles, setRoles] = useState<Role[]>([]);
+  const [establishments, setEstablishments] = useState<Establishment[]>([]);
+  const [emissionPoints, setEmissionPoints] = useState<EmissionPoint[]>([]);
+  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  const fetchAllData = async () => {
+    try {
+      setLoading(true);
+
+      const [rolRes, estRes, emiRes] = await Promise.all([
+        getRoles(),
+        getEstablishments("", 1, 100, token!),
+        getEmissionPoints("", 1, 100, token!),
+      ]);
+
+      setRoles(rolRes.data);
+      setEstablishments(estRes.data);
+      setEmissionPoints(emiRes.data);
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchAllData();
+  }, [token]);
+
+  return (
+    <Card>
+      <CardContent>
+        <UserCreateHeader />
+        {loading ? (
+          <Loading />
+        ) : error ? (
+          <AlertMessage message={error} variant="destructive" />
+        ) : (
+          <UserCreateForm
+            roles={roles}
+            establishments={establishments}
+            emissionPoints={emissionPoints}
+            token={token}
+          />
+        )}
+      </CardContent>
+    </Card>
+  );
+}

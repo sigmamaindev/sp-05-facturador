@@ -1,0 +1,25 @@
+using Microsoft.AspNetCore.Mvc;
+using Core.DTOs;
+using Core.DTOs.Role;
+using Core.Interfaces;
+
+namespace API.Controllers
+{
+    [Route("api/[controller]")]
+    [ApiController]
+    public class RoleController(IRoleRepository roleRepository) : ControllerBase
+    {
+        [HttpGet]
+        public async Task<ActionResult<ApiResponse<List<RolResDto>>>> GetRoles()
+        {
+            var response = await roleRepository.GetRolesAsync();
+
+            if (!response.Success)
+            {
+                return BadRequest(response);
+            }
+
+            return Ok(response);
+        }
+    }
+}
