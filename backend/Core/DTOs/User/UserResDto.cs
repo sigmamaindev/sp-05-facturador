@@ -1,6 +1,7 @@
 using Core.DTOs.Business;
 using Core.DTOs.EmissionPoint;
 using Core.DTOs.Establishment;
+using Core.DTOs.Role;
 
 namespace Core.DTOs.User;
 
@@ -19,7 +20,7 @@ public class UserResDto
     public string? Sequence { get; set; }
     public bool IsActive { get; set; }
     public DateTime CreatedAt { get; set; }
-    public List<string> Roles { get; set; } = [];
+    public List<RolResDto> Roles { get; set; } = [];
     public BusinessResDto? Business { get; set; }
     public List<EstablishmentResDto> Establishment { get; set; } = [];
     public List<EmissionPointResDto> EmissionPoint { get; set; } = [];

@@ -13,6 +13,7 @@ import UserCreateView from "@/views/user/UserCreateView";
 import InvoiceListView from "@/views/invoice/InvoiceListView";
 import InvoiceCreateView from "@/views/invoice/InvoiceCreateView";
 import CustomerListView from "@/views/customer/CustomerListView";
+import UserUpdateView from "@/views/user/UserUpdateView";
 
 export default function Router() {
   return (
@@ -24,6 +25,7 @@ export default function Router() {
               <Route path="/" element={<DashboardView />} />
               <Route path="/usuarios" element={<UserListView />} />
               <Route path="/usuarios/crear" element={<UserCreateView />} />
+              <Route path="/usuarios/actualizar/:id" element={<UserUpdateView />} />
               <Route path="/clientes" element={<CustomerListView />} />
               <Route path="/facturas" element={<InvoiceListView />} />
               <Route path="/facturas/crear" element={<InvoiceCreateView />} />

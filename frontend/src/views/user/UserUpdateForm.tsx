@@ -1,16 +1,15 @@
 import { useState } from "react";
-import { useForm, Controller } from "react-hook-form";
-
+import { Controller, useForm } from "react-hook-form";
+import { useNavigate } from "react-router-dom";
 import { Loader2 } from "lucide-react";
 
 import type { Role } from "@/types/role.types";
-import type { Establishment } from "@/types/establishment.types";
 import type { EmissionPoint } from "@/types/emissionPoint.types";
-import type { CreateUserForm } from "@/types/user.types";
-
-import { Input } from "@/components/ui/input";
+import type { Establishment } from "@/types/establishment.types";
+import type { UpdateUserForm, User } from "@/types/user.types";
+import { updateUser } from "@/api/user";
 import { Label } from "@/components/ui/label";
-import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import {
   Select,
   SelectContent,
@@ -18,41 +17,58 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Button } from "@/components/ui/button";
 
-import { createUser } from "@/api/user";
-
-interface UserCreateFormProps {
+interface UserUpdateFormProps {
+  user: User;
   roles: Role[];
   establishments: Establishment[];
   emissionPoints: EmissionPoint[];
   token: string | null;
 }
 
-export default function UserCreateForm({
+export default function UserUpdateForm({
+  user,
   roles,
   establishments,
   emissionPoints,
   token,
-}: UserCreateFormProps) {
+}: UserUpdateFormProps) {
   const [savingUser, setSavingUser] = useState(false);
 
-  const {
-    control,
-    register,
-    handleSubmit,
-    reset,
-    formState: { errors },
-  } = useForm<CreateUserForm>();
+  const navigate = useNavigate();
 
-  const onSubmit = async (data: CreateUserForm) => {
+  const {
+    register,
+    control,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<UpdateUserForm>({
+    defaultValues: {
+      document: user.document,
+      username: user.username,
+      fullName: user.fullName,
+      email: user.email,
+      address: user.address,
+      cellphone: user.cellphone,
+      telephone: user.telephone,
+      rolIds: user.roles?.length
+        ? [roles.find((r) => r.name === user.roles[0].name)?.id ?? 0]
+        : [],
+      establishmentId: user.establishment[0].id ?? 0,
+      emissionPointId: user.emissionPoint[0].id ?? 0,
+    },
+  });
+
+  const onSubmit = async (data: UpdateUserForm) => {
     try {
       setSavingUser(true);
 
-      await createUser(data, token!);
+      await updateUser(user.id, data, token!);
 
-      reset();
+      navigate("/usuarios");
     } catch (err: any) {
-      console.log(err.message);
+      alert(err.message);
     } finally {
       setSavingUser(false);
     }
@@ -103,20 +119,6 @@ export default function UserCreateForm({
         />
         {errors.username && (
           <p className="text-red-500 text-sm">{errors.username.message}</p>
-        )}
-      </div>
-      <div className="grid gap-2">
-        <Label htmlFor="password">Contraseña</Label>
-        <Input
-          id="password"
-          type="password"
-          placeholder="Contraseña"
-          {...register("password", {
-            required: "La contraseña es obligatoria",
-          })}
-        />
-        {errors.password && (
-          <p className="text-red-500 text-sm">{errors.password.message}</p>
         )}
       </div>
       <div className="grid gap-2">
@@ -200,6 +202,7 @@ export default function UserCreateForm({
             {errors.rolIds && (
               <p className="text-red-500 text-sm">{errors.rolIds.message}</p>
             )}
+            {}
           </div>
         )}
       />
@@ -272,7 +275,7 @@ export default function UserCreateForm({
               Guardando...
             </>
           ) : (
-            "Crear Usuario"
+            "Actualizar Usuario"
           )}
         </Button>
       </div>

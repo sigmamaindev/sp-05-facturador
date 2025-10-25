@@ -12,6 +12,7 @@ using Core.DTOs.User;
 using Core.DTOs.Business;
 using Core.DTOs.Establishment;
 using Core.DTOs.EmissionPoint;
+using Core.DTOs.Role;
 
 namespace Infrastructure.Data;
 
@@ -147,7 +148,11 @@ public class UserRepository(StoreContext context, IConfiguration config, IHttpCo
                 CompanyName = user.CompanyName,
                 Sequence = user.Sequence,
                 IsActive = user.IsActive,
-                Roles = [.. user.UserRole.Select(ur => ur.Role!.Name)],
+                Roles = [.. user.UserRole.Select(ur => new RolResDto
+                {
+                    Id = ur.Role!.Id,
+                    Name = ur.Role.Name
+                })],
                 Business = user.UserBusiness.Select(ub => new BusinessResDto
                 {
                     Id = ub.Business!.Id,
@@ -236,8 +241,13 @@ public class UserRepository(StoreContext context, IConfiguration config, IHttpCo
                 Cellphone = user.Cellphone,
                 ImageUrl = user.ImageUrl,
                 CompanyName = user.CompanyName,
+                Sequence = user.Sequence,
                 IsActive = user.IsActive,
-                Roles = [.. user.UserRole.Select(ur => ur.Role!.Name)],
+                Roles = [.. user.UserRole.Select(ur => new RolResDto
+                {
+                    Id = ur.Role!.Id,
+                    Name = ur.Role.Name
+                })],
                 Business = user.UserBusiness.Select(ub => new BusinessResDto
                 {
                     Id = ub.Business!.Id,
@@ -313,7 +323,7 @@ public class UserRepository(StoreContext context, IConfiguration config, IHttpCo
             var total = await query.CountAsync();
 
             var users = await query
-            .OrderBy(u => u.CreatedAt)
+            .OrderByDescending(u => u.CreatedAt)
             .Skip((page - 1) * limit)
             .Take(limit)
             .Select(u => new UserResDto
@@ -331,7 +341,12 @@ public class UserRepository(StoreContext context, IConfiguration config, IHttpCo
                 Sequence = u.Sequence,
                 IsActive = u.IsActive,
                 CreatedAt = u.CreatedAt,
-                Roles = u.UserRole.Select(ur => ur.Role!.Name).ToList(),
+                Roles = u.UserRole
+                .Select(ur => new RolResDto
+                {
+                    Id = ur.Role!.Id,
+                    Name = ur.Role.Name
+                }).ToList(),
                 Business = u.UserBusiness
                 .Select(ub => new BusinessResDto
                 {
@@ -564,6 +579,19 @@ public class UserRepository(StoreContext context, IConfiguration config, IHttpCo
                 return response;
             }
 
+            var validRoles = await context.Roles
+            .Where(r => rolIds.Contains(r.Id))
+            .ToListAsync();
+
+            if (validRoles.Count != rolIds.Count)
+            {
+                response.Success = false;
+                response.Message = "Rol no encontrado";
+                response.Error = "Uno o más roles no existen o no están disponibles";
+
+                return response;
+            }
+
             existingUser.Username = userUpdateReqDto.Username;
             existingUser.Document = userUpdateReqDto.Document;
             existingUser.FullName = userUpdateReqDto.FullName;
@@ -613,7 +641,11 @@ public class UserRepository(StoreContext context, IConfiguration config, IHttpCo
                 CompanyName = existingUser.CompanyName,
                 CreatedAt = existingUser.CreatedAt,
                 IsActive = existingUser.IsActive,
-                Roles = [.. existingUser.UserRole.Select(ur => ur.Role!.Name)],
+                Roles = [.. existingUser.UserRole.Select(ur => new RolResDto
+                {
+                    Id = ur.Role!.Id,
+                    Name = ur.Role.Name
+                })],
                 Business = existingUser.UserBusiness
                 .Select(ub => new BusinessResDto
                 {

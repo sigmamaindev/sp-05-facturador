@@ -1,7 +1,7 @@
 import { isAxiosError } from "axios";
 
 import type { ApiResponseList, ApiResponseSingle } from "@/types/api.types";
-import type { CreateUserForm, User } from "@/types/user.types";
+import type { CreateUserForm, UpdateUserForm, User } from "@/types/user.types";
 
 import api from "@/utils/axios";
 
@@ -32,6 +32,28 @@ export async function getUsers(
   }
 }
 
+export async function getUserById(
+  id: number,
+  token: string
+): Promise<ApiResponseSingle<User>> {
+  try {
+    const url = `/user/${id}`;
+
+    const { data } = await api.get<ApiResponseSingle<User>>(url, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    return data;
+  } catch (error) {
+    if (isAxiosError(error) && error.response) {
+      throw new Error(error.response.data.error ?? "Error en la API");
+    }
+    throw new Error("Error desconocido");
+  }
+}
+
 export async function createUser(
   body: CreateUserForm,
   token: string
@@ -40,6 +62,34 @@ export async function createUser(
     const url = `/user`;
 
     const { data } = await api.post<ApiResponseSingle<CreateUserForm>>(
+      url,
+      body,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      }
+    );
+
+    return data;
+  } catch (error) {
+    if (isAxiosError(error) && error.response) {
+      throw new Error(error.response.data.error ?? "Error en la API");
+    }
+    throw new Error("Error desconocido");
+  }
+}
+
+export async function updateUser(
+  id:number,
+  body: UpdateUserForm,
+  token: string
+): Promise<ApiResponseSingle<UpdateUserForm>> {
+  try {
+    const url = `/user/${id}`;
+
+    const { data } = await api.put<ApiResponseSingle<UpdateUserForm>>(
       url,
       body,
       {
