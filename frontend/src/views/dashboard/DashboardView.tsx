@@ -1,3 +1,3 @@
 export default function DashboardView() {
-  return <div>DashboardView</div>;
+  return <div>Bienvenido a la plataforma SIGMA</div>;
 }

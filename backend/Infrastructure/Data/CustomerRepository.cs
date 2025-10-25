@@ -3,7 +3,6 @@ using Microsoft.EntityFrameworkCore;
 using Core.Interfaces;
 using Core.DTOs;
 using Core.DTOs.Customer;
-using Core.DTOs.Business;
 using Core.DTOs.DocumentType;
 
 namespace Infrastructure.Data;

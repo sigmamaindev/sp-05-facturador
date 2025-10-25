@@ -8,12 +8,13 @@ import ProtectedRoute from "./protectedRoute";
 import PublicRoute from "./publicRoute";
 import DashboardView from "@/views/dashboard/DashboardView";
 import LoginView from "@/views/auth/LoginView";
+import BusinessListView from "@/views/business/BusinessListView";
 import UserListView from "@/views/user/UserListView";
 import UserCreateView from "@/views/user/UserCreateView";
+import UserUpdateView from "@/views/user/UserUpdateView";
 import InvoiceListView from "@/views/invoice/InvoiceListView";
 import InvoiceCreateView from "@/views/invoice/InvoiceCreateView";
 import CustomerListView from "@/views/customer/CustomerListView";
-import UserUpdateView from "@/views/user/UserUpdateView";
 
 export default function Router() {
   return (
@@ -23,9 +24,13 @@ export default function Router() {
           <Route element={<ProtectedRoute />}>
             <Route element={<AppLayout />}>
               <Route path="/" element={<DashboardView />} />
+              <Route path="/empresas" element={<BusinessListView />} />
               <Route path="/usuarios" element={<UserListView />} />
               <Route path="/usuarios/crear" element={<UserCreateView />} />
-              <Route path="/usuarios/actualizar/:id" element={<UserUpdateView />} />
+              <Route
+                path="/usuarios/actualizar/:id"
+                element={<UserUpdateView />}
+              />
               <Route path="/clientes" element={<CustomerListView />} />
               <Route path="/facturas" element={<InvoiceListView />} />
               <Route path="/facturas/crear" element={<InvoiceCreateView />} />
