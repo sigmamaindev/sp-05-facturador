@@ -15,8 +15,8 @@ import { Card, CardContent } from "@/components/ui/card";
 import Loading from "@/components/shared/Loading";
 import AlertMessage from "@/components/shared/AlertMessage";
 
-import UserCreateForm from "./UserCreateForm";
 import UserCreateHeader from "./UserCreateHeader";
+import UserCreateForm from "./UserCreateForm";
 
 export default function UserCreateView() {
   const { token } = useAuth();
@@ -59,6 +59,13 @@ export default function UserCreateView() {
           <Loading />
         ) : error ? (
           <AlertMessage message={error} variant="destructive" />
+        ) : !roles.length ||
+          !establishments.length ||
+          !emissionPoints.length ? (
+          <AlertMessage
+            message="Los datos del catálogo no se han cargado completamente."
+            variant="destructive"
+          />
         ) : (
           <UserCreateForm
             roles={roles}

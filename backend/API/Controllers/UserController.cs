@@ -24,7 +24,7 @@ namespace API.Controllers
         }
 
         [HttpGet]
-        [Authorize(Roles = "SuperAdmin, Admin")]
+        [Authorize]
         public async Task<ActionResult<ApiResponse<List<UserResDto>>>> GetUsers([FromQuery] string? keyword = null, [FromQuery] int page = 1, [FromQuery] int limit = 10)
         {
             var response = await userRepository.GetUsersAsync(keyword, page, limit);
@@ -38,14 +38,14 @@ namespace API.Controllers
         }
 
         [HttpGet("{id:int}")]
-        [Authorize(Roles = "SuperAdmin, Admin")]
+        [Authorize]
         public async Task<ActionResult<ApiResponse<UserResDto>>> GetUserById(int id)
         {
             var response = await userRepository.GetUserByIdAsync(id);
 
             if (!response.Success)
             {
-                return NotFound(response);
+                return BadRequest(response);
             }
 
             return Ok(response);

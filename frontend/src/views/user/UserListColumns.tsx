@@ -1,10 +1,11 @@
 import { useNavigate } from "react-router-dom";
 import type { ColumnDef } from "@tanstack/react-table";
 
+import { Badge } from "@/components/ui/badge";
+
 import type { User } from "@/types/user.types";
 
 import RowActions from "@/components/shared/RowActions";
-import { Badge } from "@/components/ui/badge";
 
 export const columns: ColumnDef<User>[] = [
   {

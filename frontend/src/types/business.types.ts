@@ -3,6 +3,8 @@ export interface Business {
   document: string;
   name: string;
   address: string;
+  city: string;
+  province: string;
   isActive: boolean;
   createdAt: Date;
 }

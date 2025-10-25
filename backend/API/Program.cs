@@ -26,6 +26,7 @@ builder.Services.AddDbContext<StoreContext>(opt =>
     opt.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection"));
 });
 
+builder.Services.AddScoped<IBusinessRepository, BusinessRepository>();
 builder.Services.AddScoped<IRoleRepository, RoleRepository>();
 builder.Services.AddScoped<IEstablishmentRepository, EstablishmentRepository>();
 builder.Services.AddScoped<IEmissionPointRepository, EmissionPointRepository>();

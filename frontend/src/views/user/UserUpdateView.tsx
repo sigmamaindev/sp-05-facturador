@@ -71,7 +71,7 @@ export default function UserUpdateView() {
           !establishments.length ||
           !emissionPoints.length ? (
           <AlertMessage
-            message="Los datos del usuario o catálogos no se han cargado completamente."
+            message="Los datos del usuario no se han cargado completamente"
             variant="destructive"
           />
         ) : (

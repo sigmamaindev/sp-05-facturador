@@ -137,6 +137,7 @@ public class UserRepository(StoreContext context, IConfiguration config, IHttpCo
 
             var userResDto = new UserResDto
             {
+                Id = createdUser.Id,
                 Document = createdUser.Document,
                 Username = createdUser.Username,
                 FullName = createdUser.FullName,
@@ -184,7 +185,6 @@ public class UserRepository(StoreContext context, IConfiguration config, IHttpCo
         }
         catch (Exception ex)
         {
-
             response.Success = false;
             response.Message = "Error al crear el usuario";
             response.Error = ex.Message;
