@@ -9,6 +9,9 @@ import {
   Power,
   User,
   DollarSign,
+  Building2,
+  MapPin,
+  Warehouse,
 } from "lucide-react";
 
 import {
@@ -26,15 +29,25 @@ import {
 } from "../ui/sidebar";
 
 import { useAuth } from "@/contexts/AuthContext";
+import NavOrganization from "./NavOrganization";
 
-const menuItems = [
-  { to: "/", label: "Dashboard", icon: Home },
-  { to: "/empresas", label: "Empresas", icon: BriefcaseBusiness },
-  { to: "/usuarios", label: "Usuarios", icon: User },
-  { to: "/clientes", label: "Clientes", icon: HandHelping },
-  { to: "/productos", label: "Productos", icon: List },
-  { to: "/facturas", label: "Facturas", icon: DollarSign },
-];
+const data = {
+  dashboard: { to: "/", label: "Dashboard", icon: Home },
+  organization: {
+    label: "Organización",
+    icon: Building2,
+    items: [
+      { to: "/empresas", label: "Empresas", icon: BriefcaseBusiness },
+      { to: "/establecimientos", label: "Establecimientos", icon: MapPin },
+      { to: "/puntos-emision", label: "Puntos de Emisión", icon: List },
+      { to: "/bodegas", label: "Bodegas", icon: Warehouse },
+    ],
+  },
+  user: { to: "/usuarios", label: "Usuarios", icon: User },
+  customer: { to: "/clientes", label: "Clientes", icon: HandHelping },
+  product: { to: "/productos", label: "Productos", icon: List },
+  invoice: { to: "/facturas", label: "Facturas", icon: DollarSign },
+};
 
 export default function AppSidebar() {
   const { setOpenMobile } = useSidebar();
@@ -62,16 +75,55 @@ export default function AppSidebar() {
           <SidebarGroupLabel>Inicio</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              {menuItems.map(({ to, label, icon: Icon }) => (
-                <SidebarMenuItem key={to}>
-                  <SidebarMenuButton asChild>
-                    <Link to={to}>
-                      <Icon />
-                      <span>{label}</span>
-                    </Link>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
+              <SidebarMenuItem key={data.dashboard.to}>
+                <SidebarMenuButton asChild>
+                  <Link to={data.dashboard.to}>
+                    <data.dashboard.icon />
+                    <span>{data.dashboard.label}</span>
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            </SidebarMenu>
+            <NavOrganization items={data.organization} />
+            <SidebarMenu>
+              <SidebarMenuItem key={data.user.to}>
+                <SidebarMenuButton asChild>
+                  <Link to={data.user.to}>
+                    <data.user.icon />
+                    <span>{data.user.label}</span>
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            </SidebarMenu>
+            <SidebarMenu>
+              <SidebarMenuItem key={data.customer.to}>
+                <SidebarMenuButton asChild>
+                  <Link to={data.customer.to}>
+                    <data.customer.icon />
+                    <span>{data.customer.label}</span>
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            </SidebarMenu>
+            <SidebarMenu>
+              <SidebarMenuItem key={data.product.to}>
+                <SidebarMenuButton asChild>
+                  <Link to={data.product.to}>
+                    <data.product.icon />
+                    <span>{data.product.label}</span>
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            </SidebarMenu>
+            <SidebarMenu>
+              <SidebarMenuItem key={data.invoice.to}>
+                <SidebarMenuButton asChild>
+                  <Link to={data.invoice.to}>
+                    <data.invoice.icon />
+                    <span>{data.invoice.label}</span>
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>

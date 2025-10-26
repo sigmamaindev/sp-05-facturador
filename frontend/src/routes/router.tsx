@@ -10,6 +10,8 @@ import DashboardView from "@/views/dashboard/DashboardView";
 import LoginView from "@/views/auth/LoginView";
 import BusinessListView from "@/views/business/BusinessListView";
 import BusinessDetailView from "@/views/business/BusinessDetailView";
+import EstablishmentListView from "@/views/establishment/EstablishmentListView";
+import EstablishmentDetailView from "@/views/establishment/EstablishmentDetailView";
 import UserListView from "@/views/user/UserListView";
 import UserCreateView from "@/views/user/UserCreateView";
 import UserUpdateView from "@/views/user/UserUpdateView";
@@ -27,6 +29,14 @@ export default function Router() {
               <Route path="/" element={<DashboardView />} />
               <Route path="/empresas" element={<BusinessListView />} />
               <Route path="/empresas/:id" element={<BusinessDetailView />} />
+              <Route
+                path="/establecimientos"
+                element={<EstablishmentListView />}
+              />
+              <Route
+                path="/establecimientos/:id"
+                element={<EstablishmentDetailView />}
+              />
               <Route path="/usuarios" element={<UserListView />} />
               <Route path="/usuarios/crear" element={<UserCreateView />} />
               <Route
