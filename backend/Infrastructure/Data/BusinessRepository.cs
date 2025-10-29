@@ -68,10 +68,10 @@ public class BusinessRepository(StoreContext context) : IBusinessRepository
 
         try
         {
-            var business = await context.Businesses
+            var existingBusiness = await context.Businesses
             .FirstOrDefaultAsync(b => b.Id == id);
 
-            if (business == null)
+            if (existingBusiness == null)
             {
                 response.Success = false;
                 response.Message = "Empresa no encontrada";
@@ -80,21 +80,21 @@ public class BusinessRepository(StoreContext context) : IBusinessRepository
                 return response;
             }
 
-            var existingBusinessDto = new BusinessResDto
+            var business = new BusinessResDto
             {
-                Id = business.Id,
-                Document = business.Document,
-                Name = business.Name,
-                Address = business.Address,
-                City = business.City!,
-                Province = business.Province!,
-                IsActive = business.IsActive,
-                CreatedAt = business.CreatedAt
+                Id = existingBusiness.Id,
+                Document = existingBusiness.Document,
+                Name = existingBusiness.Name,
+                Address = existingBusiness.Address,
+                City = existingBusiness.City!,
+                Province = existingBusiness.Province!,
+                IsActive = existingBusiness.IsActive,
+                CreatedAt = existingBusiness.CreatedAt
             };
 
             response.Success = true;
             response.Message = "Empresa obtenida correctamente";
-            response.Data = existingBusinessDto;
+            response.Data = business;
         }
         catch (Exception ex)
         {

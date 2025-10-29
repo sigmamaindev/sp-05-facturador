@@ -23,5 +23,47 @@ namespace API.Controllers
 
             return Ok(response);
         }
+
+        [HttpGet("{id:int}")]
+        [Authorize]
+        public async Task<ActionResult<ApiResponse<EstablishmentResDto>>> GetEstablishmentById(int id)
+        {
+            var response = await establishmentRepository.GetEstablishmentByIdAsync(id);
+
+            if (!response.Success)
+            {
+                return BadRequest(response);
+            }
+
+            return Ok(response);
+        }
+
+        [HttpPost]
+        [Authorize(Roles = "SuperAdmin, Admin")]
+        public async Task<ActionResult<ApiResponse<EstablishmentResDto>>> CreateEstablishment([FromBody] EstablishmentReqDto establishmentReqDto)
+        {
+            var response = await establishmentRepository.CreateEstablishmentAsync(establishmentReqDto);
+
+            if (!response.Success)
+            {
+                return BadRequest(response);
+            }
+
+            return Ok(response);
+        }
+
+        [HttpPut("{id:int}")]
+        [Authorize(Roles = "SuperAdmin, Admin")]
+        public async Task<ActionResult<ApiResponse<EstablishmentResDto>>> UpdateEstablishment(int id, [FromBody] EstablishmentReqDto establishmentReqDto)
+        {
+            var response = await establishmentRepository.UpdateEstablishmentAsync(id, establishmentReqDto);
+
+            if (!response.Success)
+            {
+                return BadRequest(response);
+            }
+
+            return Ok(response);
+        }
     }
 }
