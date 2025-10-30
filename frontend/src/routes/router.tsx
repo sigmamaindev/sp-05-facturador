@@ -12,6 +12,7 @@ import BusinessListView from "@/views/business/BusinessListView";
 import BusinessDetailView from "@/views/business/BusinessDetailView";
 import EstablishmentListView from "@/views/establishment/EstablishmentListView";
 import EstablishmentDetailView from "@/views/establishment/EstablishmentDetailView";
+import EstablishmentCreateView from "@/views/establishment/EstablishmentCreateView";
 import UserListView from "@/views/user/UserListView";
 import UserCreateView from "@/views/user/UserCreateView";
 import UserUpdateView from "@/views/user/UserUpdateView";
@@ -36,6 +37,10 @@ export default function Router() {
               <Route
                 path="/establecimientos/:id"
                 element={<EstablishmentDetailView />}
+              />
+              <Route
+                path="/establecimientos/crear"
+                element={<EstablishmentCreateView />}
               />
               <Route path="/usuarios" element={<UserListView />} />
               <Route path="/usuarios/crear" element={<UserCreateView />} />

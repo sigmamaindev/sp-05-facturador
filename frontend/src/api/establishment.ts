@@ -1,7 +1,10 @@
 import { isAxiosError } from "axios";
 
-import type { ApiResponseList } from "@/types/api.types";
-import type { Establishment } from "@/types/establishment.types";
+import type { ApiResponseList, ApiResponseSingle } from "@/types/api.types";
+import type {
+  CreateEstablishmentForm,
+  Establishment,
+} from "@/types/establishment.types";
 
 import api from "@/utils/axios";
 
@@ -22,6 +25,55 @@ export async function getEstablishments(
         Authorization: `Bearer ${token}`,
       },
     });
+
+    return data;
+  } catch (error) {
+    if (isAxiosError(error) && error.response) {
+      throw new Error(error.response.data.error ?? "Error en la API");
+    }
+    throw new Error("Error desconocido");
+  }
+}
+
+export async function getEstablishmentById(
+  id: number,
+  token: string
+): Promise<ApiResponseSingle<Establishment>> {
+  try {
+    const url = `/establishment/${id}`;
+
+    const { data } = await api.get<ApiResponseSingle<Establishment>>(url, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    return data;
+  } catch (error) {
+    if (isAxiosError(error) && error.response) {
+      throw new Error(error.response.data.error ?? "Error en la API");
+    }
+    throw new Error("Error desconocido");
+  }
+}
+
+export async function createEstablishment(
+  body: CreateEstablishmentForm,
+  token: string
+): Promise<ApiResponseSingle<Establishment>> {
+  try {
+    const url = `/establishment`;
+
+    const { data } = await api.post<ApiResponseSingle<Establishment>>(
+      url,
+      body,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      }
+    );
 
     return data;
   } catch (error) {

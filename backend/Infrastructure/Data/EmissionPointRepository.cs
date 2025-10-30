@@ -161,6 +161,7 @@ public class EmissionPointRepository(StoreContext context, IHttpContextAccessor 
                 Code = existingEmissionPoint.Code,
                 Description = existingEmissionPoint.Description,
                 IsActive = existingEmissionPoint.IsActive,
+                CreatedAt = existingEmissionPoint.CreatedAt
             };
 
             response.Success = true;
@@ -240,7 +241,8 @@ public class EmissionPointRepository(StoreContext context, IHttpContextAccessor 
                 Id = ep.Id,
                 Code = ep.Code,
                 Description = ep.Description,
-                IsActive = ep.IsActive
+                IsActive = ep.IsActive,
+                CreatedAt = ep.CreatedAt
             }).ToListAsync();
 
             response.Success = true;

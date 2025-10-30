@@ -37,5 +37,33 @@ namespace API.Controllers
 
             return Ok(response);
         }
+
+        [HttpPost]
+        [Authorize]
+        public async Task<ActionResult<ApiResponse<EmissionPointResDto>>> CreateEmissionPoint([FromQuery] int establishmentId, EmissionPointCreateReqDto emissionPointCreateReqDto)
+        {
+            var response = await emissionPointRepository.CreateEmissionPointAsync(establishmentId, emissionPointCreateReqDto);
+
+            if (!response.Success)
+            {
+                return BadRequest(response);
+            }
+
+            return Ok(response);
+        }
+
+        [HttpPut("{id:int}")]
+        [Authorize]
+        public async Task<ActionResult<ApiResponse<EmissionPointResDto>>> UpdateEmissionPoint(int id, EmissionPointUpdateReqDto emissionPointUpdateReqDto)
+        {
+            var response = await emissionPointRepository.UpdateEmissionPointAsync(id, emissionPointUpdateReqDto);
+
+            if (!response.Success)
+            {
+                return BadRequest(response);
+            }
+
+            return Ok(response);
+        }
     }
 }

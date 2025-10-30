@@ -60,7 +60,8 @@ public class EstablishmentRepository(StoreContext context, IHttpContextAccessor 
             var newEstablishment = new Establishment
             {
                 Code = newEstablishmentCode,
-                Name = establishmentReqDto.Name
+                Name = establishmentReqDto.Name,
+                BusinessId = businessId
             };
 
             context.Establishments.Add(newEstablishment);
@@ -71,7 +72,8 @@ public class EstablishmentRepository(StoreContext context, IHttpContextAccessor 
                 Id = newEstablishment.Id,
                 Code = newEstablishment.Code,
                 Name = newEstablishment.Name,
-                IsActive = newEstablishment.IsActive
+                IsActive = newEstablishment.IsActive,
+                CreatedAt = newEstablishment.CreatedAt
             };
 
             response.Success = true;
@@ -125,6 +127,7 @@ public class EstablishmentRepository(StoreContext context, IHttpContextAccessor 
                 Code = existingEstablishment.Code,
                 Name = existingEstablishment.Name,
                 IsActive = existingEstablishment.IsActive,
+                CreatedAt = existingEstablishment.CreatedAt
             };
 
             response.Success = true;
@@ -165,7 +168,7 @@ public class EstablishmentRepository(StoreContext context, IHttpContextAccessor 
             {
                 query = query.Where(
                     e =>
-                    e.Name.Contains(keyword) ||
+                    EF.Functions.ILike(e.Name, $"%{keyword}%") ||
                     e.Code.Contains(keyword));
             }
 
@@ -180,7 +183,8 @@ public class EstablishmentRepository(StoreContext context, IHttpContextAccessor 
                 Id = e.Id,
                 Code = e.Code,
                 Name = e.Name,
-                IsActive = e.IsActive
+                IsActive = e.IsActive,
+                CreatedAt = e.CreatedAt
             }).ToListAsync();
 
             response.Success = true;
@@ -244,6 +248,7 @@ public class EstablishmentRepository(StoreContext context, IHttpContextAccessor 
                 Code = existingEstablishment.Code,
                 Name = existingEstablishment.Name,
                 IsActive = existingEstablishment.IsActive,
+                CreatedAt = existingEstablishment.CreatedAt
             };
 
             response.Success = true;
