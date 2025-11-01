@@ -225,9 +225,10 @@ public class EmissionPointRepository(StoreContext context, IHttpContextAccessor 
 
             if (!string.IsNullOrEmpty(keyword))
             {
-                query = query.Where(ep =>
-                ep.Code.Contains(keyword) ||
-                ep.Description.Contains(keyword));
+                query = query.Where(
+                    ep =>
+                    EF.Functions.ILike(ep.Description, $"%{keyword}%") ||
+                    ep.Code.Contains(keyword));
             }
 
             var total = await query.CountAsync();

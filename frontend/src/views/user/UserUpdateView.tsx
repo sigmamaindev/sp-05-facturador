@@ -39,7 +39,7 @@ export default function UserUpdateView() {
       const [rolRes, estRes, emiRes, userRes] = await Promise.all([
         getRoles(),
         getEstablishments("", 1, 100, token!),
-        getEmissionPoints("", 1, 100, token!),
+        getEmissionPoints(1, "", 1, 100, token!),
         getUserById(Number(id), token!),
       ]);
 

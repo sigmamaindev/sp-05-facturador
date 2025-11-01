@@ -18,8 +18,9 @@ export default function EstablishmentListHeader({
   setPage,
   setKeyword,
 }: EstablishmentListHeaderProps) {
-  const { user } = useAuth();
   const navigate = useNavigate();
+
+  const { user } = useAuth();
 
   const hasPermission =
     user?.roles?.includes("SuperAdmin") || user?.roles?.includes("Admin");

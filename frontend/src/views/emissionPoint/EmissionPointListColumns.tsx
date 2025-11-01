@@ -1,13 +1,15 @@
 import { useNavigate } from "react-router-dom";
 import type { ColumnDef } from "@tanstack/react-table";
 
-import type { Establishment } from "@/types/establishment.types";
+import type { EmissionPoint } from "@/types/emissionPoint.types";
 
 import { useAuth } from "@/contexts/AuthContext";
 
 import RowActions from "@/components/shared/RowActions";
 
-export const columns: ColumnDef<Establishment>[] = [
+export const columns = (
+  establishmentId: number | null
+): ColumnDef<EmissionPoint>[] => [
   {
     accessorKey: "id",
     header: "ID",
@@ -17,8 +19,8 @@ export const columns: ColumnDef<Establishment>[] = [
     header: "Código",
   },
   {
-    accessorKey: "name",
-    header: "Nombre",
+    accessorKey: "description",
+    header: "Descripción",
   },
   {
     id: "actions",
@@ -31,11 +33,11 @@ export const columns: ColumnDef<Establishment>[] = [
       const hasPermission =
         user?.roles?.includes("SuperAdmin") || user?.roles?.includes("Admin");
 
-      const establishment = row.original;
+      const emissionPoint = row.original;
       const actions = [
         {
           label: "Detalles",
-          onClick: () => navigate(`/establecimientos/${establishment.id}`),
+          onClick: () => navigate(`/puntos-emision/${emissionPoint.id}`),
         },
       ];
 
@@ -43,7 +45,9 @@ export const columns: ColumnDef<Establishment>[] = [
         actions.push({
           label: "Editar",
           onClick: () =>
-            navigate(`/establecimientos/actualizar/${establishment.id}`),
+            navigate(
+              `/puntos-emision/actualizar/${emissionPoint.id}?establishmentId=${establishmentId}`
+            ),
         });
       }
 

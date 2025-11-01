@@ -13,3 +13,9 @@ const createEstablishmentSchema = z.object({
 });
 
 export type CreateEstablishmentForm = z.infer<typeof createEstablishmentSchema>;
+
+const updateEstablishmentSchema = z.object({
+  name: z.string().min(4, "El nombre debe tener al menos 4 caracteres"),
+});
+
+export type UpdateEstablishmentForm = z.infer<typeof updateEstablishmentSchema>;

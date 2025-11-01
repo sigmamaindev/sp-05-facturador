@@ -34,7 +34,7 @@ export default function UserCreateView() {
       const [rolRes, estRes, emiRes] = await Promise.all([
         getRoles(),
         getEstablishments("", 1, 100, token!),
-        getEmissionPoints("", 1, 100, token!),
+        getEmissionPoints(1, "", 1, 100, token!),
       ]);
 
       setRoles(rolRes.data);

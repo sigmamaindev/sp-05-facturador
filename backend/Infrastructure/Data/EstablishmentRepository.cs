@@ -239,6 +239,7 @@ public class EstablishmentRepository(StoreContext context, IHttpContextAccessor 
             }
 
             existingEstablishment.Name = establishmentReqDto.Name;
+            existingEstablishment.UpdatedAt = DateTime.UtcNow;
 
             await context.SaveChangesAsync();
 

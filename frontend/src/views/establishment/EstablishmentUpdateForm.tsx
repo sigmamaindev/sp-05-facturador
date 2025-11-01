@@ -1,24 +1,29 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
+import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
 
-import type { CreateEstablishmentForm } from "@/types/establishment.types";
+import type {
+  Establishment,
+  UpdateEstablishmentForm,
+} from "@/types/establishment.types";
 
-import { createEstablishment } from "@/api/establishment";
+import { updateEstablishment } from "@/api/establishment";
 
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 
-interface EstablishmentCreateFormProps {
+interface EstablishmentUpdateFormProps {
+  establishment: Establishment;
   token: string | null;
 }
 
-export default function EstablishmentCreateForm({
+export default function EstablishmentUpdateForm({
+  establishment,
   token,
-}: EstablishmentCreateFormProps) {
+}: EstablishmentUpdateFormProps) {
   const navigate = useNavigate();
 
   const [savingEstablishment, setSavingEstablishment] = useState(false);
@@ -27,15 +32,17 @@ export default function EstablishmentCreateForm({
     register,
     handleSubmit,
     formState: { errors },
-  } = useForm<CreateEstablishmentForm>();
+  } = useForm<UpdateEstablishmentForm>({
+    defaultValues: {
+      name: establishment.name,
+    },
+  });
 
-  const onSubmit = async (data: CreateEstablishmentForm) => {
+  const onSubmit = async (data: UpdateEstablishmentForm) => {
     try {
       setSavingEstablishment(true);
 
-      const response = await createEstablishment(data, token!);
-
-      toast.success(response.message);
+      await updateEstablishment(establishment.id, data, token!);
 
       navigate("/establecimientos");
     } catch (err: any) {
@@ -46,7 +53,7 @@ export default function EstablishmentCreateForm({
   };
 
   return (
-    <form className="grid grid-cols-1" onSubmit={handleSubmit(onSubmit)}>
+    <form onSubmit={handleSubmit(onSubmit)} className="grid grid-cols-1">
       <div className="grid gap-2">
         <Label htmlFor="name">Nombre</Label>
         <Input
@@ -64,10 +71,10 @@ export default function EstablishmentCreateForm({
           {savingEstablishment ? (
             <>
               <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-              Guardando...
+              Actualizando...
             </>
           ) : (
-            "Guardar"
+            "Actualizar"
           )}
         </Button>
       </div>

@@ -1,12 +1,13 @@
 import { isAxiosError } from "axios";
 
+import api from "@/utils/axios";
+
 import type { ApiResponseList, ApiResponseSingle } from "@/types/api.types";
 import type {
   CreateEstablishmentForm,
   Establishment,
+  UpdateEstablishmentForm,
 } from "@/types/establishment.types";
-
-import api from "@/utils/axios";
 
 export async function getEstablishments(
   keyword: string,
@@ -65,6 +66,34 @@ export async function createEstablishment(
     const url = `/establishment`;
 
     const { data } = await api.post<ApiResponseSingle<Establishment>>(
+      url,
+      body,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      }
+    );
+
+    return data;
+  } catch (error) {
+    if (isAxiosError(error) && error.response) {
+      throw new Error(error.response.data.error ?? "Error en la API");
+    }
+    throw new Error("Error desconocido");
+  }
+}
+
+export async function updateEstablishment(
+  id: number,
+  body: UpdateEstablishmentForm,
+  token: string
+): Promise<ApiResponseSingle<Establishment>> {
+  try {
+    const url = `/establishment/${id}`;
+
+    const { data } = await api.put<ApiResponseSingle<Establishment>>(
       url,
       body,
       {
