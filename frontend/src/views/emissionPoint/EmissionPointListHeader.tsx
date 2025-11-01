@@ -71,7 +71,13 @@ export default function EmissionPointListHeader({
           className="max-w-sm"
         />
         {hasPermission && (
-          <Button onClick={() => navigate("/punto-emision/crear")}>
+          <Button
+            onClick={() =>
+              navigate(
+                `/puntos-emision/crear?establecimiento=${selectedEstablishment}`
+              )
+            }
+          >
             <PlusIcon />
             Punto de emisión
           </Button>

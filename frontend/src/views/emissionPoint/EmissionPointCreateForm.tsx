@@ -4,26 +4,23 @@ import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
 
-import type {
-  EmissionPoint,
-  UpdateEmissionPointForm,
-} from "@/types/emissionPoint.types";
+import type { CreateEmissionPointForm } from "@/types/emissionPoint.types";
 
-import { updateEmissionPoint } from "@/api/emissionPoint";
+import { createEmissionPoint } from "@/api/emissionPoint";
 
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 
-interface EmissionPointUpdateFormProps {
-  emissionPoint: EmissionPoint;
+interface EmissionPointCreateFormProps {
   token: string | null;
+  establishmentId: string;
 }
 
-export default function EmissionPointUpdateForm({
-  emissionPoint,
+export default function EmissionPointCreateForm({
   token,
-}: EmissionPointUpdateFormProps) {
+  establishmentId,
+}: EmissionPointCreateFormProps) {
   const navigate = useNavigate();
 
   const [savingEmissionPoint, setSavingEmissionPoint] = useState(false);
@@ -32,18 +29,14 @@ export default function EmissionPointUpdateForm({
     register,
     handleSubmit,
     formState: { errors },
-  } = useForm<UpdateEmissionPointForm>({
-    defaultValues: {
-      description: emissionPoint.description,
-    },
-  });
+  } = useForm<CreateEmissionPointForm>();
 
-  const onSubmit = async (data: UpdateEmissionPointForm) => {
+  const onSubmit = async (data: CreateEmissionPointForm) => {
     try {
       setSavingEmissionPoint(true);
 
-      const response = await updateEmissionPoint(
-        emissionPoint.id,
+      const response = await createEmissionPoint(
+        Number(establishmentId),
         data,
         token!
       );
@@ -79,10 +72,10 @@ export default function EmissionPointUpdateForm({
           {savingEmissionPoint ? (
             <>
               <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-              Actualizando...
+              Creando...
             </>
           ) : (
-            "Actualizar"
+            "Crear"
           )}
         </Button>
       </div>

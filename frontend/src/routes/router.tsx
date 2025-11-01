@@ -15,6 +15,8 @@ import EstablishmentDetailView from "@/views/establishment/EstablishmentDetailVi
 import EstablishmentCreateView from "@/views/establishment/EstablishmentCreateView";
 import EstablishmentUpdateView from "@/views/establishment/EstablishmentUpdateView";
 import EmissionPointListView from "@/views/emissionPoint/EmissionPointListView";
+import EmissionPointDetailView from "@/views/emissionPoint/EmissionPointDetailView";
+import EmissionPointCreateView from "@/views/emissionPoint/EmissionPointCreateView";
 import EmissionPointUpdateView from "@/views/emissionPoint/EmissionPointUpdateView";
 import UserListView from "@/views/user/UserListView";
 import UserCreateView from "@/views/user/UserCreateView";
@@ -54,7 +56,15 @@ export default function Router() {
                 element={<EmissionPointListView />}
               />
               <Route
-                path="puntos-emision/actualizar/:id"
+                path="/puntos-emision/:id"
+                element={<EmissionPointDetailView />}
+              />
+              <Route
+                path="/puntos-emision/crear"
+                element={<EmissionPointCreateView />}
+              />
+              <Route
+                path="/puntos-emision/actualizar/:id"
                 element={<EmissionPointUpdateView />}
               />
               <Route path="/usuarios" element={<UserListView />} />

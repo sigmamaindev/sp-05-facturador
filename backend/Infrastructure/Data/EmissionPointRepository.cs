@@ -52,7 +52,7 @@ public class EmissionPointRepository(StoreContext context, IHttpContextAccessor 
 
             var lastEmissionPoint = await context.EmissionPoints
             .Where(ep => ep.EstablishmentId == establishmentId)
-            .OrderBy(ep => ep.Code)
+            .OrderByDescending(ep => ep.Code)
             .FirstOrDefaultAsync();
 
             string newEmissionPointCode;

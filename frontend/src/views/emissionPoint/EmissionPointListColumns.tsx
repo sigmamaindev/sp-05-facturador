@@ -37,7 +37,10 @@ export const columns = (
       const actions = [
         {
           label: "Detalles",
-          onClick: () => navigate(`/puntos-emision/${emissionPoint.id}`),
+          onClick: () =>
+            navigate(
+              `/puntos-emision/${emissionPoint.id}?establecimiento=${establishmentId}`
+            ),
         },
       ];
 
@@ -46,7 +49,7 @@ export const columns = (
           label: "Editar",
           onClick: () =>
             navigate(
-              `/puntos-emision/actualizar/${emissionPoint.id}?establishmentId=${establishmentId}`
+              `/puntos-emision/actualizar/${emissionPoint.id}?establecimiento=${establishmentId}`
             ),
         });
       }

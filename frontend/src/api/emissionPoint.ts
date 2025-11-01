@@ -4,6 +4,7 @@ import type { ApiResponseList, ApiResponseSingle } from "@/types/api.types";
 import type {
   CreateEmissionPointForm,
   EmissionPoint,
+  UpdateEmissionPointForm,
 } from "@/types/emissionPoint.types";
 
 import api from "@/utils/axios";
@@ -61,9 +62,39 @@ export async function getEmissionPointById(
   }
 }
 
+export async function createEmissionPoint(
+  establishmentId: number,
+  body: CreateEmissionPointForm,
+  token: string
+) {
+  try {
+    const search = `establishmentId=${establishmentId}`;
+
+    const url = `/emissionPoint?${search}`;
+
+    const { data } = await api.post<ApiResponseSingle<EmissionPoint>>(
+      url,
+      body,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      }
+    );
+
+    return data;
+  } catch (error) {
+    if (isAxiosError(error) && error.response) {
+      throw new Error(error.response.data.error ?? "Error en la API");
+    }
+    throw new Error("Error desconocido");
+  }
+}
+
 export async function updateEmissionPoint(
   id: number,
-  body: CreateEmissionPointForm,
+  body: UpdateEmissionPointForm,
   token: string
 ): Promise<ApiResponseSingle<EmissionPoint>> {
   try {

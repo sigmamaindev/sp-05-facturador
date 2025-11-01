@@ -9,13 +9,13 @@ export interface EmissionPoint {
 }
 
 const createEmissioPointSchema = z.object({
-  description: z.string().min(4, "El nombre debe tener al menos 4 caracteres"),
+  description: z.string().min(4, "La descripción debe tener al menos 4 caracteres"),
 });
 
 export type CreateEmissionPointForm = z.infer<typeof createEmissioPointSchema>;
 
 const updateEmissioPointSchema = z.object({
-  description: z.string().min(4, "El nombre debe tener al menos 4 caracteres"),
+  description: z.string().min(4, "La descripción debe tener al menos 4 caracteres"),
 });
 
 export type UpdateEmissionPointForm = z.infer<typeof updateEmissioPointSchema>;

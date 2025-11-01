@@ -9,18 +9,17 @@ import type { EmissionPoint } from "@/types/emissionPoint.types";
 
 import { Card, CardContent } from "@/components/ui/card";
 
+import EmissionPointDetailHeader from "./EmissionPointDetailHeader";
 import Loading from "@/components/shared/Loading";
 import AlertMessage from "@/components/shared/AlertMessage";
+import EmissionPointDetailInfo from "./EmissionPointDetailInfo";
 
-import EmissionPointUpdateHeader from "./EmissionPointUpdateHeader";
-import EmissionPointUpdateForm from "./EmissionPointUpdateForm";
-
-export default function EmissionPointUpdateView() {
+export default function EmissionPointDetailView() {
   const { id } = useParams<{ id: string }>();
 
   const [searchParams] = useSearchParams();
   const establishmentId = searchParams.get("establecimiento");
-  
+
   const { token } = useAuth();
 
   const [emissionPoint, setEmissionPoint] = useState<EmissionPoint | null>(
@@ -54,6 +53,7 @@ export default function EmissionPointUpdateView() {
   return (
     <Card>
       <CardContent>
+        <EmissionPointDetailHeader />
         {loading ? (
           <Loading />
         ) : error ? (
@@ -64,13 +64,7 @@ export default function EmissionPointUpdateView() {
             variant="destructive"
           />
         ) : (
-          <>
-            <EmissionPointUpdateHeader code={emissionPoint.code} />
-            <EmissionPointUpdateForm
-              emissionPoint={emissionPoint}
-              token={token}
-            />
-          </>
+          <EmissionPointDetailInfo emissionPoint={emissionPoint} />
         )}
       </CardContent>
     </Card>
