@@ -20,9 +20,6 @@ public class StoreContext(DbContextOptions options) : DbContext(options)
     public DbSet<Warehouse> Warehouses { get; set; }
     public DbSet<ProductWarehouse> ProductWarehouses { get; set; }
     public DbSet<Customer> Customers { get; set; }
-    public DbSet<Invoice> Invoices { get; set; }
-    public DbSet<InvoiceDetails> InvoiceDetails { get; set; }
-    public DbSet<InvoiceTaxTotal> InvoiceTaxTotals { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -269,82 +266,6 @@ public class StoreContext(DbContextOptions options) : DbContext(options)
             entity.HasOne(c => c.Business)
             .WithMany(c => c.Customers)
             .HasForeignKey(c => c.BusinessId);
-        });
-
-        modelBuilder.Entity<DocumentType>(entity =>
-        {
-            entity.ToTable("TipoDocumento");
-            entity.Property(dt => dt.Code).HasColumnName("Codigo");
-            entity.Property(dt => dt.Name).HasColumnName("Nombre");
-        });
-
-        modelBuilder.Entity<Invoice>(entity =>
-        {
-            entity.ToTable("Factura");
-            entity.Property(i => i.Sequential).HasColumnName("Sequencial");
-            entity.Property(i => i.Subtotal).HasColumnName("Subtotal");
-            entity.Property(i => i.DiscountTotal).HasColumnName("TotalDescuento");
-            entity.Property(i => i.TotalInvoice).HasColumnName("TotalFactura");
-            entity.Property(i => i.Status).HasColumnName("Estado");
-            entity.Property(i => i.Description).HasColumnName("Descripcion");
-            entity.Property(i => i.InvoiceDate).HasColumnName("FechaFactura");
-            entity.Property(i => i.BusinessId).HasColumnName("EmpresaId");
-            entity.Property(i => i.EstablishmentId).HasColumnName("EstablecimientoId");
-            entity.Property(i => i.EmissionPointId).HasColumnName("PuntoEmisionId");
-            entity.Property(i => i.CustomerId).HasColumnName("ClienteId");
-
-            entity.HasOne(i => i.Customer)
-            .WithMany(i => i.Invoices)
-            .HasForeignKey(i => i.CustomerId);
-
-            entity.HasOne(i => i.Business)
-            .WithMany(i => i.Invoices)
-            .HasForeignKey(i => i.BusinessId);
-
-            entity.HasOne(i => i.Establishment)
-            .WithMany(i => i.Invoices)
-            .HasForeignKey(i => i.EstablishmentId);
-
-            entity.HasOne(i => i.EmissionPoint)
-            .WithMany(i => i.Invoices)
-            .HasForeignKey(i => i.EmissionPointId);
-        });
-
-        modelBuilder.Entity<InvoiceDetails>(entity =>
-        {
-            entity.ToTable("FacturaDetalle");
-            entity.Property(id => id.Description).HasColumnName("Descripcion");
-            entity.Property(id => id.Quantity).HasColumnName("Cantidad");
-            entity.Property(id => id.UnitPrice).HasColumnName("PrecioUnitario");
-            entity.Property(id => id.Discount).HasColumnName("Descuento");
-            entity.Property(id => id.Subtotal).HasColumnName("Subtotal");
-            entity.Property(id => id.IvaValue).HasColumnName("ValorIva");
-            entity.Property(id => id.Total).HasColumnName("Total");
-            entity.Property(id => id.TaxRate).HasColumnName("TasaImpuesto");
-            entity.Property(id => id.ProductId).HasColumnName("ProductoId");
-            entity.Property(id => id.InvoiceId).HasColumnName("FacturaId");
-
-            entity.HasOne(id => id.Product)
-            .WithMany(id => id.InvoiceDetails)
-            .HasForeignKey(id => id.ProductId);
-
-            entity.HasOne(id => id.Invoice)
-            .WithMany(id => id.InvoiceDetails)
-            .HasForeignKey(id => id.InvoiceId);
-        });
-
-        modelBuilder.Entity<InvoiceTaxTotal>(entity =>
-        {
-            entity.ToTable("FacturaImpuestoTotal");
-            entity.Property(itt => itt.TaxRate).HasColumnName("TasaImpuesto");
-            entity.Property(itt => itt.TaxableBase).HasColumnName("BaseImponible");
-            entity.Property(itt => itt.TaxValue).HasColumnName("ValorImpuesto");
-            entity.Property(itt => itt.TaxCode).HasColumnName("CodigoImpuesto");
-            entity.Property(itt => itt.InvoiceId).HasColumnName("FacturaId");
-
-            entity.HasOne(itt => itt.Invoice)
-            .WithMany(itt => itt.InvoiceTaxTotals)
-            .HasForeignKey(itt => itt.InvoiceId);
         });
     }
 }

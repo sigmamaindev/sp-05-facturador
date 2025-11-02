@@ -17,5 +17,4 @@ public class Business : BaseEntity
     public ICollection<UnitMeasure> UnitMeasures { get; set; } = [];
     public ICollection<Tax> Taxes { get; set; } = [];
     public ICollection<Customer> Customers { get; set; } = [];
-    public ICollection<Invoice> Invoices { get; set; } = [];
 }

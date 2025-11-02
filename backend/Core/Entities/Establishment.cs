@@ -13,5 +13,4 @@ public class Establishment : BaseEntity
     public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
     public ICollection<EmissionPoint> EmissionPoints { get; set; } = [];
     public ICollection<UserEstablishment> UserEstablishments { get; set; } = [];
-    public ICollection<Invoice> Invoices { get; set; } = [];
 }

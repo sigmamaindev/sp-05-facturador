@@ -15,5 +15,4 @@ public class Customer : BaseEntity
     public DocumentType? DocumentType { get; set; }
     public int BusinessId { get; set; }
     public Business? Business { get; set; }
-    public ICollection<Invoice> Invoices { get; set; } = [];
 }
