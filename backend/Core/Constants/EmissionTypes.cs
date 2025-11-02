@@ -2,5 +2,5 @@ namespace Core.Constants;
 
 public static class EmissionTypes
 {
-    public const string Normal = "1";
+    public const string NORMAL = "1";
 }

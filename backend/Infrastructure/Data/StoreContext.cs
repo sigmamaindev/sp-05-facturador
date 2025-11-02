@@ -248,6 +248,7 @@ public class StoreContext(DbContextOptions options) : DbContext(options)
         {
             entity.ToTable("Cliente");
             entity.Property(c => c.Document).HasColumnName("Documento");
+            entity.Property(c => c.DocumentType).HasColumnName("TipoDocumento");
             entity.Property(c => c.Name).HasColumnName("Nombre");
             entity.Property(c => c.Email).HasColumnName("Correo");
             entity.Property(c => c.Address).HasColumnName("Direccion");
@@ -256,12 +257,7 @@ public class StoreContext(DbContextOptions options) : DbContext(options)
             entity.Property(c => c.IsActive).HasColumnName("Activo");
             entity.Property(c => c.CreatedAt).HasColumnName("FechaCreado");
             entity.Property(c => c.UpdatedAt).HasColumnName("FechaActualizado");
-            entity.Property(c => c.DocumentTypeId).HasColumnName("TipoDocumentoId");
             entity.Property(c => c.BusinessId).HasColumnName("EmpresaId");
-
-            entity.HasOne(c => c.DocumentType)
-            .WithMany(c => c.Customers)
-            .HasForeignKey(c => c.DocumentTypeId);
 
             entity.HasOne(c => c.Business)
             .WithMany(c => c.Customers)

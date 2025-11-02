@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
 using Core.DTOs;
 using Core.DTOs.Role;
 using Core.Interfaces;
@@ -10,6 +11,7 @@ namespace API.Controllers
     public class RoleController(IRoleRepository roleRepository) : ControllerBase
     {
         [HttpGet]
+        [Authorize]
         public async Task<ActionResult<ApiResponse<List<RolResDto>>>> GetRoles()
         {
             var response = await roleRepository.GetRolesAsync();

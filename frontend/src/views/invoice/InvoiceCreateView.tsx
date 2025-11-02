@@ -138,9 +138,6 @@ export default function InvoiceCreateView() {
                         <th className="text-right py-2 px-2 font-semibold">
                           IVA
                         </th>
-                        <th className="text-right py-2 px-2 font-semibold">
-                          B/S
-                        </th>
                         <th className="text-center py-2 px-2 font-semibold">
                           Acciones
                         </th>
@@ -186,9 +183,6 @@ export default function InvoiceCreateView() {
                             </td>
                             <td className="py-2 px-2 text-right">
                               ${p.ivaValue.toFixed(2)}
-                            </td>
-                            <td className="py-2 px-2 text-center">
-                              {p.productType.type === "BIEN" ? "B" : "S"}
                             </td>
                             <td className="py-2 px-2 text-center">
                               <Button

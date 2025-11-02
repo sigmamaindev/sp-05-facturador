@@ -1,6 +1,6 @@
 namespace Core.Constants;
 
-public  static class InvoiceTypes
+public static class InvoiceTypes
 {
-    public const string Invoice = "01"; // Factura
+    public const string INVOICE = "01"; // Factura
 }

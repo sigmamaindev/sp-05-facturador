@@ -16,6 +16,6 @@ public class Product : BaseEntity
     public UnitMeasure? UnitMeasure { get; set; }
     public int TaxId { get; set; }
     public Tax? Tax { get; set; }
-    public string Type { get; set; } = ProductTypes.Good;
+    public string Type { get; set; } = ProductTypes.GOOD;
     public ICollection<ProductWarehouse> ProductWarehouses { get; set; } = [];
 }

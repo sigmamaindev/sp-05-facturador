@@ -13,6 +13,4 @@ export type Product = {
   isActive: boolean;
   business: Business;
   tax: Tax;
-  productType: ProductType;
-  productWarehouses: ProductWarehouses;
 };
