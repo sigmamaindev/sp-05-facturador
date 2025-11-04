@@ -1,6 +1,3 @@
-import type { Business } from "./business.types";
-import type { DocumentType } from "./documentType.types";
-
 export type Customer = {
   id: number;
   document: string;
@@ -10,6 +7,5 @@ export type Customer = {
   cellphone: string;
   telephone: string;
   isActive: boolean;
-  documentType: DocumentType;
-  business: Business;
+  documentType: string;
 };

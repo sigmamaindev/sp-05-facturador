@@ -1,21 +1,149 @@
+using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Http;
 using Core.Interfaces;
 using Core.DTOs;
 using Core.DTOs.Warehouse;
-using Microsoft.EntityFrameworkCore;
+using Core.Entities;
 
 namespace Infrastructure.Data;
 
 public class WarehouseRepository(StoreContext context, IHttpContextAccessor httpContextAccessor) : IWarehouseRepository
 {
-    public Task<ApiResponse<WarehouseResDto>> CreateWarehouseByIdAsync(WarehouseCreateReqDto warehouseCreateReqDto)
+    public async Task<ApiResponse<WarehouseResDto>> CreateWarehouseAsync(WarehouseCreateReqDto warehouseCreateReqDto)
     {
-        throw new NotImplementedException();
+        var response = new ApiResponse<WarehouseResDto>();
+
+        try
+        {
+            var businessId = GetBusinessIdFromToken();
+
+            if (businessId == 0)
+            {
+                response.Success = false;
+                response.Message = "Negocio no asociado a esta usuario";
+                response.Error = "Error de asociación";
+
+                return response;
+            }
+
+            var existingWarehouse = await context.Warehouses
+            .FirstOrDefaultAsync(w =>
+            w.BusinessId == businessId &&
+            w.Name == warehouseCreateReqDto.Name);
+
+            if (existingWarehouse != null)
+            {
+                response.Success = false;
+                response.Message = "La bodega ya está registrada en este negocio";
+                response.Error = "Error de duplicación";
+
+                return response;
+            }
+
+            var lastWarehouse = await context.Warehouses
+            .Where(w => w.BusinessId == businessId)
+            .OrderByDescending(e => e.Code)
+            .FirstOrDefaultAsync();
+
+            string newWarehouseCode;
+
+            if (lastWarehouse == null || string.IsNullOrEmpty(lastWarehouse.Code))
+            {
+                newWarehouseCode = "001";
+            }
+            else
+            {
+                int lastNumber = int.Parse(lastWarehouse.Code);
+                newWarehouseCode = (lastNumber + 1).ToString().PadLeft(3, '0');
+            }
+
+            var newWarehouse = new Warehouse
+            {
+                Code = newWarehouseCode,
+                Name = warehouseCreateReqDto.Name,
+                Address = warehouseCreateReqDto.Address
+            };
+
+            context.Warehouses.Add(newWarehouse);
+            await context.SaveChangesAsync();
+
+            var warehouse = new WarehouseResDto
+            {
+                Id = newWarehouse.Id,
+                Code = newWarehouse.Code,
+                Name = newWarehouse.Name,
+                Address = newWarehouse.Address,
+                IsActive = newWarehouse.IsActive,
+                IsMain = newWarehouse.IsMain
+            };
+
+            response.Success = true;
+            response.Message = "Bodega obtenido correctamente";
+            response.Data = warehouse;
+        }
+        catch (Exception ex)
+        {
+            response.Success = false;
+            response.Message = "Error al obtener la bodega";
+            response.Error = ex.Message;
+        }
+
+        return response;
     }
 
-    public Task<ApiResponse<WarehouseResDto>> GetWarehouseByIdAsync(int id)
+    public async Task<ApiResponse<WarehouseResDto>> GetWarehouseByIdAsync(int id)
     {
-        throw new NotImplementedException();
+        var response = new ApiResponse<WarehouseResDto>();
+
+        try
+        {
+            var businessId = GetBusinessIdFromToken();
+
+            if (businessId == 0)
+            {
+                response.Success = false;
+                response.Message = "Negocio no asociado a esta usuario";
+                response.Error = "Error de asociación";
+
+                return response;
+            }
+
+            var existingWarehouse = await context.Warehouses
+            .FirstOrDefaultAsync(w =>
+            w.BusinessId == businessId &&
+            w.Id == id);
+
+            if (existingWarehouse == null)
+            {
+                response.Success = false;
+                response.Message = "Bodega no encontrada";
+                response.Error = "No existe una bodega con el ID especificado";
+
+                return response;
+            }
+
+            var warehouse = new WarehouseResDto
+            {
+                Id = existingWarehouse.Id,
+                Code = existingWarehouse.Code,
+                Name = existingWarehouse.Name,
+                Address = existingWarehouse.Address,
+                IsActive = existingWarehouse.IsActive,
+                IsMain = existingWarehouse.IsMain
+            };
+
+            response.Success = true;
+            response.Message = "Bodega obtenida correctamente";
+            response.Data = warehouse;
+        }
+        catch (Exception ex)
+        {
+            response.Success = false;
+            response.Message = "Error al obtener la bodega";
+            response.Error = ex.Message;
+        }
+
+        return response;
     }
 
     public async Task<ApiResponse<List<WarehouseResDto>>> GetWarehousesAsync(string? keyword, int page, int limit)
@@ -83,9 +211,64 @@ public class WarehouseRepository(StoreContext context, IHttpContextAccessor http
         return response;
     }
 
-    public Task<ApiResponse<WarehouseResDto>> UpdateWarehouseByIdAsync(int warehouseId, WarehouseCreateReqDto warehouseCreateReqDto)
+    public async Task<ApiResponse<WarehouseResDto>> UpdateWarehouseAsync(int warehouseId, WarehouseUpdateReqDto warehouseUpdateReqDto)
     {
-        throw new NotImplementedException();
+        var response = new ApiResponse<WarehouseResDto>();
+
+        try
+        {
+            var businessId = GetBusinessIdFromToken();
+
+            if (businessId == 0)
+            {
+                response.Success = false;
+                response.Message = "Negocio no asociado a esta usuario";
+                response.Error = "Error de asociación";
+
+                return response;
+            }
+
+            var existingWarehouse = await context.Warehouses
+            .FirstOrDefaultAsync(w =>
+            w.BusinessId == businessId &&
+            w.Id == warehouseId);
+
+            if (existingWarehouse == null)
+            {
+                response.Success = false;
+                response.Message = "Establecimiento no encontrado";
+                response.Error = "No existe el establecimiento especificado";
+
+                return response;
+            }
+
+            existingWarehouse.Name = warehouseUpdateReqDto.Name;
+            existingWarehouse.Address = warehouseUpdateReqDto.Address;
+
+            await context.SaveChangesAsync();
+
+            var warehouse = new WarehouseResDto
+            {
+                Id = existingWarehouse.Id,
+                Code = existingWarehouse.Code,
+                Address = existingWarehouse.Address,
+                Name = existingWarehouse.Name,
+                IsActive = existingWarehouse.IsActive,
+                IsMain = existingWarehouse.IsMain
+            };
+
+            response.Success = true;
+            response.Message = "Bodega actualizada correctamente";
+            response.Data = warehouse;
+        }
+        catch (Exception ex)
+        {
+            response.Success = false;
+            response.Message = "Error al actualizar el establecimiento";
+            response.Error = ex.Message;
+        }
+
+        return response;
     }
 
     private int GetBusinessIdFromToken()

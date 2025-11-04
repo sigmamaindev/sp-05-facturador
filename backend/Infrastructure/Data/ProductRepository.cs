@@ -1,9 +1,8 @@
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
+using Core.Interfaces;
 using Core.DTOs;
 using Core.DTOs.Product;
-using Core.Interfaces;
-using Core.DTOs.Business;
 using Core.DTOs.Tax;
 using Core.DTOs.UnitMeasure;
 
@@ -22,7 +21,7 @@ public class ProductRepository(StoreContext context, IHttpContextAccessor httpCo
             if (businessId == 0)
             {
                 response.Success = false;
-                response.Message = "Negocios no asociados al contexto actual";
+                response.Message = "Negocio no asociado a esta usuario";
                 response.Error = "Error de asociación";
 
                 return response;
@@ -39,9 +38,9 @@ public class ProductRepository(StoreContext context, IHttpContextAccessor httpCo
             {
                 query = query.Where(
                     p =>
-                    p.Sku.Contains(keyword) ||
-                    p.Name.Contains(keyword) ||
-                    p.Description.Contains(keyword));
+                    EF.Functions.ILike(p.Sku, $"%{keyword}%") ||
+                    EF.Functions.ILike(p.Name, $"%{keyword}%") ||
+                    EF.Functions.ILike(p.Description, $"%{keyword}%"));
             }
 
             var total = await query.CountAsync();

@@ -21,9 +21,11 @@ import EmissionPointUpdateView from "@/views/emissionPoint/EmissionPointUpdateVi
 import UserListView from "@/views/user/UserListView";
 import UserCreateView from "@/views/user/UserCreateView";
 import UserUpdateView from "@/views/user/UserUpdateView";
+import CustomerListView from "@/views/customer/CustomerListView";
+import ProductListView from "@/views/product/ProductListView";
 import InvoiceListView from "@/views/invoice/InvoiceListView";
 import InvoiceCreateView from "@/views/invoice/InvoiceCreateView";
-import CustomerListView from "@/views/customer/CustomerListView";
+import WarehouseListView from "@/views/warehouse/WarehouseListView";
 
 export default function Router() {
   return (
@@ -67,6 +69,7 @@ export default function Router() {
                 path="/puntos-emision/actualizar/:id"
                 element={<EmissionPointUpdateView />}
               />
+              <Route path="/bodegas" element={<WarehouseListView />} />
               <Route path="/usuarios" element={<UserListView />} />
               <Route path="/usuarios/crear" element={<UserCreateView />} />
               <Route
@@ -74,6 +77,7 @@ export default function Router() {
                 element={<UserUpdateView />}
               />
               <Route path="/clientes" element={<CustomerListView />} />
+              <Route path="/productos" element={<ProductListView />} />
               <Route path="/facturas" element={<InvoiceListView />} />
               <Route path="/facturas/crear" element={<InvoiceCreateView />} />
             </Route>

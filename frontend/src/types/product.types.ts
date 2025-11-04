@@ -1,6 +1,3 @@
-import type { Business } from "./business.types";
-import type { ProductType } from "./productType.types";
-import type { ProductWarehouses } from "./productWarehouses.types";
 import type { Tax } from "./tax.types";
 
 export type Product = {
@@ -11,6 +8,5 @@ export type Product = {
   price: number;
   iva: boolean;
   isActive: boolean;
-  business: Business;
   tax: Tax;
 };
