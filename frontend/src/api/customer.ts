@@ -2,8 +2,8 @@ import { isAxiosError } from "axios";
 
 import api from "@/utils/axios";
 
-import type { ApiResponseList } from "@/types/api.types";
-import type { Customer } from "@/types/customer.types";
+import type { ApiResponseList, ApiResponseSingle } from "@/types/api.types";
+import type { CreateCustomerForm, Customer } from "@/types/customer.types";
 
 export async function getCustomers(
   keyword: string,
@@ -20,6 +20,29 @@ export async function getCustomers(
     const { data } = await api.get<ApiResponseList<Customer>>(url, {
       headers: {
         Authorization: `Bearer ${token}`,
+      },
+    });
+
+    return data;
+  } catch (error) {
+    if (isAxiosError(error) && error.response) {
+      throw new Error(error.response.data.error ?? "Error en la API");
+    }
+    throw new Error("Error desconocido");
+  }
+}
+
+export async function createCustomer(
+  body: CreateCustomerForm,
+  token: string
+): Promise<ApiResponseSingle<Customer>> {
+  try {
+    const url = `/customer`;
+
+    const { data } = await api.post<ApiResponseSingle<Customer>>(url, body, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
       },
     });
 

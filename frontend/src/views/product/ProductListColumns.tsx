@@ -1,24 +1,33 @@
 import { useNavigate } from "react-router-dom";
 import type { ColumnDef } from "@tanstack/react-table";
 
-import type { Customer } from "@/types/customer.types";
+import type { Product } from "@/types/product.types";
 
 import { useAuth } from "@/contexts/AuthContext";
 
 import RowActions from "@/components/shared/RowActions";
 
-export const columns: ColumnDef<Customer>[] = [
+export const columns: ColumnDef<Product>[] = [
   {
     accessorKey: "id",
     header: "ID",
   },
   {
-    accessorKey: "document",
-    header: "Documento",
+    accessorKey: "sku",
+    header: "Código",
   },
   {
     accessorKey: "name",
     header: "Nombre",
+  },
+  {
+    accessorKey: "price",
+    header: "Precio",
+    cell: ({ row }) => {
+      const price = row.original.price.toFixed(2);
+
+      return <span>{price}</span>;
+    },
   },
   {
     id: "actions",
@@ -28,22 +37,21 @@ export const columns: ColumnDef<Customer>[] = [
 
       const { user } = useAuth();
 
-      const customer = row.original;
-
       const hasPermission =
         user?.roles?.includes("SuperAdmin") || user?.roles?.includes("Admin");
 
+      const product = row.original;
       const actions = [
         {
           label: "Detalles",
-          onClick: () => navigate(`/clientes/${customer.id}`),
+          onClick: () => console.log("Detalles"),
         },
       ];
 
       if (hasPermission) {
         actions.push({
           label: "Editar",
-          onClick: () => navigate(`/clientes/actualizar/${customer.id}`),
+          onClick: () => navigate(`/productos/actualizar/${product.id}`),
         });
       }
 

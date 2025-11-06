@@ -1,6 +1,6 @@
-using Core.DTOs.Business;
 using Core.DTOs.UnitMeasure;
 using Core.DTOs.Tax;
+using Core.DTOs.Inventory;
 
 namespace Core.DTOs.Product;
 
@@ -15,4 +15,5 @@ public class ProductResDto
     public bool IsActive { get; set; }
     public UnitMeasureResDto? UnitMeasure { get; set; }
     public TaxResDto? Tax { get; set; }
+    public List<InventoryResDto> Inventory { get; set; } = [];
 }

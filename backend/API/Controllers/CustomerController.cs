@@ -24,5 +24,47 @@ namespace API.Controllers
 
             return Ok(response);
         }
+
+        [HttpGet("{id:int}")]
+        [Authorize]
+        public async Task<ActionResult<ApiResponse<CustomerResDto>>> GetCustomerById(int id)
+        {
+            var response = await customerRepository.GetCustomerByIdAsync(id);
+
+            if (!response.Success)
+            {
+                return BadRequest(response);
+            }
+
+            return Ok(response);
+        }
+
+        [HttpPost]
+        [Authorize(Roles = "SuperAdmin, Admin")]
+        public async Task<ActionResult<ApiResponse<CustomerResDto>>> CreateCustomer([FromBody] CustomerCreateReqDto customerCreateReqDto)
+        {
+            var response = await customerRepository.CreateCustomerAsync(customerCreateReqDto);
+
+            if (!response.Success)
+            {
+                return BadRequest(response);
+            }
+
+            return Ok(response);
+        }
+
+        [HttpPut("{id:int}")]
+        [Authorize(Roles = "SuperAdmin, Admin")]
+        public async Task<ActionResult<ApiResponse<CustomerResDto>>> UpdateCustomer(int id, [FromBody] CustomerUpdateReqDto customerUpdateReqDto)
+        {
+            var response = await customerRepository.UpdateCustomerAsync(id, customerUpdateReqDto);
+
+            if (!response.Success)
+            {
+                return BadRequest(response);
+            }
+
+            return Ok(response);
+        }
     }
 }

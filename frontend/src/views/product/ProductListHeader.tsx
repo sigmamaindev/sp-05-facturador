@@ -7,19 +7,20 @@ import { Button } from "@/components/ui/button";
 
 import { useAuth } from "@/contexts/AuthContext";
 
-interface CustomerListHeaderProps {
+interface ProductListHeaderProps {
   keyword: string;
   setPage: React.Dispatch<React.SetStateAction<number>>;
   setKeyword: React.Dispatch<React.SetStateAction<string>>;
 }
 
-export default function CustomerListHeader({
+export default function ProductListHeader({
   keyword,
   setPage,
   setKeyword,
-}: CustomerListHeaderProps) {
-  const { user } = useAuth();
+}: ProductListHeaderProps) {
   const navigate = useNavigate();
+
+  const { user } = useAuth();
 
   const hasPermission =
     user?.roles?.includes("SuperAdmin") || user?.roles?.includes("Admin");
@@ -27,11 +28,11 @@ export default function CustomerListHeader({
   return (
     <div className="grid grid-cols-1 md:flex md:flex-row md:justify-between md:items-center items-center gap-4 pb-4">
       <div className="grid grid-cols-2 items-center gap-4 md:inline-flex w-auto">
-        <h1 className="text-lg font-semibold">CLIENTES</h1>
+        <h1 className="text-lg font-semibold">PRODUCTOS</h1>
       </div>
       <div className="inline-flex items-center gap-4 w-auto">
         <Input
-          placeholder="Buscar clientes..."
+          placeholder="Buscar productos..."
           value={keyword}
           onChange={(e) => {
             setPage(1);
@@ -40,9 +41,9 @@ export default function CustomerListHeader({
           className="max-w-sm"
         />
         {hasPermission && (
-          <Button onClick={() => navigate("/clientes/crear")}>
+          <Button onClick={() => navigate("/productos/crear")}>
             <PlusIcon />
-            Cliente
+            Producto
           </Button>
         )}
       </div>

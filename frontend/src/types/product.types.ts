@@ -1,4 +1,6 @@
+import type { Inventory } from "./inventory.types";
 import type { Tax } from "./tax.types";
+import type { UnitMeasure } from "./unitMeasure.types";
 
 export type Product = {
   id: number;
@@ -9,4 +11,6 @@ export type Product = {
   iva: boolean;
   isActive: boolean;
   tax: Tax;
+  unitMeasure: UnitMeasure;
+  inventory: Inventory[];
 };

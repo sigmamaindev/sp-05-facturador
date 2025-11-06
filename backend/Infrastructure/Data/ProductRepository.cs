@@ -5,6 +5,7 @@ using Core.DTOs;
 using Core.DTOs.Product;
 using Core.DTOs.Tax;
 using Core.DTOs.UnitMeasure;
+using Core.DTOs.Inventory;
 
 namespace Infrastructure.Data;
 
@@ -76,7 +77,16 @@ public class ProductRepository(StoreContext context, IHttpContextAccessor httpCo
                     FactorBase = p.UnitMeasure.FactorBase,
                     IsActive = p.UnitMeasure.IsActive
                 },
-
+                Inventory = p.ProductWarehouses.Select(pw => new InventoryResDto
+                {
+                    Id = pw.Id,
+                    WarehouseId = pw.Warehouse!.Id,
+                    WarehouseCode = pw.Warehouse!.Code,
+                    WarehouseName = pw.Warehouse.Name,
+                    Stock = pw.Stock,
+                    MinStock = pw.MinStock,
+                    MaxStock = pw.MaxStock
+                }).ToList()
             }).ToListAsync();
 
             response.Success = true;

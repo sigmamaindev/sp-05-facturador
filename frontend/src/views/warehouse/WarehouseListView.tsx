@@ -1,3 +1,9 @@
+import { Card, CardContent } from "@/components/ui/card";
+
 export default function WarehouseListView() {
-  return <div>WarehouseListView</div>;
+  return (
+    <Card>
+      <CardContent>En construcción</CardContent>
+    </Card>
+  );
 }
