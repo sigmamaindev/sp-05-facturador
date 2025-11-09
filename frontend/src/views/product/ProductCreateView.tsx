@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 
 import { useAuth } from "@/contexts/AuthContext";
 
+import type { Warehouse } from "@/types/warehouse.types";
 import type { Product } from "@/types/product.types";
 import type { UnitMeasure } from "@/types/unitMeasure.types";
 import type { Tax } from "@/types/tax.types";
@@ -17,6 +18,7 @@ import AlertMessage from "@/components/shared/AlertMessage";
 import ProductCreateHeader from "./ProductCreateHeader";
 import ProductCreateForm from "./ProductCreateForm";
 import ProductCreateInventoryForm from "./ProductCreateInventoryForm";
+import { getWarehouses } from "@/api/warehouse";
 
 export default function ProductCreateView() {
   const { token } = useAuth();
@@ -24,6 +26,7 @@ export default function ProductCreateView() {
   const [step, setStep] = useState<number>(1);
 
   const [product, setProduct] = useState<Product | null>(null);
+  const [warehouses, setWarehouses] = useState<Warehouse[]>([]);
   const [unitMeasures, setUnitMeasures] = useState<UnitMeasure[]>([]);
   const [taxes, setTaxes] = useState<Tax[]>([]);
   const [error, setError] = useState<string | null>(null);
@@ -33,12 +36,14 @@ export default function ProductCreateView() {
     try {
       setLoading(true);
 
-      const [unitMeaRes, taxRes] = await Promise.all([
+      const [warRes, unitMeRes, taxRes] = await Promise.all([
+        getWarehouses("", 1, 100, token!),
         getUnitMeasures("", 1, 100, token!),
         getTaxes("", 1, 100, token!),
       ]);
 
-      setUnitMeasures(unitMeaRes.data);
+      setWarehouses(warRes.data);
+      setUnitMeasures(unitMeRes.data);
       setTaxes(taxRes.data);
     } catch (err: any) {
       setError(err.message);
@@ -79,7 +84,13 @@ export default function ProductCreateView() {
                 onNext={handleNext}
               />
             )}
-            {step === 2 && <ProductCreateInventoryForm />}
+            {step === 2 && (
+              <ProductCreateInventoryForm
+                token={token!}
+                warehouses={warehouses}
+                product={product!}
+              />
+            )}
           </>
         )}
       </CardContent>

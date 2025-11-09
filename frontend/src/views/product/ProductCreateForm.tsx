@@ -8,6 +8,7 @@ import type { Tax } from "@/types/tax.types";
 import type { CreateProductForm } from "@/types/product.types";
 
 import { createProduct } from "@/api/product";
+
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import {
@@ -42,10 +43,7 @@ export default function ProductCreateForm({
     formState: { errors },
   } = useForm<CreateProductForm>();
 
-  const hasIva = useWatch({
-    control,
-    name: "iva",
-  });
+  const hasIva = useWatch({ control, name: "iva" });
   const productType = useWatch({ control, name: "type" });
 
   useEffect(() => {
@@ -76,8 +74,6 @@ export default function ProductCreateForm({
       setSavingProduct(true);
 
       const response = await createProduct(data, token!);
-
-      console.log(response.data);
 
       onNext(response.data);
 
