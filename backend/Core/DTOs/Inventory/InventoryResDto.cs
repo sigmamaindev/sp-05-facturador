@@ -9,4 +9,5 @@ public class InventoryResDto
     public decimal Stock { get; set; }
     public decimal MinStock { get; set; }
     public decimal MaxStock { get; set; }
+    public int ProductId { get; set; }
 }

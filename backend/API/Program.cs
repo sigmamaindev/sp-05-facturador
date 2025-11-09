@@ -33,6 +33,9 @@ builder.Services.AddScoped<IEmissionPointRepository, EmissionPointRepository>();
 builder.Services.AddScoped<IWarehouseRepository, WarehouseRepository>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IProductRepository, ProductRepository>();
+builder.Services.AddScoped<IUnitMeasureRepository, UnitMeasureRepository>();
+builder.Services.AddScoped<ITaxRepository, TaxRepository>();
+builder.Services.AddScoped<IInventoryRepository, InventoryRepository>();
 builder.Services.AddScoped<ICustomerRepository, CustomerRepository>();
 
 var jwtSettings = builder.Configuration.GetSection("Jwt");

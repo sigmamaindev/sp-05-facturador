@@ -23,5 +23,19 @@ namespace API.Controllers
 
             return Ok(response);
         }
+
+        [HttpPost]
+        [Authorize(Roles = "SuperAdmin, Admin")]
+        public async Task<ActionResult<ApiResponse<ProductResDto>>> CreateProduct([FromBody] ProductCreateReqDto productCreateReqDto)
+        {
+            var response = await productRepository.CreateProductAsync(productCreateReqDto);
+
+            if (!response.Success)
+            {
+                return BadRequest(response);
+            }
+
+            return Ok(response);
+        }
     }
 }

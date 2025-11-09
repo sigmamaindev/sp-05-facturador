@@ -41,8 +41,6 @@ export default function CustomerCreateForm({ token }: CustomerCreateFormProps) {
     try {
       setSavingCustomer(true);
 
-      console.log(data);
-
       const response = await createCustomer(data, token!);
 
       toast.success(response.message);
