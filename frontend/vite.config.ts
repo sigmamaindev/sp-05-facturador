@@ -11,9 +11,16 @@ export default defineConfig({
       "@": path.resolve(__dirname, "./src"),
     },
   },
+  appType: "spa",
   server: {
     host: "0.0.0.0",
     port: 5173,
     allowedHosts: true,
+  },
+  preview: {
+    port: 4173,
+  },
+  build: {
+    outDir: "dist",
   },
 });
