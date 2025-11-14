@@ -37,6 +37,7 @@ builder.Services.AddScoped<IUnitMeasureRepository, UnitMeasureRepository>();
 builder.Services.AddScoped<ITaxRepository, TaxRepository>();
 builder.Services.AddScoped<IInventoryRepository, InventoryRepository>();
 builder.Services.AddScoped<ICustomerRepository, CustomerRepository>();
+builder.Services.AddScoped<IInvoiceRepository, InvoiceRepository>();
 
 var jwtSettings = builder.Configuration.GetSection("Jwt");
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)

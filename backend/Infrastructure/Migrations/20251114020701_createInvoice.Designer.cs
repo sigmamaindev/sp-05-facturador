@@ -3,6 +3,7 @@ using System;
 using Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Infrastructure.Migrations
 {
     [DbContext(typeof(StoreContext))]
-    partial class StoreContextModelSnapshot : ModelSnapshot
+    [Migration("20251114020701_createInvoice")]
+    partial class createInvoice
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -233,7 +236,7 @@ namespace Infrastructure.Migrations
                         .HasColumnType("text")
                         .HasColumnName("InformacionAdicional");
 
-                    b.Property<DateTime?>("AuthorizationDate")
+                    b.Property<DateTime>("AuthorizationDate")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("FechaAutorizacion");
 
@@ -259,8 +262,7 @@ namespace Infrastructure.Migrations
 
                     b.Property<string>("DocumentType")
                         .IsRequired()
-                        .HasColumnType("text")
-                        .HasColumnName("TipoDocumento");
+                        .HasColumnType("text");
 
                     b.Property<DateTime?>("DueDate")
                         .HasColumnType("timestamp with time zone")

@@ -2,10 +2,21 @@ import { useNavigate } from "react-router-dom";
 import { PlusIcon } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 
 import { useAuth } from "@/contexts/AuthContext";
 
-export default function InvoiceListHeader() {
+interface InvoiceListHeaderProps {
+  keyword: string;
+  setPage: React.Dispatch<React.SetStateAction<number>>;
+  setKeyword: React.Dispatch<React.SetStateAction<string>>;
+}
+
+export default function InvoiceListHeader({
+  keyword,
+  setPage,
+  setKeyword,
+}: InvoiceListHeaderProps) {
   const { user } = useAuth();
   const navigate = useNavigate();
 
@@ -18,10 +29,19 @@ export default function InvoiceListHeader() {
         <h1 className="text-lg font-semibold">FACTURAS</h1>
       </div>
       <div className="inline-flex items-center gap-4 w-auto">
+        <Input
+          placeholder="Buscar facturas..."
+          value={keyword}
+          onChange={(e) => {
+            setPage(1);
+            setKeyword(e.target.value);
+          }}
+          className="max-w-sm"
+        />
         {hasPermission && (
           <Button onClick={() => navigate("/facturas/crear")}>
             <PlusIcon />
-            Nuevo
+            Factura
           </Button>
         )}
       </div>

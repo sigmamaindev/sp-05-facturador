@@ -20,4 +20,5 @@ public class User : BaseEntity
     public ICollection<UserBusiness> UserBusiness { get; set; } = [];
     public ICollection<UserEstablishment> UserEstablishment { get; set; } = [];
     public ICollection<UserEmissionPoint> UserEmissionPoint { get; set; } = [];
+    public ICollection<Invoice> Invoices { get; set; } = [];
 }

@@ -10,4 +10,5 @@ public class Warehouse : BaseEntity
     public int BusinessId { get; set; }
     public Business? Business { get; set; }
     public ICollection<ProductWarehouse> ProductWarehouses { get; set; } = [];
+    public ICollection<InvoiceDetail> InvoiceDetails { get; set; } = [];
 }

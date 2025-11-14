@@ -18,4 +18,5 @@ public class Product : BaseEntity
     public Tax? Tax { get; set; }
     public string Type { get; set; } = ProductTypes.GOOD;
     public ICollection<ProductWarehouse> ProductWarehouses { get; set; } = [];
+    public ICollection<InvoiceDetail> InvoiceDetails { get; set; } = [];
 }
