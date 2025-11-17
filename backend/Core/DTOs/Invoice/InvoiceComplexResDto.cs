@@ -1,12 +1,8 @@
-using Core.DTOs.Business;
 using Core.DTOs.Customer;
-using Core.DTOs.EmissionPoint;
-using Core.DTOs.Establishment;
-using Core.DTOs.User;
 
 namespace Core.DTOs.Invoice;
 
-public class InvoiceResDto
+public class InvoiceComplexResDto
 {
     public int Id { get; set; }
     public string Sequential { get; set; } = string.Empty;
@@ -18,10 +14,18 @@ public class InvoiceResDto
     public DateTime InvoiceDate { get; set; }
     public DateTime? AuthorizationDate { get; set; }
     public CustomerResDto? Customer { get; set; }
-    public BusinessResDto? Business { get; set; }
-    public EstablishmentResDto? Establishment { get; set; }
-    public EmissionPointResDto? EmissionPoint { get; set; }
-    public UserResDto? User { get; set; }
+    public int BusinessId { get; set; }
+    public string BusinessDocument { get; set; } = string.Empty;
+    public string BusinessName { get; set; } = string.Empty;
+    public int EstablishmentId { get; set; }
+    public string EstablishmentCode { get; set; } = string.Empty;
+    public string EstablishmentName { get; set; } = string.Empty;
+    public int EmissionPointId { get; set; }
+    public string EmissionPointCode { get; set; } = string.Empty;
+    public string EmissionPointDescription { get; set; } = string.Empty;
+    public int UserId { get; set; }
+    public string UserDocument { get; set; } = string.Empty;
+    public string UserFullName { get; set; } = string.Empty;
     public decimal SubtotalWithoutTaxes { get; set; }
     public decimal SubtotalWithTaxes { get; set; }
     public decimal DiscountTotal { get; set; }
@@ -29,11 +33,11 @@ public class InvoiceResDto
     public decimal TotalInvoice { get; set; }
     public string PaymentMethod { get; set; } = string.Empty;
     public int PaymentTermDays { get; set; }
-    public DateTime DueDate { get; set; }
+    public DateTime? DueDate { get; set; }
     public string Description { get; set; } = string.Empty;
     public string? AdditionalInformation { get; set; }
     public string XmlSigned { get; set; } = string.Empty;
     public string? AuthorizationNumber { get; set; }
     public string? SriMessage { get; set; }
-    public ICollection<InvoiceDetailResDto> InvoiceDetails { get; set; } = [];
+    public List<InvoiceDetailResDto> Details { get; set; } = [];
 }

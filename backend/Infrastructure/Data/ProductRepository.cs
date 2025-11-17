@@ -159,7 +159,7 @@ public class ProductRepository(StoreContext context, IHttpContextAccessor httpCo
             };
 
             response.Success = true;
-            response.Message = "Productos obtenidos correctamente";
+            response.Message = "Producto obtenido correctamente";
             response.Data = product;
         }
         catch (Exception ex)

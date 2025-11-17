@@ -7,7 +7,9 @@ public class InvoiceDetailResDto
     public int ProductId { get; set; }
     public string ProductCode { get; set; } = string.Empty;
     public string ProductName { get; set; } = string.Empty;
-    public string UnitMeasure { get; set; } = string.Empty;
+    public int UnitMeasureId { get; set; }
+    public string UnitMeasureCode { get; set; } = string.Empty;
+    public string UnitMeasureName { get; set; } = string.Empty;
     public int WarehouseId { get; set; }
     public string WarehouseCode { get; set; } = string.Empty;
     public string WarehouseName { get; set; } = string.Empty;
@@ -21,7 +23,5 @@ public class InvoiceDetailResDto
     public decimal Discount { get; set; }
     public decimal Subtotal { get; set; }
     public decimal Total { get; set; }
-    public decimal TotalWithoutTax => Subtotal - Discount;
-    public decimal TotalWithTax => Total;
     public string AdditionalDetail { get; set; } = string.Empty;
 }
