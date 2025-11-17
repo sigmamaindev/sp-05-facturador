@@ -14,7 +14,7 @@ namespace API.Controllers
     {
         [HttpGet]
         [Authorize]
-        public async Task<ActionResult<ApiResponse<List<InvoiceResDto>>>> GetInvoices([FromQuery] string? keyword = null, [FromQuery] int page = 1, [FromQuery] int limit = 10)
+        public async Task<ActionResult<ApiResponse<List<InvoiceSimpleResDto>>>> GetInvoices([FromQuery] string? keyword = null, [FromQuery] int page = 1, [FromQuery] int limit = 10)
         {
             var response = await invoiceRepository.GetInvoicesAsync(keyword, page, limit);
 
@@ -28,9 +28,23 @@ namespace API.Controllers
 
         [HttpPost]
         [Authorize(Roles = "SuperAdmin, Admin")]
-        public async Task<ActionResult<ApiResponse<InvoiceResDto>>> CreateInvoice([FromBody] InvoiceCreateReqDto invoiceCreateReqDto)
+        public async Task<ActionResult<ApiResponse<InvoiceSimpleResDto>>> CreateInvoice([FromBody] InvoiceCreateReqDto invoiceCreateReqDto)
         {
             var response = await invoiceRepository.CreateInvoiceAsync(invoiceCreateReqDto);
+
+            if (!response.Success)
+            {
+                return BadRequest(response);
+            }
+
+            return Ok(response);
+        }
+
+        [HttpGet("{id:int}")]
+        [Authorize]
+        public async Task<ActionResult<ApiResponse<List<InvoiceComplexResDto>>>> GetInvoiceById(int id)
+        {
+            var response = await invoiceRepository.GetInvoiceByIdAsync(id);
 
             if (!response.Success)
             {
