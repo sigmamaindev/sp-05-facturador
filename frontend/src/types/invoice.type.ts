@@ -1,7 +1,7 @@
 import z from "zod";
 
 import type { Customer } from "./customer.types";
-import type { User } from "./user.types";
+import type { Product } from "./product.types";
 
 export type Invoice = {
   id: number;
@@ -14,7 +14,18 @@ export type Invoice = {
   invoiceDate: Date;
   authorizationDate: Date;
   customer: Customer;
-  user: User;
+  businessId: number;
+  businessDocument: string;
+  businessName: string;
+  establishmentId: number;
+  establishmentCode: string;
+  establishmentName: string;
+  emissionPointId: number;
+  emissionPointCode: string;
+  emissionPointDescription: string;
+  userId: number;
+  userDocument: string;
+  userFullName: string;
   subtotalWithoutTaxes: number;
   subtotalWithTaxes: number;
   discountTotal: number;
@@ -28,7 +39,47 @@ export type Invoice = {
   xmlSigned: string;
   authorizationNumber: string | null;
   sriMessage: string | null;
+  details: InvoiceDetail[];
 };
+
+export type InvoiceDetail = {
+  id: number;
+  invoiceId: number;
+  productId: number;
+  productCode: string;
+  productName: string;
+  unitMeasureId: number;
+  unitMeasureCode: string;
+  unitMeasureName: string;
+  warehouseId: number;
+  warehouseCode: string;
+  warehouseName: string;
+  taxId: number;
+  taxCode: string;
+  taxName: string;
+  taxRate: number;
+  taxValue: number;
+  quantity: number;
+  unitPrice: number;
+  discount: number;
+  subtotal: number;
+  total: number;
+  additionalDetail: string;
+};
+
+export interface InvoiceProduct extends Product {
+  quantity: number;
+  discount: number;
+  subtotal: number;
+  taxValue: number;
+}
+
+export interface InvoiceTotals {
+  subtotal: number;
+  discount: number;
+  tax: number;
+  total: number;
+}
 
 export const invoiceDetailSchema = z.object({
   productId: z

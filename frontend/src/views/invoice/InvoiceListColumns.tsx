@@ -13,25 +13,50 @@ export const columns: ColumnDef<Invoice>[] = [
     header: "ID",
   },
   {
+    accessorKey: "invoiceDate",
+    header: "Fecha",
+    cell: ({ row }) => {
+      const date = new Date(row.original.invoiceDate);
+
+      return (
+        <span>
+          {date.toLocaleString("es-EC", {
+            year: "numeric",
+            month: "2-digit",
+            day: "2-digit",
+            hour: "2-digit",
+            minute: "2-digit",
+            second: "2-digit",
+            hour12: false,
+          })}
+        </span>
+      );
+    },
+  },
+  {
     accessorKey: "sequential",
     header: "Código",
   },
   {
-    accessorKey: "customer.name",
-    header: "Cliente",
+    accessorKey: "customer.document",
+    header: "Cedula Cliente",
   },
   {
-    accessorKey: "price",
-    header: "Precio",
+    accessorKey: "customer.name",
+    header: "Nombre Cliente",
+  },
+  {
+    accessorKey: "totalInvoice",
+    header: () => <div className="text-right">Total</div>,
     cell: ({ row }) => {
-      const price = row.original.totalInvoice.toFixed(2);
+      const total = row.original.totalInvoice.toFixed(2);
 
-      return <span>{price}</span>;
+      return <p className="text-right">{total}</p>;
     },
   },
   {
     id: "actions",
-    header: "Acciones",
+    header: () => <div className="text-right">Acciones</div>,
     cell: ({ row }) => {
       const navigate = useNavigate();
 
@@ -40,22 +65,26 @@ export const columns: ColumnDef<Invoice>[] = [
       const hasPermission =
         user?.roles?.includes("SuperAdmin") || user?.roles?.includes("Admin");
 
-      const product = row.original;
+      const invoice = row.original;
       const actions = [
         {
           label: "Detalles",
-          onClick: () => console.log("Detalles"),
+          onClick: () => navigate(`/facturas/${invoice.id}`),
         },
       ];
 
       if (hasPermission) {
         actions.push({
           label: "Editar",
-          onClick: () => navigate(`/facturas/actualizar/${product.id}`),
+          onClick: () => navigate(`/facturas/actualizar/${invoice.id}`),
         });
       }
 
-      return <RowActions actions={actions} />;
+      return (
+        <div className="text-right">
+          <RowActions actions={actions} />
+        </div>
+      );
     },
   },
 ];

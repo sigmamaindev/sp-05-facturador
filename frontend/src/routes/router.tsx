@@ -28,6 +28,7 @@ import InvoiceListView from "@/views/invoice/InvoiceListView";
 import InvoiceCreateView from "@/views/invoice/InvoiceCreateView";
 import WarehouseListView from "@/views/warehouse/WarehouseListView";
 import CustomerCreateView from "@/views/customer/CustomerCreateView";
+import InvoiceDetailView from "@/views/invoice/InvoiceDetailView";
 
 export default function Router() {
   return (
@@ -83,6 +84,7 @@ export default function Router() {
               <Route path="/productos" element={<ProductListView />} />
               <Route path="/productos/crear" element={<ProductCreateView />} />
               <Route path="/facturas" element={<InvoiceListView />} />
+              <Route path="/facturas/:id" element={<InvoiceDetailView />} />
               <Route path="/facturas/crear" element={<InvoiceCreateView />} />
             </Route>
           </Route>

@@ -32,6 +32,28 @@ export async function getInvoices(
   }
 }
 
+export async function getInvoiceById(
+  id: number,
+  token: string
+): Promise<ApiResponseSingle<Invoice>> {
+  try {
+    const url = `/invoice/${id}`;
+
+    const { data } = await api.get<ApiResponseSingle<Invoice>>(url, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    return data;
+  } catch (error) {
+    if (isAxiosError(error) && error.response) {
+      throw new Error(error.response.data.error ?? "Error en la API");
+    }
+    throw new Error("Error desconocido");
+  }
+}
+
 export async function createInvoice(
   body: CreateInvoiceForm,
   token: string

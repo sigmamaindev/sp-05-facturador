@@ -226,7 +226,7 @@ public class InvoiceRepository(StoreContext context, IHttpContextAccessor httpCo
                 AccessKey = newInvoice.AccessKey,
                 AuthorizationNumber = newInvoice.AuthorizationNumber,
                 Environment = newInvoice.Environment,
-                DocumentType = newInvoice.DocumentType,
+                DocumentType = customer.DocumentType,
                 Status = newInvoice.Status,
                 IsElectronic = newInvoice.IsElectronic,
                 InvoiceDate = newInvoice.InvoiceDate,
@@ -409,7 +409,6 @@ public class InvoiceRepository(StoreContext context, IHttpContextAccessor httpCo
         }
         catch (Exception ex)
         {
-
             response.Success = false;
             response.Message = "Error al obtener la factura";
             response.Error = ex.Message;
