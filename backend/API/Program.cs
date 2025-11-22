@@ -1,9 +1,12 @@
 using System.Text;
+using Yamgooo.SRI.Sign;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.EntityFrameworkCore;
-using Core.Interfaces;
+using Core.Interfaces.Repository;
+using Core.Interfaces.Services;
 using Infrastructure.Data;
+using Infrastructure.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -26,6 +29,7 @@ builder.Services.AddDbContext<StoreContext>(opt =>
     opt.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection"));
 });
 
+// Repository
 builder.Services.AddScoped<IBusinessRepository, BusinessRepository>();
 builder.Services.AddScoped<IRoleRepository, RoleRepository>();
 builder.Services.AddScoped<IEstablishmentRepository, EstablishmentRepository>();
@@ -38,6 +42,13 @@ builder.Services.AddScoped<ITaxRepository, TaxRepository>();
 builder.Services.AddScoped<IInventoryRepository, InventoryRepository>();
 builder.Services.AddScoped<ICustomerRepository, CustomerRepository>();
 builder.Services.AddScoped<IInvoiceRepository, InvoiceRepository>();
+builder.Services.AddScoped<ICertificateRepository, CertificateRepository>();
+// Services
+builder.Services.AddScoped<IInvoiceXmlBuilder, InvoiceXmlBuilder>();
+builder.Services.AddScoped<IElectronicSignature, ElectronicSignature>();
+builder.Services.AddScoped<IAesEncryptionService, AesEncryptionService>();
+builder.Services.AddScoped<ISriSignService, SriSignService>();
+builder.Services.AddHttpClient<ISriReceptionService, SriReceptionService>();
 
 var jwtSettings = builder.Configuration.GetSection("Jwt");
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)

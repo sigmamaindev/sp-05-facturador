@@ -22,6 +22,7 @@ public class StoreContext(DbContextOptions options) : DbContext(options)
     public DbSet<Customer> Customers { get; set; }
     public DbSet<Invoice> Invoices { get; set; }
     public DbSet<InvoiceDetail> InvoiceDetails { get; set; }
+    public DbSet<BusinessCertificate> BusinessCertificates => Set<BusinessCertificate>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -347,6 +348,19 @@ public class StoreContext(DbContextOptions options) : DbContext(options)
             entity.HasOne(id => id.Tax)
             .WithMany(id => id.InvoiceDetails)
             .HasForeignKey(id => id.TaxId);
+        });
+
+        modelBuilder.Entity<BusinessCertificate>(entity =>
+        {
+            entity.ToTable("CertificadoEmpresa");
+            entity.Property(bc => bc.BusinessId).HasColumnName("EmpresaId");
+            entity.Property(bc => bc.CertificateBase64).HasColumnName("CertificadoBase64");
+            entity.Property(bc => bc.Password).HasColumnName("CertificadoClave");
+            entity.Property(bc => bc.CreatedAt).HasColumnName("FechaCreacion");
+
+            entity.HasOne(bc => bc.Business)
+            .WithOne(bc => bc.BusinessCertificate)
+            .HasForeignKey<BusinessCertificate>(bc => bc.BusinessId);
         });
     }
 }

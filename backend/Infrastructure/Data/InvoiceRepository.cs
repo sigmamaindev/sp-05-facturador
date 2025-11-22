@@ -1,17 +1,17 @@
+using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Http;
 using System.Security.Claims;
 using Core.Constants;
 using Core.DTOs;
 using Core.DTOs.Customer;
 using Core.DTOs.Invoice;
-using Core.DTOs.User;
 using Core.Entities;
-using Core.Interfaces;
-using Microsoft.AspNetCore.Http;
-using Microsoft.EntityFrameworkCore;
+using Core.Interfaces.Repository;
+using Core.Interfaces.Services;
 
 namespace Infrastructure.Data;
 
-public class InvoiceRepository(StoreContext context, IHttpContextAccessor httpContextAccessor) : IInvoiceRepository
+public class InvoiceRepository(StoreContext context, IHttpContextAccessor httpContextAccessor, IInvoiceXmlBuilder invoiceXmlBuilder, IAesEncryptionService aes, IElectronicSignature electronicSignature, ISriReceptionService sriReceptionService) : IInvoiceRepository
 {
     public async Task<ApiResponse<InvoiceSimpleResDto>> CreateInvoiceAsync(InvoiceCreateReqDto invoiceCreateReqDto)
     {
@@ -34,9 +34,6 @@ public class InvoiceRepository(StoreContext context, IHttpContextAccessor httpCo
                 return response;
             }
 
-            var business = await context.Businesses
-            .FirstOrDefaultAsync(b => b.Id == businessId);
-
             if (establishmentId == 0)
             {
                 response.Success = false;
@@ -46,9 +43,6 @@ public class InvoiceRepository(StoreContext context, IHttpContextAccessor httpCo
                 return response;
             }
 
-            var establishment = await context.Establishments
-            .FirstOrDefaultAsync(e => e.Id == establishmentId);
-
             if (emissionPointId == 0)
             {
                 response.Success = false;
@@ -57,9 +51,6 @@ public class InvoiceRepository(StoreContext context, IHttpContextAccessor httpCo
 
                 return response;
             }
-
-            var emissionPoint = await context.EmissionPoints
-            .FirstOrDefaultAsync(ep => ep.Id == emissionPointId);
 
             var userId = GetUserIdFromToken();
 
@@ -72,9 +63,6 @@ public class InvoiceRepository(StoreContext context, IHttpContextAccessor httpCo
                 return response;
             }
 
-            var user = await context.Users
-            .FirstOrDefaultAsync(u => u.Id == userId);
-
             var customer = await context.Customers.FindAsync(invoiceCreateReqDto.CustomerId);
 
             if (customer == null)
@@ -82,6 +70,54 @@ public class InvoiceRepository(StoreContext context, IHttpContextAccessor httpCo
                 response.Success = false;
                 response.Message = "Cliente no encontrado";
                 response.Error = "No existe un cliente con el ID especificado";
+
+                return response;
+            }
+
+            var business = await context.Businesses
+            .FirstOrDefaultAsync(b => b.Id == businessId);
+
+            if (business == null)
+            {
+                response.Success = false;
+                response.Message = "Negocio no encontrado";
+                response.Error = "No existe un negocio con el ID especificado";
+
+                return response;
+            }
+
+            var establishment = await context.Establishments
+            .FirstOrDefaultAsync(e => e.Id == establishmentId);
+
+            if (establishment == null)
+            {
+                response.Success = false;
+                response.Message = "Establecimiento no encontrado";
+                response.Error = "No existe un establecimiento con el ID especificado";
+
+                return response;
+            }
+
+            var emissionPoint = await context.EmissionPoints
+            .FirstOrDefaultAsync(ep => ep.Id == emissionPointId);
+
+            if (emissionPoint == null)
+            {
+                response.Success = false;
+                response.Message = "Punto de emisión no encontrado";
+                response.Error = "No existe un punto de emisión con el ID especificado";
+
+                return response;
+            }
+
+            var user = await context.Users
+            .FirstOrDefaultAsync(u => u.Id == userId);
+
+            if (user == null)
+            {
+                response.Success = false;
+                response.Message = "Usuario no encontrado";
+                response.Error = "No existe un usuario con el ID especificado";
 
                 return response;
             }
@@ -103,16 +139,12 @@ public class InvoiceRepository(StoreContext context, IHttpContextAccessor httpCo
 
             var sequence = $"{establishment?.Code}-{emissionPoint?.Code}-{nextNumber:D9}";
 
-            string accesskey = invoiceCreateReqDto.IsElectronic
-            ? GenerateAccessKey(invoiceCreateReqDto.InvoiceDate, invoiceCreateReqDto.DocumentType, customer.Document, sequence, invoiceCreateReqDto.Environment)
-            : string.Empty;
-
             var newInvoice = new Invoice
             {
                 DocumentType = customer.DocumentType,
                 Environment = invoiceCreateReqDto.Environment,
                 IsElectronic = invoiceCreateReqDto.IsElectronic,
-                InvoiceDate = invoiceCreateReqDto.InvoiceDate,
+                InvoiceDate = DateTime.UtcNow,
                 DueDate = DateTime.UtcNow,
                 CustomerId = customer.Id,
                 BusinessId = businessId,
@@ -120,12 +152,16 @@ public class InvoiceRepository(StoreContext context, IHttpContextAccessor httpCo
                 EmissionPointId = emissionPointId,
                 UserId = userId,
                 Sequential = sequence,
-                AccessKey = accesskey,
+                AccessKey = "",
                 PaymentMethod = invoiceCreateReqDto.PaymentMethod,
                 PaymentTermDays = invoiceCreateReqDto.PaymentTermDays,
                 Description = invoiceCreateReqDto.Description,
                 AdditionalInformation = invoiceCreateReqDto.AdditionalInformation,
-                Status = InvoiceStatuses.DRAFT
+                Status = InvoiceStatuses.DRAFT,
+                Business = business,
+                Establishment = establishment,
+                EmissionPoint = emissionPoint,
+                Customer = customer
             };
 
             decimal subtotalBase = 0;
@@ -203,7 +239,10 @@ public class InvoiceRepository(StoreContext context, IHttpContextAccessor httpCo
                     TaxId = detail.TaxId,
                     TaxRate = taxRate,
                     TaxValue = taxValue,
-                    Total = total
+                    Total = total,
+                    Product = product,
+                    Warehouse = warehouse,
+                    Tax = product.Tax
                 };
 
                 newInvoice.InvoiceDetails.Add(newInvoiceDetail);
@@ -534,9 +573,269 @@ public class InvoiceRepository(StoreContext context, IHttpContextAccessor httpCo
         }
     }
 
-    public Task<ApiResponse<InvoiceComplexResDto>> UpdateInvoiceAsync(int invoiceId, InvoiceUpdateReqDto invoiceUpdateReqDto)
+    public async Task<ApiResponse<InvoiceComplexResDto>> UpdateInvoiceAsync(int invoiceId, InvoiceUpdateReqDto invoiceUpdateReqDto)
     {
-        throw new NotImplementedException();
+        var response = new ApiResponse<InvoiceComplexResDto>();
+
+        using var transaction = await context.Database.BeginTransactionAsync();
+
+        try
+        {
+            var businessId = GetBusinessIdFromToken();
+            var establishmentId = GetEstablishmentIdFromToken();
+            var emissionPointId = GetEmissionPointIdFromToken();
+            var userId = GetUserIdFromToken();
+
+            if (businessId == 0)
+            {
+                response.Success = false;
+                response.Message = "Negocio no encontrado";
+                response.Error = "No existe un negocio con el ID especificado";
+
+                return response;
+            }
+
+            if (establishmentId == 0)
+            {
+                response.Success = false;
+                response.Message = "Establecimiento no encontrado";
+                response.Error = "No existe un establecimiento con el ID especificado";
+
+                return response;
+            }
+
+            if (emissionPointId == 0)
+            {
+                response.Success = false;
+                response.Message = "Punto de emisión no encontrado";
+                response.Error = "No existe un punto de emisión con el ID especificado";
+
+                return response;
+            }
+
+            if (userId == 0)
+            {
+                response.Success = false;
+                response.Message = "Usuario no encontrado";
+                response.Error = "No existe un usuario con el ID especificado";
+
+                return response;
+            }
+
+            var invoice = await context.Invoices
+            .Include(i => i.Customer)
+            .Include(i => i.Business)
+            .Include(i => i.Establishment)
+            .Include(i => i.EmissionPoint)
+            .Include(i => i.User)
+            .Include(i => i.InvoiceDetails)
+            .ThenInclude(d => d.Product)
+            .ThenInclude(p => p!.UnitMeasure)
+            .Include(i => i.InvoiceDetails).ThenInclude(d => d.Warehouse)
+            .Include(i => i.InvoiceDetails).ThenInclude(d => d.Tax)
+            .FirstOrDefaultAsync(
+                i =>
+                i.Id == invoiceId &&
+                i.BusinessId == businessId &&
+                i.EstablishmentId == establishmentId &&
+                i.EmissionPointId == emissionPointId &&
+                i.UserId == userId);
+
+            if (invoice == null)
+            {
+                response.Success = false;
+                response.Message = "Factura no encontrada";
+                response.Error = "No existe una Factura con el ID especificado";
+
+                return response;
+            }
+
+            if (invoice.Customer == null || invoice.Business == null || invoice.Establishment == null || invoice.EmissionPoint == null)
+            {
+                response.Success = false;
+                response.Message = "Datos incompletos para la factura";
+                response.Error = "No se encontraron datos de negocio, establecimiento, punto de emisión o cliente asociados";
+
+                return response;
+            }
+
+            invoice.DocumentType = invoiceUpdateReqDto.DocumentType;
+            invoice.IsElectronic = invoiceUpdateReqDto.IsElectronic;
+            invoice.Environment = invoiceUpdateReqDto.Environment;
+            invoice.InvoiceDate = DateTime.UtcNow;
+            invoice.DueDate = DateTime.UtcNow;
+            invoice.PaymentMethod = invoiceUpdateReqDto.PaymentMethod;
+            invoice.PaymentTermDays = invoiceUpdateReqDto.PaymentTermDays;
+            invoice.Description = invoiceUpdateReqDto.Description;
+            invoice.AdditionalInformation = invoiceUpdateReqDto.AdditionalInformation;
+
+            decimal subtotalBase = 0;
+            decimal subtotalWithTaxes = 0;
+            decimal discountTotal = 0;
+            decimal taxTotal = 0;
+
+            foreach (var detail in invoice.InvoiceDetails)
+            {
+                var taxableBase = (detail.Quantity * detail.UnitPrice) - detail.Discount;
+                var taxRate = detail.Tax?.Rate ?? detail.TaxRate;
+                var taxValue = taxableBase * (taxRate / 100);
+                var total = taxableBase + taxValue;
+
+                detail.Subtotal = taxableBase;
+                detail.TaxRate = taxRate;
+                detail.TaxValue = taxValue;
+                detail.Total = total;
+
+                subtotalBase += taxableBase;
+                discountTotal += detail.Discount;
+                taxTotal += taxValue;
+                subtotalWithTaxes += total;
+            }
+
+            invoice.SubtotalWithoutTaxes = subtotalBase;
+            invoice.SubtotalWithTaxes = subtotalWithTaxes;
+            invoice.DiscountTotal = discountTotal;
+            invoice.TaxTotal = taxTotal;
+            invoice.TotalInvoice = subtotalWithTaxes;
+
+            if (invoice.IsElectronic)
+            {
+                invoice.AccessKey = GenerateAccessKey(invoice.InvoiceDate, invoice.DocumentType, invoice.Customer.Document, invoice.Sequential, invoice.Environment);
+                var unsignedXml = invoiceXmlBuilder.BuildXMLInvoice(invoice, invoice.Business, invoice.Establishment, invoice.EmissionPoint, invoice.Customer);
+
+                var (pfxBytes, pfxPassword) = await GetCertificateAsync(businessId);
+
+
+                var signedXml = await electronicSignature.SignXmlAsync(
+                    unsignedXml,
+                    pfxBytes,
+                    pfxPassword,
+                    cancellationToken: default
+                );
+
+                invoice.XmlSigned = signedXml;
+                invoice.Status = InvoiceStatuses.PENDING;
+
+                var receptionResponse = await sriReceptionService.SendAsync(signedXml, false);
+
+                if (receptionResponse.State == "RECIBIDA")
+                {
+                    invoice.Status = "RECIBIDA";
+                    invoice.SriMessage = receptionResponse.Message;
+                }
+                else if (receptionResponse.State == "DEVUELTA")
+                {
+                    invoice.Status = "DEVUELTA";
+                    invoice.SriMessage = receptionResponse.Message;
+                }
+                else if (receptionResponse.State is "SRI_TIMEOUT" or "SRI_UNAVAILABLE")
+                {
+                    invoice.Status = "SRI NO DISPONIBLE";
+                }
+                else
+                {
+                    invoice.Status = "ERROR";
+                }
+            }
+            else
+            {
+                invoice.AccessKey = string.Empty;
+                invoice.XmlSigned = null;
+            }
+
+            await context.SaveChangesAsync();
+            await transaction.CommitAsync();
+
+            response.Data = new InvoiceComplexResDto
+            {
+                Id = invoice.Id,
+                Sequential = invoice.Sequential,
+                AccessKey = invoice.AccessKey,
+                AuthorizationNumber = invoice.AuthorizationNumber,
+                Environment = invoice.Environment,
+                DocumentType = invoice.DocumentType,
+                Status = invoice.Status,
+                IsElectronic = invoice.IsElectronic,
+                InvoiceDate = invoice.InvoiceDate,
+                DueDate = invoice.DueDate,
+                BusinessId = invoice.Business.Id,
+                BusinessDocument = invoice.Business.Document,
+                BusinessName = invoice.Business.Name,
+                EstablishmentId = invoice.Establishment.Id,
+                EstablishmentCode = invoice.Establishment.Code,
+                EstablishmentName = invoice.Establishment.Name,
+                EmissionPointId = invoice.EmissionPoint.Id,
+                EmissionPointCode = invoice.EmissionPoint.Code,
+                EmissionPointDescription = invoice.EmissionPoint.Description,
+                UserId = invoice.User!.Id,
+                UserDocument = invoice.User.Document,
+                UserFullName = invoice.User.FullName,
+                Customer = new CustomerResDto
+                {
+                    Id = invoice.Customer.Id,
+                    DocumentType = invoice.Customer.DocumentType,
+                    Document = invoice.Customer.Document,
+                    Email = invoice.Customer.Email,
+                    Name = invoice.Customer.Name,
+                    Cellphone = invoice.Customer.Cellphone,
+                    Telephone = invoice.Customer.Telephone,
+                    Address = invoice.Customer.Address,
+                    IsActive = invoice.Customer.IsActive,
+                    CreatedAt = invoice.Customer.CreatedAt
+                },
+                SubtotalWithoutTaxes = invoice.SubtotalWithoutTaxes,
+                SubtotalWithTaxes = invoice.SubtotalWithTaxes,
+                DiscountTotal = invoice.DiscountTotal,
+                TaxTotal = invoice.TaxTotal,
+                TotalInvoice = invoice.TotalInvoice,
+                PaymentMethod = invoice.PaymentMethod,
+                PaymentTermDays = invoice.PaymentTermDays,
+                Description = invoice.Description ?? "",
+                AdditionalInformation = invoice.AdditionalInformation,
+                AuthorizationDate = invoice.AuthorizationDate,
+                SriMessage = invoice.SriMessage,
+                XmlSigned = invoice.XmlSigned ?? "",
+                Details = [.. invoice.InvoiceDetails.Select(d => new InvoiceDetailResDto
+                {
+                    Id = d.Id,
+                    InvoiceId = d.InvoiceId,
+                    ProductId = d.Product!.Id,
+                    ProductCode = d.Product.Sku,
+                    ProductName = d.Product.Name,
+                    UnitMeasureId = d.Product.UnitMeasureId,
+                    UnitMeasureCode = d.Product.UnitMeasure!.Code,
+                    UnitMeasureName = d.Product.UnitMeasure!.Name,
+                    WarehouseId = d.Warehouse!.Id,
+                    WarehouseCode = d.Warehouse.Code,
+                    WarehouseName = d.Warehouse.Name,
+                    TaxId = d.Tax!.Id,
+                    TaxCode = d.Tax.Code,
+                    TaxName = d.Tax.Name,
+                    TaxRate = d.TaxRate,
+                    TaxValue = d.TaxValue,
+                    Quantity = d.Quantity,
+                    UnitPrice = d.UnitPrice,
+                    Discount = d.Discount,
+                    Subtotal = d.Subtotal,
+                    Total = d.Total
+                })]
+            };
+
+            response.Success = true;
+            response.Message = invoice.SriMessage ?? "Factura actualizada correctamente.";
+
+            return response;
+        }
+        catch (Exception ex)
+        {
+            await transaction.RollbackAsync();
+
+            response.Success = false;
+            response.Message = "Error al actualizar la factura";
+            response.Error = ex.Message;
+        }
+
+        return response;
     }
 
     private static string GenerateAccessKey(DateTime date, string documentType, string customerId, string sequential, string environment)
@@ -568,5 +867,17 @@ public class InvoiceRepository(StoreContext context, IHttpContextAccessor httpCo
     {
         var emissionPointIdClaim = httpContextAccessor.HttpContext?.User.FindFirst("EmissionPointId")?.Value;
         return int.TryParse(emissionPointIdClaim, out var id) ? id : 0;
+    }
+
+    private async Task<(byte[] pfxBytes, string password)> GetCertificateAsync(int businessId)
+    {
+        var cert = await context.BusinessCertificates
+            .FirstOrDefaultAsync(c => c.BusinessId == businessId)
+            ?? throw new Exception("El negocio no tiene certificado cargado");
+
+        var bytes = Convert.FromBase64String(cert.CertificateBase64);
+        var pass = aes.Decrypt(cert.Password);
+
+        return (bytes, pass);
     }
 }

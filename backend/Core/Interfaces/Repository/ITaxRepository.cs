@@ -1,7 +1,7 @@
 using Core.DTOs;
 using Core.DTOs.Tax;
 
-namespace Core.Interfaces;
+namespace Core.Interfaces.Repository;
 
 public interface ITaxRepository
 {

@@ -1,7 +1,7 @@
 using Core.DTOs;
 using Core.DTOs.Invoice;
 
-namespace Core.Interfaces;
+namespace Core.Interfaces.Repository;
 
 public interface IInvoiceRepository
 {

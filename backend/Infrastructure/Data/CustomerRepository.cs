@@ -1,5 +1,5 @@
 using Microsoft.AspNetCore.Http;
-using Core.Interfaces;
+using Core.Interfaces.Repository;
 using Core.DTOs;
 using Core.DTOs.Customer;
 using Microsoft.EntityFrameworkCore;

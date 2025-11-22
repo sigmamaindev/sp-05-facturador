@@ -2,7 +2,7 @@ using Core.DTOs;
 using Core.DTOs.User;
 using Core.Entities;
 
-namespace Core.Interfaces;
+namespace Core.Interfaces.Repository;
 
 public interface IUserRepository
 {

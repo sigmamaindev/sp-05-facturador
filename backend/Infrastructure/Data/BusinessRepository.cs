@@ -1,4 +1,4 @@
-using Core.Interfaces;
+using Core.Interfaces.Repository;
 using Core.DTOs;
 using Core.DTOs.Business;
 using Microsoft.EntityFrameworkCore;

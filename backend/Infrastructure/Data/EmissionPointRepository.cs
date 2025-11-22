@@ -1,6 +1,6 @@
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
-using Core.Interfaces;
+using Core.Interfaces.Repository;
 using Core.DTOs;
 using Core.DTOs.EmissionPoint;
 using Core.Entities;

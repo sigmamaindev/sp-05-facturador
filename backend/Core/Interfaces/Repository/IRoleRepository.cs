@@ -1,7 +1,7 @@
 using Core.DTOs;
 using Core.DTOs.Role;
 
-namespace Core.Interfaces;
+namespace Core.Interfaces.Repository;
 
 public interface IRoleRepository
 {

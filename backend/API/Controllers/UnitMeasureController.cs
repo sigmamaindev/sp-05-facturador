@@ -1,6 +1,6 @@
 using Core.DTOs;
 using Core.DTOs.UnitMeasure;
-using Core.Interfaces;
+using Core.Interfaces.Repository;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 

@@ -1,0 +1,302 @@
+using System.Globalization;
+using System.Xml.Linq;
+using Core.Constants;
+using Core.Entities;
+using Core.Interfaces.Services;
+
+namespace Infrastructure.Services;
+
+public class InvoiceXmlBuilder : IInvoiceXmlBuilder
+{
+    private const string InvoiceVersion = "1.0.0";
+    private static readonly CultureInfo Culture = CultureInfo.InvariantCulture;
+
+    public string BuildXMLInvoice(Invoice invoice, Business business, Establishment establishment, EmissionPoint emissionPoint, Customer customer)
+    {
+        ArgumentNullException.ThrowIfNull(invoice);
+        ArgumentNullException.ThrowIfNull(business);
+        ArgumentNullException.ThrowIfNull(establishment);
+        ArgumentNullException.ThrowIfNull(emissionPoint);
+        ArgumentNullException.ThrowIfNull(customer);
+
+        if (invoice.InvoiceDetails == null || invoice.InvoiceDetails.Count == 0)
+        {
+            throw new InvalidOperationException("La factura no contiene detalles para generar el XML del SRI.");
+        }
+
+        var facturaContent = new List<object>
+        {
+            TaxInfoBuilder(invoice, business, establishment, emissionPoint),
+            InvoiceInfoBuilder(invoice, business, customer),
+            InvoiceDetailsBuilder(invoice)
+        };
+
+        var infoAdicional = BuildInfoAdicional(invoice, customer);
+
+        if (infoAdicional != null)
+        {
+            facturaContent.Add(infoAdicional);
+        }
+
+        var facturaElement = new XElement("factura",
+            new XAttribute("id", "comprobante"),
+            new XAttribute("version", InvoiceVersion),
+            facturaContent);
+
+        var document = new XDocument(new XDeclaration("1.0", "UTF-8", null), facturaElement);
+
+        return document.ToString(SaveOptions.DisableFormatting);
+    }
+
+    private static XElement TaxInfoBuilder(Invoice invoice, Business business, Establishment establishment, EmissionPoint emissionPoint)
+    {
+        return new XElement("infoTributaria",
+            new XElement("ambiente", invoice.Environment),
+            new XElement("tipoEmision", EmissionTypes.NORMAL),
+            new XElement("razonSocial", business.Name),
+            new XElement("nombreComercial", establishment.Name),
+            new XElement("ruc", business.Document),
+            new XElement("claveAcceso", invoice.AccessKey),
+            new XElement("codDoc", invoice.DocumentType),
+            new XElement("estab", establishment.Code),
+            new XElement("ptoEmi", emissionPoint.Code),
+            new XElement("secuencial", GetSequence(invoice.Sequential)),
+            new XElement("dirMatriz", business.Address)
+        );
+    }
+
+    private static XElement InvoiceInfoBuilder(Invoice invoice, Business business, Customer customer)
+    {
+        return new XElement("infoFactura",
+            new XElement("fechaEmision", invoice.InvoiceDate.ToString("dd/MM/yyyy")),
+            new XElement("dirEstablecimiento", business.Address),
+            new XElement("obligadoContabilidad", "NO"),
+            new XElement("tipoIdentificacionComprador", customer.DocumentType),
+            new XElement("razonSocialComprador", customer.Name),
+            new XElement("identificacionComprador", customer.Document),
+            new XElement("direccionComprador", customer.Address),
+            new XElement("totalSinImpuestos", FormatDecimal(invoice.SubtotalWithoutTaxes)),
+            new XElement("totalDescuento", FormatDecimal(invoice.DiscountTotal)),
+            BuildTotalConImpuestos(invoice),
+            new XElement("propina", FormatDecimal(0m)),
+            new XElement("importeTotal", FormatDecimal(invoice.TotalInvoice)),
+            new XElement("moneda", Currencies.USD),
+            BuildPagos(invoice)
+        );
+    }
+
+    private static XElement BuildTotalConImpuestos(Invoice invoice)
+    {
+        var groupedTaxes = invoice.InvoiceDetails
+            .Where(d => d.Subtotal > 0)
+            .GroupBy(d => new
+            {
+                Code = d.Tax?.Code ?? "2",
+                CodePercentage = d.Tax?.CodePercentage ?? "0",
+                Rate = d.TaxRate
+            })
+            .Select(group => new XElement("totalImpuesto",
+                new XElement("codigo", group.Key.Code),
+                new XElement("codigoPorcentaje", group.Key.CodePercentage),
+                new XElement("baseImponible", FormatDecimal(group.Sum(d => d.Subtotal))),
+                new XElement("tarifa", FormatDecimal(group.Key.Rate)),
+                new XElement("valor", FormatDecimal(group.Sum(d => d.TaxValue)))
+            ))
+            .ToList();
+
+        if (groupedTaxes.Count == 0)
+        {
+            groupedTaxes.Add(new XElement("totalImpuesto",
+                new XElement("codigo", "2"),
+                new XElement("codigoPorcentaje", "0"),
+                new XElement("baseImponible", FormatDecimal(invoice.SubtotalWithoutTaxes)),
+                new XElement("tarifa", FormatDecimal(0m)),
+                new XElement("valor", FormatDecimal(0m))
+            ));
+        }
+
+        return new XElement("totalConImpuestos", groupedTaxes);
+    }
+
+    private static XElement BuildPagos(Invoice invoice)
+    {
+        var pago = new XElement("pago",
+            new XElement("formaPago", string.IsNullOrWhiteSpace(invoice.PaymentMethod) ? PaymentMethods.CASH : invoice.PaymentMethod),
+            new XElement("total", FormatDecimal(invoice.TotalInvoice))
+        );
+
+        if (invoice.PaymentTermDays > 0)
+        {
+            pago.Add(new XElement("plazo", invoice.PaymentTermDays));
+            pago.Add(new XElement("unidadTiempo", "dias"));
+        }
+
+        return new XElement("pagos", pago);
+    }
+
+    private static XElement InvoiceDetailsBuilder(Invoice invoice)
+    {
+        var detalleElements = new List<XElement>();
+
+        foreach (var detail in invoice.InvoiceDetails)
+        {
+            var detalle = new XElement("detalle",
+                new XElement("codigoPrincipal", detail.Product?.Sku ?? detail.ProductId.ToString(Culture)),
+                new XElement("descripcion", detail.Product?.Name ?? "Producto"),
+                new XElement("cantidad", FormatDecimal(detail.Quantity, 6)),
+                new XElement("precioUnitario", FormatDecimal(detail.UnitPrice)),
+                new XElement("descuento", FormatDecimal(detail.Discount)),
+                new XElement("precioTotalSinImpuesto", FormatDecimal(detail.Subtotal)),
+                BuildImpuestosDetalle(detail)
+            );
+
+            var additionalDetails = AdditionalDetailsBuilder(detail);
+
+            if (additionalDetails != null)
+            {
+                detalle.Add(additionalDetails);
+            }
+
+            detalleElements.Add(detalle);
+        }
+
+        return new XElement("detalles", detalleElements);
+    }
+
+    private static XElement BuildImpuestosDetalle(InvoiceDetail detail)
+    {
+        var impuesto = new XElement("impuesto",
+            new XElement("codigo", detail.Tax?.Code ?? "2"),
+            new XElement("codigoPorcentaje", detail.Tax?.CodePercentage ?? "0"),
+            new XElement("tarifa", FormatDecimal(detail.TaxRate)),
+            new XElement("baseImponible", FormatDecimal(detail.Subtotal)),
+            new XElement("valor", FormatDecimal(detail.TaxValue))
+        );
+
+        return new XElement("impuestos", impuesto);
+    }
+
+    private static XElement? AdditionalDetailsBuilder(InvoiceDetail detail)
+    {
+        var add = new List<XElement>();
+
+        if (!string.IsNullOrWhiteSpace(detail.Product?.Description))
+        {
+            add.Add(new XElement("detAdicional",
+                new XAttribute("nombre", "Detalle"),
+                detail.Product.Description));
+        }
+
+        if (!string.IsNullOrWhiteSpace(detail.Warehouse?.Name))
+        {
+            add.Add(new XElement("detAdicional",
+                new XAttribute("nombre", "Bodega"),
+                detail.Warehouse.Name));
+        }
+
+        if (add.Count == 0)
+        {
+            return null;
+        }
+
+        return new XElement("detallesAdicionales", add);
+    }
+
+    private static XElement? BuildInfoAdicional(Invoice invoice, Customer customer)
+    {
+        var campos = new List<XElement>();
+
+        if (!string.IsNullOrWhiteSpace(customer.Email))
+        {
+            campos.Add(new XElement("campoAdicional",
+                new XAttribute("nombre", "Email"),
+                customer.Email));
+        }
+
+        if (!string.IsNullOrWhiteSpace(customer.Cellphone))
+        {
+            campos.Add(new XElement("campoAdicional",
+                new XAttribute("nombre", "Celular"),
+                customer.Cellphone));
+        }
+
+        if (!string.IsNullOrWhiteSpace(customer.Telephone))
+        {
+            campos.Add(new XElement("campoAdicional",
+                new XAttribute("nombre", "Telefono"),
+                customer.Telephone));
+        }
+
+        if (!string.IsNullOrWhiteSpace(invoice.AdditionalInformation))
+        {
+            campos.AddRange(ParseAdditionalInformation(invoice.AdditionalInformation));
+        }
+
+        if (campos.Count == 0)
+        {
+            return null;
+        }
+
+        return new XElement("infoAdicional", campos);
+    }
+
+    private static IEnumerable<XElement> ParseAdditionalInformation(string additionalInformation)
+    {
+        var separators = new char[] { ';', '\n', '\r' };
+        var lines = additionalInformation.Split(separators, StringSplitOptions.RemoveEmptyEntries);
+
+
+        if (lines.Length == 0)
+        {
+            yield return new XElement("campoAdicional",
+                new XAttribute("nombre", "Informacion"),
+                additionalInformation.Trim());
+            yield break;
+        }
+
+        var unnamedIndex = 1;
+
+        foreach (var rawLine in lines)
+        {
+            var line = rawLine.Trim();
+
+            if (line.Length == 0)
+            {
+                continue;
+            }
+
+            var parts = line.Split(':', 2, StringSplitOptions.TrimEntries);
+
+            if (parts.Length == 2)
+            {
+                yield return new XElement("campoAdicional",
+                    new XAttribute("nombre", parts[0]),
+                    parts[1]);
+            }
+            else
+            {
+                yield return new XElement("campoAdicional",
+                    new XAttribute("nombre", $"Adicional{unnamedIndex++}"),
+                    line);
+            }
+        }
+    }
+
+    private static string GetSequence(string sequential)
+    {
+        if (string.IsNullOrWhiteSpace(sequential))
+        {
+            return "000000000";
+        }
+
+        var parts = sequential.Split('-', StringSplitOptions.RemoveEmptyEntries);
+
+        return parts.Length > 2 ? parts[2] : sequential;
+    }
+
+    private static string FormatDecimal(decimal value, int decimals = 2)
+    {
+        var format = "0." + new string('0', decimals);
+        return decimal.Round(value, decimals, MidpointRounding.AwayFromZero).ToString(format, Culture);
+    }
+}

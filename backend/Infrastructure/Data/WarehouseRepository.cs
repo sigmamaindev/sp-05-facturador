@@ -1,6 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Http;
-using Core.Interfaces;
+using Core.Interfaces.Repository;
 using Core.DTOs;
 using Core.DTOs.Warehouse;
 using Core.Entities;

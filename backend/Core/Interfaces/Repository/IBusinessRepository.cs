@@ -2,7 +2,7 @@ using Core.Entities;
 using Core.DTOs;
 using Core.DTOs.Business;
 
-namespace Core.Interfaces;
+namespace Core.Interfaces.Repository;
 
 public interface IBusinessRepository
 {
