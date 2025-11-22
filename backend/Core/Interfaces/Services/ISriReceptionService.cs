@@ -4,5 +4,5 @@ namespace Core.Interfaces.Services;
 
 public interface ISriReceptionService
 {
-    Task<SriReceptionResponseDto> SendAsync(string signedXml, bool isProduction);
+    Task<SriReceptionResponseDto> SendInvoiceSriAsync(string signedXml, bool isProduction);
 }

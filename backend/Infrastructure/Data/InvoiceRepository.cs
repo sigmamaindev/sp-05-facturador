@@ -714,27 +714,27 @@ public class InvoiceRepository(StoreContext context, IHttpContextAccessor httpCo
                 );
 
                 invoice.XmlSigned = signedXml;
-                invoice.Status = InvoiceStatuses.PENDING;
+                invoice.Status = InvoiceStatuses.SIGNED;
 
-                var receptionResponse = await sriReceptionService.SendAsync(signedXml, false);
+                var receptionResponse = await sriReceptionService.SendInvoiceSriAsync(signedXml, invoice.Environment == "2");
 
-                if (receptionResponse.State == "RECIBIDA")
+                if (receptionResponse.State == InvoiceStatuses.SRI_RECEIVED)
                 {
-                    invoice.Status = "RECIBIDA";
+                    invoice.Status = InvoiceStatuses.SRI_RECEIVED;
                     invoice.SriMessage = receptionResponse.Message;
                 }
-                else if (receptionResponse.State == "DEVUELTA")
+                else if (receptionResponse.State == InvoiceStatuses.SRI_RETURNED)
                 {
-                    invoice.Status = "DEVUELTA";
+                    invoice.Status = InvoiceStatuses.SRI_RETURNED;
                     invoice.SriMessage = receptionResponse.Message;
                 }
-                else if (receptionResponse.State is "SRI_TIMEOUT" or "SRI_UNAVAILABLE")
+                else if (receptionResponse.State is InvoiceStatuses.SRI_TIMEOUT or InvoiceStatuses.SRI_UNAVAILABLE)
                 {
-                    invoice.Status = "SRI NO DISPONIBLE";
+                    invoice.Status = InvoiceStatuses.SRI_UNAVAILABLE;
                 }
                 else
                 {
-                    invoice.Status = "ERROR";
+                    invoice.Status = InvoiceStatuses.SRI_ERROR;
                 }
             }
             else

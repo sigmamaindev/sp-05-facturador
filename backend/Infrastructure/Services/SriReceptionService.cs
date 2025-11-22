@@ -1,7 +1,7 @@
-using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Text;
 using System.Xml;
+using Core.Constants;
 using Core.DTOs.SRI;
 using Core.Interfaces.Services;
 
@@ -9,7 +9,7 @@ namespace Infrastructure.Services;
 
 public class SriReceptionService(HttpClient httpClient) : ISriReceptionService
 {
-    public async Task<SriReceptionResponseDto> SendAsync(string signedXml, bool isProduction)
+    public async Task<SriReceptionResponseDto> SendInvoiceSriAsync(string signedXml, bool isProduction)
     {
 
         var url = isProduction
@@ -47,7 +47,7 @@ public class SriReceptionService(HttpClient httpClient) : ISriReceptionService
             return new SriReceptionResponseDto
             {
                 Success = false,
-                State = "SRI_TIMEOUT",
+                State = InvoiceStatuses.SRI_TIMEOUT,
                 Message = "El SRI no respondió (timeout). Intente más tarde."
             };
         }
@@ -56,7 +56,7 @@ public class SriReceptionService(HttpClient httpClient) : ISriReceptionService
             return new SriReceptionResponseDto
             {
                 Success = false,
-                State = "SRI_UNAVAILABLE",
+                State = InvoiceStatuses.SRI_UNAVAILABLE,
                 Message = "No fue posible conectarse al SRI. Servicio no disponible."
             };
         }
@@ -65,7 +65,7 @@ public class SriReceptionService(HttpClient httpClient) : ISriReceptionService
             return new SriReceptionResponseDto
             {
                 Success = false,
-                State = "ERROR",
+                State = InvoiceStatuses.SRI_ERROR,
                 Message = $"Error desconocido al enviar comprobante: {ex.Message}"
             };
         }

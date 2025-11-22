@@ -76,3 +76,27 @@ export async function createInvoice(
     throw new Error("Error desconocido");
   }
 }
+
+export async function updateInvoice(
+  id: number,
+  body: CreateInvoiceForm,
+  token: string
+): Promise<ApiResponseSingle<Invoice>> {
+  try {
+    const url = `/invoice/${id}`;
+
+    const { data } = await api.put<ApiResponseSingle<Invoice>>(url, body, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+    });
+
+    return data;
+  } catch (error) {
+    if (isAxiosError(error) && error.response) {
+      throw new Error(error.response.data.error ?? "Error en la API");
+    }
+    throw new Error("Error desconocido");
+  }
+}
