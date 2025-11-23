@@ -1,6 +1,12 @@
+bin/
+obj/
 **/bin/
 **/obj/
-**/.env
-**/Migrations/
-*.user
-*.vscode
+.git/
+.gitignore
+.env
+*.md
+Dockerfile
+docker-compose.yml
+.vscode/
+.idea/
