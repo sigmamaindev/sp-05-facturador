@@ -91,9 +91,9 @@ public class InvoiceXmlBuilder : IInvoiceXmlBuilder
             .Where(d => d.Subtotal > 0)
             .GroupBy(d => new
             {
-                Code = d.Tax?.Code ?? "2",
-                CodePercentage = d.Tax?.CodePercentage ?? "0",
-                Rate = d.TaxRate
+                Code = d.Tax!.Code,
+                CodePercentage = d.Tax.CodePercentage,
+                Rate = d.Tax.Rate
             })
             .Select(group => new XElement("totalImpuesto",
                 new XElement("codigo", group.Key.Code),
@@ -103,17 +103,6 @@ public class InvoiceXmlBuilder : IInvoiceXmlBuilder
                 new XElement("valor", FormatDecimal(group.Sum(d => d.TaxValue)))
             ))
             .ToList();
-
-        if (groupedTaxes.Count == 0)
-        {
-            groupedTaxes.Add(new XElement("totalImpuesto",
-                new XElement("codigo", "2"),
-                new XElement("codigoPorcentaje", "0"),
-                new XElement("baseImponible", FormatDecimal(invoice.SubtotalWithoutTaxes)),
-                new XElement("tarifa", FormatDecimal(0m)),
-                new XElement("valor", FormatDecimal(0m))
-            ));
-        }
 
         return new XElement("totalConImpuestos", groupedTaxes);
     }
@@ -165,15 +154,17 @@ public class InvoiceXmlBuilder : IInvoiceXmlBuilder
 
     private static XElement BuildTaxesDetail(InvoiceDetail detail)
     {
-        var tax = new XElement("impuesto",
-            new XElement("codigo", detail.Tax?.Code ?? "2"),
-            new XElement("codigoPorcentaje", detail.Tax?.CodePercentage ?? "0"),
-            new XElement("tarifa", FormatDecimal(detail.TaxRate)),
-            new XElement("baseImponible", FormatDecimal(detail.Subtotal)),
-            new XElement("valor", FormatDecimal(detail.TaxValue))
+        var tax = detail.Tax ?? throw new Exception("El producto no tiene impuesto configurado.");
+
+        var taxDetail = new XElement("impuesto",
+        new XElement("codigo", tax.Code),
+        new XElement("codigoPorcentaje", tax.CodePercentage),
+        new XElement("tarifa", FormatDecimal(tax.Rate)),
+        new XElement("baseImponible", FormatDecimal(detail.Subtotal)),
+        new XElement("valor", FormatDecimal(detail.TaxValue))
         );
 
-        return new XElement("impuestos", tax);
+        return new XElement("impuestos", taxDetail);
     }
 
     private static XElement? AdditionalDetailsBuilder(InvoiceDetail detail)

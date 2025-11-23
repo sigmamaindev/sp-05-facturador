@@ -871,7 +871,7 @@ public class InvoiceRepository(StoreContext context, IHttpContextAccessor httpCo
 
     private static int CalculateCheckDigit(string chain)
     {
-        int[] factors = [7, 6, 5, 4, 3, 2];
+        int[] factors = [2, 3, 4, 5, 6, 7];
         int factorIndex = 0;
         int sum = 0;
 

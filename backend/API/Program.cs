@@ -49,6 +49,7 @@ builder.Services.AddScoped<IElectronicSignature, ElectronicSignature>();
 builder.Services.AddScoped<IAesEncryptionService, AesEncryptionService>();
 builder.Services.AddScoped<ISriSignService, SriSignService>();
 builder.Services.AddHttpClient<ISriReceptionService, SriReceptionService>();
+builder.Services.AddHostedService<SriAuthorizationBackgroundService>();
 
 var jwtSettings = builder.Configuration.GetSection("Jwt");
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
