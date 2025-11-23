@@ -36,7 +36,7 @@ export default function InvoiceCreateView() {
     defaultValues: {
       documentType: "",
       isElectronic: true,
-      environment: "",
+      environment: "1",
       invoiceDate: new Date(),
       customerId: 0,
       subtotalWithoutTaxes: 0,

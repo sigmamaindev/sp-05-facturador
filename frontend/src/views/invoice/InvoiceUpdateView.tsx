@@ -34,11 +34,11 @@ export default function InvoiceUpdateView() {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
-  const { setValue, handleSubmit, reset } = useForm<CreateInvoiceForm>({
+  const { setValue, handleSubmit } = useForm<CreateInvoiceForm>({
     defaultValues: {
       documentType: "",
       isElectronic: true,
-      environment: "",
+      environment: "1",
       invoiceDate: new Date(),
       customerId: 0,
       subtotalWithoutTaxes: 0,
@@ -103,33 +103,8 @@ export default function InvoiceUpdateView() {
       const response = await getInvoiceById(Number(id), token!);
 
       setInvoice(response.data);
-      setCustomer(response.data.customer);
-      setProducts(mapDetailsToProducts(response.data));
-
-      reset({
-        documentType: response.data.documentType,
-        isElectronic: response.data.isElectronic,
-        environment: response.data.environment,
-        invoiceDate: new Date(response.data.invoiceDate),
-        customerId: response.data.customer.id,
-        subtotalWithoutTaxes: response.data.subtotalWithoutTaxes,
-        subtotalWithTaxes: response.data.subtotalWithTaxes,
-        discountTotal: response.data.discountTotal,
-        taxTotal: response.data.taxTotal,
-        totalInvoice: response.data.totalInvoice,
-        paymentMethod: String(response.data.paymentMethod),
-        paymentTermDays: response.data.paymentTermDays,
-        description: response.data.description,
-        additionalInformation: response.data.additionalInformation,
-        details: response.data.details.map((detail) => ({
-          productId: detail.productId,
-          quantity: detail.quantity,
-          unitPrice: detail.unitPrice,
-          discount: detail.discount,
-          warehouseId: detail.warehouseId,
-          taxId: detail.taxId,
-        })),
-      });
+      setCustomer(response.data!.customer);
+      setProducts(mapDetailsToProducts(response.data!));
     } catch (err: any) {
       setError(err.message);
     } finally {
