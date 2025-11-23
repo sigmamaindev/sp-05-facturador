@@ -1,29 +1,36 @@
-# ====== Etapa 1: Build ======
-FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
-WORKDIR /app
+# =======================
+#  STAGE 1 — RESTORE
+# =======================
+FROM mcr.microsoft.com/dotnet/sdk:8.0 AS restore
+WORKDIR /src
 
-# Copiar csproj y restaurar dependencias
+# Copiar solamente los csproj (mejora cache)
 COPY *.sln ./
 COPY Core/*.csproj Core/
 COPY Infrastructure/*.csproj Infrastructure/
 COPY API/*.csproj API/
+
+# Restaurar dependencias usando cache
 RUN dotnet restore
 
-# Copiar todo y compilar
+# =======================
+#  STAGE 2 — BUILD
+# =======================
+FROM restore AS build
+WORKDIR /src
 COPY . .
-WORKDIR /app/API
-RUN dotnet publish -c Release -o /out
 
-# ====== Etapa 2: Runtime ======
+RUN dotnet publish API/API.csproj -c Release -o /app/out
+
+# =======================
+#  STAGE 3 — RUNTIME
+# =======================
 FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS runtime
 WORKDIR /app
 
-# Copiar los archivos compilados
-COPY --from=build /out .
+COPY --from=build /app/out .
 
-# Puerto usado por Railway (variable de entorno)
 ENV ASPNETCORE_URLS=http://+:8080
 EXPOSE 8080
 
-# Ejecutar la aplicación
 ENTRYPOINT ["dotnet", "API.dll"]
