@@ -23,6 +23,10 @@ interface InvoiceUpdateFormProps {
   customer: Customer | null;
   products: InvoiceProduct[];
   totals: InvoiceTotals;
+  invoiceDate?: Date;
+  dueDate?: Date;
+  onInvoiceDateChange: (value: string) => void;
+  onDueDateChange: (value: string) => void;
   openCustomerModal: boolean;
   setOpenCustomerModal: React.Dispatch<React.SetStateAction<boolean>>;
   openProductModal: boolean;
@@ -39,6 +43,10 @@ export default function InvoiceUpdateForm({
   customer,
   products,
   totals,
+  invoiceDate,
+  dueDate,
+  onInvoiceDateChange,
+  onDueDateChange,
   openCustomerModal,
   setOpenCustomerModal,
   openProductModal,
@@ -187,6 +195,30 @@ export default function InvoiceUpdateForm({
             <CardTitle>RESUMEN</CardTitle>
           </CardHeader>
           <CardContent className="space-y-2">
+            <div className="grid grid-cols-1 gap-2">
+              <div className="space-y-1">
+                <label className="text-sm font-medium">Fecha de emisión</label>
+                <Input
+                  type="date"
+                  value={
+                    invoiceDate
+                      ? invoiceDate.toISOString().split("T")[0]
+                      : ""
+                  }
+                  onChange={(e) => onInvoiceDateChange(e.target.value)}
+                />
+              </div>
+              <div className="space-y-1">
+                <label className="text-sm font-medium">Fecha de vencimiento</label>
+                <Input
+                  type="date"
+                  value={
+                    dueDate ? dueDate.toISOString().split("T")[0] : ""
+                  }
+                  onChange={(e) => onDueDateChange(e.target.value)}
+                />
+              </div>
+            </div>
             <div className="flex justify-between text-sm">
               <span>Subtotal:</span>
               <span>${totals.subtotal.toFixed(2)}</span>

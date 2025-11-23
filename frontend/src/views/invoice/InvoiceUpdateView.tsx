@@ -34,12 +34,13 @@ export default function InvoiceUpdateView() {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
-  const { setValue, handleSubmit } = useForm<CreateInvoiceForm>({
+  const { setValue, handleSubmit, watch } = useForm<CreateInvoiceForm>({
     defaultValues: {
       documentType: "05",
       isElectronic: true,
       environment: "1",
       invoiceDate: new Date(),
+      dueDate: new Date(),
       customerId: 0,
       subtotalWithoutTaxes: 0,
       subtotalWithTaxes: 0,
@@ -110,6 +111,7 @@ export default function InvoiceUpdateView() {
       setValue("isElectronic", invoiceData.isElectronic);
       setValue("environment", invoiceData.environment);
       setValue("invoiceDate", new Date(invoiceData.invoiceDate));
+      setValue("dueDate", new Date(invoiceData.dueDate));
       setValue("customerId", invoiceData.customer.id);
       setValue("paymentMethod", String(invoiceData.paymentMethod));
       setValue("paymentTermDays", invoiceData.paymentTermDays);
@@ -201,6 +203,19 @@ export default function InvoiceUpdateView() {
     setValue("totalInvoice", calculateTotals.total);
   }, [calculateTotals, setValue]);
 
+  const invoiceDate = watch("invoiceDate");
+  const dueDate = watch("dueDate");
+
+  const handleInvoiceDateChange = (value: string) => {
+    const parsedDate = value ? new Date(`${value}T00:00:00`) : new Date();
+    setValue("invoiceDate", parsedDate);
+  };
+
+  const handleDueDateChange = (value: string) => {
+    const parsedDate = value ? new Date(`${value}T00:00:00`) : invoiceDate;
+    setValue("dueDate", parsedDate ?? new Date());
+  };
+
   const onSubmit = async (data: CreateInvoiceForm) => {
     const details = products.map((p) => ({
       productId: p.id,
@@ -211,9 +226,13 @@ export default function InvoiceUpdateView() {
       taxId: p.tax.id,
     }));
 
+    const emissionDate = data.invoiceDate ?? new Date();
+    const selectedDueDate = data.dueDate ?? emissionDate;
+
     const payload = {
       ...data,
-      invoiceDate: new Date(data.invoiceDate),
+      invoiceDate: new Date(emissionDate),
+      dueDate: new Date(selectedDueDate),
       details,
     };
 
@@ -251,6 +270,10 @@ export default function InvoiceUpdateView() {
               customer={customer}
               products={products}
               totals={calculateTotals}
+              invoiceDate={invoiceDate}
+              dueDate={dueDate}
+              onInvoiceDateChange={handleInvoiceDateChange}
+              onDueDateChange={handleDueDateChange}
               openCustomerModal={openCustomerModal}
               setOpenCustomerModal={setOpenCustomerModal}
               openProductModal={openProductModal}

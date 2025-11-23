@@ -140,13 +140,21 @@ public class InvoiceRepository(StoreContext context, IHttpContextAccessor httpCo
 
             var sequence = $"{nextNumber:D9}";
 
+            var emissionDate = invoiceCreateReqDto.InvoiceDate == default
+                ? DateTime.UtcNow
+                : invoiceCreateReqDto.InvoiceDate.ToUniversalTime();
+
+            var dueDate = invoiceCreateReqDto.DueDate == default
+                ? emissionDate.AddDays(invoiceCreateReqDto.PaymentTermDays)
+                : invoiceCreateReqDto.DueDate.ToUniversalTime();
+
             var newInvoice = new Invoice
             {
                 DocumentType = customer.DocumentType,
                 Environment = invoiceCreateReqDto.Environment,
                 IsElectronic = invoiceCreateReqDto.IsElectronic,
-                InvoiceDate = DateTime.UtcNow,
-                DueDate = DateTime.UtcNow,
+                InvoiceDate = emissionDate,
+                DueDate = dueDate,
                 CustomerId = customer.Id,
                 BusinessId = businessId,
                 EstablishmentId = establishmentId,
@@ -660,11 +668,19 @@ public class InvoiceRepository(StoreContext context, IHttpContextAccessor httpCo
                 return response;
             }
 
+            var emissionDate = invoiceUpdateReqDto.InvoiceDate == default
+                ? DateTime.UtcNow
+                : invoiceUpdateReqDto.InvoiceDate.ToUniversalTime();
+
+            var dueDate = invoiceUpdateReqDto.DueDate == default
+                ? emissionDate.AddDays(invoiceUpdateReqDto.PaymentTermDays)
+                : invoiceUpdateReqDto.DueDate.ToUniversalTime();
+
             invoice.DocumentType = invoiceUpdateReqDto.DocumentType;
             invoice.IsElectronic = invoiceUpdateReqDto.IsElectronic;
             invoice.Environment = invoiceUpdateReqDto.Environment;
-            invoice.InvoiceDate = DateTime.UtcNow;
-            invoice.DueDate = DateTime.UtcNow;
+            invoice.InvoiceDate = emissionDate;
+            invoice.DueDate = dueDate;
             invoice.PaymentMethod = invoiceUpdateReqDto.PaymentMethod;
             invoice.PaymentTermDays = invoiceUpdateReqDto.PaymentTermDays;
             invoice.Description = invoiceUpdateReqDto.Description;

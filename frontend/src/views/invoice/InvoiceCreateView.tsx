@@ -32,12 +32,13 @@ export default function InvoiceCreateView() {
   const [openProductModal, setOpenProductModal] = useState(false);
   const [products, setProducts] = useState<InvoiceProduct[]>([]);
 
-  const { setValue, handleSubmit } = useForm<CreateInvoiceForm>({
+  const { setValue, handleSubmit, watch } = useForm<CreateInvoiceForm>({
     defaultValues: {
       documentType: "",
       isElectronic: true,
       environment: "1",
       invoiceDate: new Date(),
+      dueDate: new Date(),
       customerId: 0,
       subtotalWithoutTaxes: 0,
       subtotalWithTaxes: 0,
@@ -126,6 +127,19 @@ export default function InvoiceCreateView() {
     setValue("totalInvoice", totals.total);
   }, [totals]);
 
+  const invoiceDate = watch("invoiceDate");
+  const dueDate = watch("dueDate");
+
+  const handleInvoiceDateChange = (value: string) => {
+    const parsedDate = value ? new Date(`${value}T00:00:00`) : new Date();
+    setValue("invoiceDate", parsedDate);
+  };
+
+  const handleDueDateChange = (value: string) => {
+    const parsedDate = value ? new Date(`${value}T00:00:00`) : invoiceDate;
+    setValue("dueDate", parsedDate ?? new Date());
+  };
+
   const onSubmit = async (data: CreateInvoiceForm) => {
     const details = products.map((p) => ({
       productId: p.id,
@@ -136,8 +150,13 @@ export default function InvoiceCreateView() {
       taxId: p.tax.id,
     }));
 
+    const emissionDate = data.invoiceDate ?? new Date();
+    const selectedDueDate = data.dueDate ?? emissionDate;
+
     const payload = {
       ...data,
+      invoiceDate: emissionDate,
+      dueDate: selectedDueDate,
       details,
     };
 
@@ -164,6 +183,10 @@ export default function InvoiceCreateView() {
           customer={customer}
           products={products}
           totals={totals}
+          invoiceDate={invoiceDate}
+          dueDate={dueDate}
+          onInvoiceDateChange={handleInvoiceDateChange}
+          onDueDateChange={handleDueDateChange}
           openCustomerModal={openCustomerModal}
           setOpenCustomerModal={setOpenCustomerModal}
           openProductModal={openProductModal}

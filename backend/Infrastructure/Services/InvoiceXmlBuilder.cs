@@ -67,8 +67,12 @@ public class InvoiceXmlBuilder : IInvoiceXmlBuilder
 
     private static XElement InvoiceInfoBuilder(Invoice invoice, Business business, Customer customer)
     {
+        var emissionDate = invoice.InvoiceDate == default
+            ? DateTime.UtcNow
+            : invoice.InvoiceDate;
+
         return new XElement("infoFactura",
-            new XElement("fechaEmision", invoice.InvoiceDate.ToString("dd/MM/yyyy")),
+            new XElement("fechaEmision", emissionDate.ToString("dd/MM/yyyy", Culture)),
             new XElement("dirEstablecimiento", business.Address),
             new XElement("obligadoContabilidad", "NO"),
             new XElement("tipoIdentificacionComprador", customer.DocumentType),

@@ -109,7 +109,8 @@ export const createInvoiceSchema = z.object({
   documentType: z.string().min(1, "Debe seleccionar un tipo de documento"),
   isElectronic: z.boolean(),
   environment: z.string().min(1, "Debe seleccionar un ambiente"),
-  invoiceDate:z.date(),
+  invoiceDate: z.date(),
+  dueDate: z.date(),
   customerId: z
     .number()
     .int("El ID del cliente debe ser un entero")
