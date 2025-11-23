@@ -36,7 +36,7 @@ export default function InvoiceUpdateView() {
 
   const { setValue, handleSubmit } = useForm<CreateInvoiceForm>({
     defaultValues: {
-      documentType: "",
+      documentType: "05",
       isElectronic: true,
       environment: "1",
       invoiceDate: new Date(),
