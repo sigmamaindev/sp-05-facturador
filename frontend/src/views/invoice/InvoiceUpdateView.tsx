@@ -101,10 +101,23 @@ export default function InvoiceUpdateView() {
       setLoading(true);
 
       const response = await getInvoiceById(Number(id), token!);
+      const invoiceData = response.data!;
 
-      setInvoice(response.data);
-      setCustomer(response.data!.customer);
-      setProducts(mapDetailsToProducts(response.data!));
+      setInvoice(invoiceData);
+      setCustomer(invoiceData.customer);
+      setProducts(mapDetailsToProducts(invoiceData));
+      setValue("documentType", invoiceData.documentType);
+      setValue("isElectronic", invoiceData.isElectronic);
+      setValue("environment", invoiceData.environment);
+      setValue("invoiceDate", new Date(invoiceData.invoiceDate));
+      setValue("customerId", invoiceData.customer.id);
+      setValue("paymentMethod", String(invoiceData.paymentMethod));
+      setValue("paymentTermDays", invoiceData.paymentTermDays);
+      setValue("description", invoiceData.description ?? "");
+      setValue(
+        "additionalInformation",
+        invoiceData.additionalInformation ?? ""
+      );
     } catch (err: any) {
       setError(err.message);
     } finally {
