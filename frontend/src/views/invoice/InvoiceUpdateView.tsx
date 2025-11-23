@@ -213,6 +213,7 @@ export default function InvoiceUpdateView() {
 
     const payload = {
       ...data,
+      invoiceDate: data.invoiceDate && new Date(data.invoiceDate),
       details,
     };
 
