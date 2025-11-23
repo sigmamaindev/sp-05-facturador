@@ -8,7 +8,7 @@ namespace Infrastructure.Services;
 
 public class InvoiceXmlBuilder : IInvoiceXmlBuilder
 {
-    private const string InvoiceVersion = "1.0.0";
+    private const string InvoiceVersion = "1.1.0";
     private static readonly CultureInfo Culture = CultureInfo.InvariantCulture;
 
     public string BuildXMLInvoice(Invoice invoice, Business business, Establishment establishment, EmissionPoint emissionPoint, Customer customer)
@@ -45,7 +45,7 @@ public class InvoiceXmlBuilder : IInvoiceXmlBuilder
 
         var document = new XDocument(new XDeclaration("1.0", "UTF-8", null), facturaElement);
 
-        return document.ToString(SaveOptions.DisableFormatting);
+        return document.ToString();
     }
 
     private static XElement TaxInfoBuilder(Invoice invoice, Business business, Establishment establishment, EmissionPoint emissionPoint)

@@ -80,7 +80,7 @@ public class SriReceptionService(HttpClient httpClient) : ISriReceptionService
             return new SriReceptionResponseDto
             {
                 Success = false,
-                State = "SRI_NO_RESPONDE",
+                State = InvoiceStatuses.SRI_TIMEOUT,
                 Message = "El SRI no devolvió ninguna respuesta."
             };
         }
@@ -90,7 +90,7 @@ public class SriReceptionService(HttpClient httpClient) : ISriReceptionService
             return new SriReceptionResponseDto
             {
                 Success = false,
-                State = "SRI_MANTENIMIENTO",
+                State = InvoiceStatuses.SRI_UNAVAILABLE,
                 Message = "El SRI está en mantenimiento o devolvió HTML."
             };
         }
@@ -106,7 +106,7 @@ public class SriReceptionService(HttpClient httpClient) : ISriReceptionService
             return new SriReceptionResponseDto
             {
                 Success = false,
-                State = "SRI_RESPUESTA_INVALIDA",
+                State = InvoiceStatuses.SRI_INVALID_RESPONSE,
                 Message = "El SRI devolvió una respuesta no válida."
             };
         }
@@ -117,7 +117,7 @@ public class SriReceptionService(HttpClient httpClient) : ISriReceptionService
             return new SriReceptionResponseDto
             {
                 Success = false,
-                State = "SRI_FAULT",
+                State = InvoiceStatuses.SRI_ERROR,
                 Message = $"SOAP Fault: {fault.InnerText}"
             };
         }
@@ -137,14 +137,14 @@ public class SriReceptionService(HttpClient httpClient) : ISriReceptionService
         var estado = estadoNode.InnerText.Trim();
         result.State = estado;
 
-        if (estado == "RECIBIDA")
+        if (estado == InvoiceStatuses.SRI_RECEIVED)
         {
             result.Success = true;
             result.Message = "Comprobante recibido por el SRI.";
             return result;
         }
 
-        if (estado == "DEVUELTA")
+        if (estado == InvoiceStatuses.SRI_RETURNED || estado == InvoiceStatuses.sri_REJECTED)
         {
             result.Success = false;
             result.Message = ParseErrors(doc);
