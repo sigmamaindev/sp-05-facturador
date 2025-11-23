@@ -106,7 +106,7 @@ export default function InvoiceUpdateView() {
       setInvoice(invoiceData);
       setCustomer(invoiceData.customer);
       setProducts(mapDetailsToProducts(invoiceData));
-      setValue("documentType", invoiceData.documentType);
+      setValue("documentType", "05");
       setValue("isElectronic", invoiceData.isElectronic);
       setValue("environment", invoiceData.environment);
       setValue("invoiceDate", new Date(invoiceData.invoiceDate));
