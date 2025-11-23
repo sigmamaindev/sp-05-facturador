@@ -47,6 +47,7 @@ builder.Services.AddScoped<ICertificateRepository, CertificateRepository>();
 builder.Services.AddScoped<IInvoiceXmlBuilder, InvoiceXmlBuilder>();
 builder.Services.AddScoped<IElectronicSignature, ElectronicSignature>();
 builder.Services.AddScoped<IAesEncryptionService, AesEncryptionService>();
+builder.Services.AddScoped<IInvoicePdfGenerator, InvoicePdfGenerator>();
 builder.Services.AddScoped<ISriSignService, SriSignService>();
 builder.Services.AddHttpClient<ISriReceptionService, SriReceptionService>();
 builder.Services.AddHostedService<SriAuthorizationBackgroundService>();

@@ -1,6 +1,8 @@
+using Core.Constants;
 using Core.DTOs;
 using Core.DTOs.Invoice;
 using Core.Interfaces.Repository;
+using Core.Interfaces.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -10,7 +12,7 @@ namespace API.Controllers
     [Route("api/[controller]")]
     [ApiController]
 
-    public class InvoiceController(IInvoiceRepository invoiceRepository) : ControllerBase
+    public class InvoiceController(IInvoiceRepository invoiceRepository, IInvoicePdfGenerator invoicePdfGenerator) : ControllerBase
     {
         [HttpGet]
         [Authorize]
@@ -52,6 +54,33 @@ namespace API.Controllers
             }
 
             return Ok(response);
+        }
+
+        [HttpGet("{id:int}/pdf")]
+        [Authorize]
+        public async Task<IActionResult> GetInvoicePdf(int id)
+        {
+            var invoiceResponse = await invoiceRepository.GetInvoiceByIdAsync(id);
+
+            if (!invoiceResponse.Success || invoiceResponse.Data is null)
+            {
+                return BadRequest(invoiceResponse);
+            }
+
+            if (invoiceResponse.Data.Status != InvoiceStatuses.SRI_AUTHORIZED)
+            {
+                return BadRequest(new ApiResponse<string>
+                {
+                    Success = false,
+                    Message = "Factura no autorizada",
+                    Error = "Solo las facturas autorizadas pueden generar PDF"
+                });
+            }
+
+            var pdfBytes = invoicePdfGenerator.Generate(invoiceResponse.Data);
+            var fileName = $"Factura_{invoiceResponse.Data.Sequential}.pdf";
+
+            return File(pdfBytes, "application/pdf", fileName);
         }
 
         [HttpPut("{id:int}")]

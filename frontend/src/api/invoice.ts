@@ -54,6 +54,29 @@ export async function getInvoiceById(
   }
 }
 
+export async function downloadInvoicePdf(
+  id: number,
+  token: string
+): Promise<Blob> {
+  try {
+    const url = `/invoice/${id}/pdf`;
+
+    const { data } = await api.get<Blob>(url, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+      responseType: "blob",
+    });
+
+    return data;
+  } catch (error) {
+    if (isAxiosError(error) && error.response) {
+      throw new Error(error.response.data.error ?? "Error en la API");
+    }
+    throw new Error("Error desconocido");
+  }
+}
+
 export async function createInvoice(
   body: CreateInvoiceForm,
   token: string
