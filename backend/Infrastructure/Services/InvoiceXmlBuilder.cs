@@ -24,24 +24,24 @@ public class InvoiceXmlBuilder : IInvoiceXmlBuilder
             throw new InvalidOperationException("La factura no contiene detalles para generar el XML del SRI.");
         }
 
-        var facturaContent = new List<object>
+        var invoiceContent = new List<object>
         {
             TaxInfoBuilder(invoice, business, establishment, emissionPoint),
             InvoiceInfoBuilder(invoice, business, customer),
             InvoiceDetailsBuilder(invoice)
         };
 
-        var infoAdicional = BuildInfoAdicional(invoice, customer);
+        var addcionalInfo = AddicionalInfoDetail(invoice, customer);
 
-        if (infoAdicional != null)
+        if (addcionalInfo != null)
         {
-            facturaContent.Add(infoAdicional);
+            invoiceContent.Add(addcionalInfo);
         }
 
         var facturaElement = new XElement("factura",
             new XAttribute("id", "comprobante"),
             new XAttribute("version", InvoiceVersion),
-            facturaContent);
+            invoiceContent);
 
         var document = new XDocument(new XDeclaration("1.0", "UTF-8", null), facturaElement);
 
@@ -60,7 +60,7 @@ public class InvoiceXmlBuilder : IInvoiceXmlBuilder
             new XElement("codDoc", invoice.DocumentType),
             new XElement("estab", establishment.Code),
             new XElement("ptoEmi", emissionPoint.Code),
-            new XElement("secuencial", GetSequence(invoice.Sequential)),
+            new XElement("secuencial", invoice.Sequential),
             new XElement("dirMatriz", business.Address)
         );
     }
@@ -77,15 +77,15 @@ public class InvoiceXmlBuilder : IInvoiceXmlBuilder
             new XElement("direccionComprador", customer.Address),
             new XElement("totalSinImpuestos", FormatDecimal(invoice.SubtotalWithoutTaxes)),
             new XElement("totalDescuento", FormatDecimal(invoice.DiscountTotal)),
-            BuildTotalConImpuestos(invoice),
+            BuildTotalWithTaxes(invoice),
             new XElement("propina", FormatDecimal(0m)),
             new XElement("importeTotal", FormatDecimal(invoice.TotalInvoice)),
             new XElement("moneda", Currencies.USD),
-            BuildPagos(invoice)
+            BuildPayments(invoice)
         );
     }
 
-    private static XElement BuildTotalConImpuestos(Invoice invoice)
+    private static XElement BuildTotalWithTaxes(Invoice invoice)
     {
         var groupedTaxes = invoice.InvoiceDetails
             .Where(d => d.Subtotal > 0)
@@ -118,7 +118,7 @@ public class InvoiceXmlBuilder : IInvoiceXmlBuilder
         return new XElement("totalConImpuestos", groupedTaxes);
     }
 
-    private static XElement BuildPagos(Invoice invoice)
+    private static XElement BuildPayments(Invoice invoice)
     {
         var pago = new XElement("pago",
             new XElement("formaPago", string.IsNullOrWhiteSpace(invoice.PaymentMethod) ? PaymentMethods.CASH : invoice.PaymentMethod),
@@ -136,36 +136,36 @@ public class InvoiceXmlBuilder : IInvoiceXmlBuilder
 
     private static XElement InvoiceDetailsBuilder(Invoice invoice)
     {
-        var detalleElements = new List<XElement>();
+        var detailElements = new List<XElement>();
 
         foreach (var detail in invoice.InvoiceDetails)
         {
-            var detalle = new XElement("detalle",
-                new XElement("codigoPrincipal", detail.Product?.Sku ?? detail.ProductId.ToString(Culture)),
+            var detailElement = new XElement("detalle",
+                new XElement("codigoPrincipal", detail.Product?.Sku ?? detail.ProductId.ToString()),
                 new XElement("descripcion", detail.Product?.Name ?? "Producto"),
                 new XElement("cantidad", FormatDecimal(detail.Quantity, 6)),
                 new XElement("precioUnitario", FormatDecimal(detail.UnitPrice)),
                 new XElement("descuento", FormatDecimal(detail.Discount)),
-                new XElement("precioTotalSinImpuesto", FormatDecimal(detail.Subtotal)),
-                BuildImpuestosDetalle(detail)
+                new XElement("precioTotalSinImpuesto", FormatDecimal(detail.Subtotal))
             );
 
             var additionalDetails = AdditionalDetailsBuilder(detail);
-
             if (additionalDetails != null)
             {
-                detalle.Add(additionalDetails);
+                detailElement.Add(additionalDetails);
             }
 
-            detalleElements.Add(detalle);
+            detailElement.Add(BuildTaxesDetail(detail));
+
+            detailElements.Add(detailElement);
         }
 
-        return new XElement("detalles", detalleElements);
+        return new XElement("detalles", detailElements);
     }
 
-    private static XElement BuildImpuestosDetalle(InvoiceDetail detail)
+    private static XElement BuildTaxesDetail(InvoiceDetail detail)
     {
-        var impuesto = new XElement("impuesto",
+        var tax = new XElement("impuesto",
             new XElement("codigo", detail.Tax?.Code ?? "2"),
             new XElement("codigoPorcentaje", detail.Tax?.CodePercentage ?? "0"),
             new XElement("tarifa", FormatDecimal(detail.TaxRate)),
@@ -173,7 +173,7 @@ public class InvoiceXmlBuilder : IInvoiceXmlBuilder
             new XElement("valor", FormatDecimal(detail.TaxValue))
         );
 
-        return new XElement("impuestos", impuesto);
+        return new XElement("impuestos", tax);
     }
 
     private static XElement? AdditionalDetailsBuilder(InvoiceDetail detail)
@@ -184,25 +184,25 @@ public class InvoiceXmlBuilder : IInvoiceXmlBuilder
         {
             add.Add(new XElement("detAdicional",
                 new XAttribute("nombre", "Detalle"),
-                detail.Product.Description));
+                new XAttribute("valor", detail.Product.Description)
+            ));
         }
 
         if (!string.IsNullOrWhiteSpace(detail.Warehouse?.Name))
         {
             add.Add(new XElement("detAdicional",
                 new XAttribute("nombre", "Bodega"),
-                detail.Warehouse.Name));
+                new XAttribute("valor", detail.Warehouse.Name)
+            ));
         }
 
         if (add.Count == 0)
-        {
             return null;
-        }
 
         return new XElement("detallesAdicionales", add);
     }
 
-    private static XElement? BuildInfoAdicional(Invoice invoice, Customer customer)
+    private static XElement? AddicionalInfoDetail(Invoice invoice, Customer customer)
     {
         var campos = new List<XElement>();
 
@@ -280,18 +280,6 @@ public class InvoiceXmlBuilder : IInvoiceXmlBuilder
                     line);
             }
         }
-    }
-
-    private static string GetSequence(string sequential)
-    {
-        if (string.IsNullOrWhiteSpace(sequential))
-        {
-            return "000000000";
-        }
-
-        var parts = sequential.Split('-', StringSplitOptions.RemoveEmptyEntries);
-
-        return parts.Length > 2 ? parts[2] : sequential;
     }
 
     private static string FormatDecimal(decimal value, int decimals = 2)

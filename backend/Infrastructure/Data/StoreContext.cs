@@ -293,7 +293,7 @@ public class StoreContext(DbContextOptions options) : DbContext(options)
             entity.Property(i => i.DueDate).HasColumnName("FechaVencimiento");
             entity.Property(i => i.Description).HasColumnName("Descripcion");
             entity.Property(i => i.AdditionalInformation).HasColumnName("InformacionAdicional");
-            entity.Property(i => i.XmlSigned).HasColumnName("FirmaXml");
+            entity.Property(i => i.XmlSigned).HasColumnName("XmlFirmado");
             entity.Property(i => i.AuthorizationNumber).HasColumnName("NumeroAutorizacion");
             entity.Property(i => i.SriMessage).HasColumnName("MensajeSri");
 

@@ -126,18 +126,19 @@ public class InvoiceRepository(StoreContext context, IHttpContextAccessor httpCo
                .Where(
                 i =>
                 i.BusinessId == businessId &&
+                i.EstablishmentId == establishmentId &&
                 i.EmissionPointId == emissionPointId)
                .OrderByDescending(i => i.Id)
                .FirstOrDefaultAsync();
 
             int nextNumber = 1;
 
-            if (lastInvoice != null && int.TryParse(lastInvoice.Sequential.Split('-').Last(), out var lastSeq))
+            if (lastInvoice != null && int.TryParse(lastInvoice.Sequential, out var lastSeq))
             {
                 nextNumber = lastSeq + 1;
             }
 
-            var sequence = $"{establishment?.Code}-{emissionPoint?.Code}-{nextNumber:D9}";
+            var sequence = $"{nextNumber:D9}";
 
             var newInvoice = new Invoice
             {
@@ -700,7 +701,7 @@ public class InvoiceRepository(StoreContext context, IHttpContextAccessor httpCo
 
             if (invoice.IsElectronic)
             {
-                invoice.AccessKey = GenerateAccessKey(invoice.InvoiceDate, invoice.DocumentType, invoice.Customer.Document, invoice.Sequential, invoice.Environment);
+                invoice.AccessKey = GenerateAccessKey(invoice.InvoiceDate, invoice.DocumentType, invoice.Business.Document, invoice.Environment, invoice.Establishment.Code, invoice.EmissionPoint.Code, invoice.Sequential);
                 var unsignedXml = invoiceXmlBuilder.BuildXMLInvoice(invoice, invoice.Business, invoice.Establishment, invoice.EmissionPoint, invoice.Customer);
 
                 var (pfxBytes, pfxPassword) = await GetCertificateAsync(businessId);
@@ -723,6 +724,11 @@ public class InvoiceRepository(StoreContext context, IHttpContextAccessor httpCo
                     invoice.Status = InvoiceStatuses.SRI_RECEIVED;
                     invoice.SriMessage = receptionResponse.Message;
                 }
+                else if (receptionResponse.State == InvoiceStatuses.SRI_REJECTED)
+                {
+                    invoice.Status = InvoiceStatuses.SRI_REJECTED;
+                    invoice.SriMessage = receptionResponse.Message;
+                }
                 else if (receptionResponse.State == InvoiceStatuses.SRI_RETURNED)
                 {
                     invoice.Status = InvoiceStatuses.SRI_RETURNED;
@@ -734,7 +740,7 @@ public class InvoiceRepository(StoreContext context, IHttpContextAccessor httpCo
                 }
                 else
                 {
-                    invoice.Status = InvoiceStatuses.SRI_ERROR;
+                    invoice.Status = InvoiceStatuses.ERROR;
                 }
             }
             else
@@ -838,11 +844,51 @@ public class InvoiceRepository(StoreContext context, IHttpContextAccessor httpCo
         return response;
     }
 
-    private static string GenerateAccessKey(DateTime date, string documentType, string customerId, string sequential, string environment)
+    private static string GenerateAccessKey(DateTime date, string documentType, string businessDocument, string environment, string establishment, string emissionPoint, string sequencial)
     {
-        var baseKey = $"{date:ddMMyyyy}{documentType}{customerId.PadLeft(13, '0')}{environment}{sequential.Replace("-", "")}{new Random().Next(10000000, 99999999)}";
-        var verifier = (baseKey.Sum(c => c) % 10).ToString();
-        return baseKey + verifier;
+        string currentDate = date.ToString("ddMMyyyy");
+
+        string docType = documentType.PadLeft(2, '0');
+
+        string document = businessDocument.PadLeft(13, '0');
+
+        string invoiceEnvironment = environment;
+
+        string serie = $"{establishment}{emissionPoint}";
+
+        string sec = sequencial.PadLeft(9, '0');
+
+        string numericCode = new Random().Next(10000000, 99999999).ToString();
+
+        string emissionType = "1";
+
+        string preKey = $"{currentDate}{docType}{document}{invoiceEnvironment}{serie}{sec}{numericCode}{emissionType}";
+
+        string dv = CalculateCheckDigit(preKey).ToString();
+
+        return preKey + dv;
+    }
+
+    private static int CalculateCheckDigit(string chain)
+    {
+        int[] factors = [7, 6, 5, 4, 3, 2];
+        int factorIndex = 0;
+        int sum = 0;
+
+        for (int i = chain.Length - 1; i >= 0; i--)
+        {
+            int digit = int.Parse(chain[i].ToString());
+            sum += digit * factors[factorIndex];
+            factorIndex = (factorIndex + 1) % factors.Length;
+        }
+
+        int modulo = sum % 11;
+        int digitVerifier = 11 - modulo;
+
+        if (digitVerifier == 10) digitVerifier = 1;
+        if (digitVerifier == 11) digitVerifier = 0;
+
+        return digitVerifier;
     }
 
     private int GetUserIdFromToken()

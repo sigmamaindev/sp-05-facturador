@@ -13,25 +13,27 @@ public class SriReceptionService(HttpClient httpClient) : ISriReceptionService
     {
 
         var url = isProduction
-            ? "https://cel.sri.gob.ec/comprobantes-electronicos-ws/RecepcionComprobantesOffline?wsdl"
-            : "https://celcer.sri.gob.ec/comprobantes-electronicos-ws/RecepcionComprobantesOffline?wsdl";
+            ? "https://cel.sri.gob.ec/comprobantes-electronicos-ws/RecepcionComprobantesOffline"
+            : "https://celcer.sri.gob.ec/comprobantes-electronicos-ws/RecepcionComprobantesOffline";
 
+
+        var xmlBytes = Encoding.UTF8.GetBytes(signedXml);
+        var xmlBase64 = Convert.ToBase64String(xmlBytes);
 
         var soapEnvelope =
-        $@"<?xml version=""1.0"" encoding=""UTF-8""?>
-        <soapenv:Envelope xmlns:soapenv=""http://schemas.xmlsoap.org/soap/envelope/""
+$@"<?xml version=""1.0"" encoding=""UTF-8""?>
+<soapenv:Envelope xmlns:soapenv=""http://schemas.xmlsoap.org/soap/envelope/""
                   xmlns:ec=""http://ec.gob.sri.ws.recepcion"">
-        <soapnv:Header/>
-        <soapenv:Body>
-        <ec:validarComprobante>
-        <xml><![CDATA[{signedXml}]]></xml>
-        </ec:validarComprobante>
-        </soapenv:Body>
-        </soapenv:Envelope>";
+  <soapenv:Header/>
+  <soapenv:Body>
+    <ec:validarComprobante>
+      <xml>{xmlBase64}</xml>
+    </ec:validarComprobante>
+  </soapenv:Body>
+</soapenv:Envelope>";
 
-        var content = new StringContent(soapEnvelope, Encoding.UTF8, "text/xml");
-        content.Headers.ContentType = new MediaTypeHeaderValue("text/xml");
-        content.Headers.Add("SOAPAction", "validarComprobante");
+        var content = new StringContent(soapEnvelope, Encoding.UTF8);
+        content.Headers.ContentType = MediaTypeHeaderValue.Parse("text/xml; charset=utf-8");
 
         try
         {
@@ -65,7 +67,7 @@ public class SriReceptionService(HttpClient httpClient) : ISriReceptionService
             return new SriReceptionResponseDto
             {
                 Success = false,
-                State = InvoiceStatuses.SRI_ERROR,
+                State = InvoiceStatuses.ERROR,
                 Message = $"Error desconocido al enviar comprobante: {ex.Message}"
             };
         }
@@ -114,37 +116,49 @@ public class SriReceptionService(HttpClient httpClient) : ISriReceptionService
         var fault = doc.GetElementsByTagName("faultstring").Item(0);
         if (fault != null)
         {
+            var faultMessage = fault.InnerText.Trim();
+
+            if (faultMessage.Contains("unmarshalling error", StringComparison.OrdinalIgnoreCase))
+            {
+                return new SriReceptionResponseDto
+                {
+                    Success = false,
+                    State = InvoiceStatuses.SRI_INVALID_RESPONSE,
+                    Message = "El SRI no pudo interpretar el XML enviado (Unmarshalling Error). Revise que el comprobante coincida con el esquema y que la firma sea válida."
+                };
+            }
+
             return new SriReceptionResponseDto
             {
                 Success = false,
-                State = InvoiceStatuses.SRI_ERROR,
-                Message = $"SOAP Fault: {fault.InnerText}"
+                State = InvoiceStatuses.ERROR,
+                Message = $"SOAP Fault: {faultMessage}"
             };
         }
 
-        var estadoNode = doc.GetElementsByTagName("estado").Item(0);
+        var statusNode = doc.GetElementsByTagName("estado").Item(0);
 
-        if (estadoNode == null)
+        if (statusNode == null)
         {
             return new SriReceptionResponseDto
             {
                 Success = false,
-                State = "SRI_SIN_ESTADO",
+                State = "",
                 Message = "El SRI no devolvió estado en la respuesta."
             };
         }
 
-        var estado = estadoNode.InnerText.Trim();
-        result.State = estado;
+        var status = statusNode.InnerText.Trim();
+        result.State = status;
 
-        if (estado == InvoiceStatuses.SRI_RECEIVED)
+        if (status == InvoiceStatuses.SRI_RECEIVED)
         {
             result.Success = true;
             result.Message = "Comprobante recibido por el SRI.";
             return result;
         }
 
-        if (estado == InvoiceStatuses.SRI_RETURNED || estado == InvoiceStatuses.sri_REJECTED)
+        if (status == InvoiceStatuses.SRI_RETURNED || status == InvoiceStatuses.SRI_REJECTED)
         {
             result.Success = false;
             result.Message = ParseErrors(doc);
@@ -154,26 +168,26 @@ public class SriReceptionService(HttpClient httpClient) : ISriReceptionService
         return new SriReceptionResponseDto
         {
             Success = false,
-            State = estado,
-            Message = $"Estado desconocido devuelto por el SRI: {estado}"
+            State = status,
+            Message = $"Estado desconocido devuelto por el SRI: {status}"
         };
     }
 
     private static string ParseErrors(XmlDocument doc)
     {
         var sb = new StringBuilder();
-        var mensajes = doc.GetElementsByTagName("mensaje");
+        var messages = doc.GetElementsByTagName("mensaje");
 
-        if (mensajes.Count == 0)
+        if (messages.Count == 0)
             return "El SRI devolvió un error sin detalles.";
 
-        foreach (XmlNode m in mensajes)
+        foreach (XmlNode m in messages)
         {
-            var identificador = m["identificador"]?.InnerText ?? "";
-            var mensaje = m["mensaje"]?.InnerText ?? "";
+            var identifier = m["identificador"]?.InnerText ?? "";
+            var message = m["mensaje"]?.InnerText ?? "";
             var info = m["informacionAdicional"]?.InnerText ?? "";
 
-            sb.AppendLine($"{identificador}: {mensaje} {info}".Trim());
+            sb.AppendLine($"{identifier}: {message} {info}".Trim());
         }
 
         return sb.ToString();
