@@ -53,6 +53,12 @@ export default function InvoiceCreateView() {
     },
   });
 
+  useEffect(() => {
+    const now = new Date();
+    setValue("invoiceDate", now);
+    setValue("dueDate", now);
+  }, [setValue]);
+
   const handleSelectCustomer = (customer: Customer) => {
     setCustomer(customer);
     setValue("customerId", customer.id);

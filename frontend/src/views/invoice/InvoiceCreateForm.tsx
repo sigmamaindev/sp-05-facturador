@@ -216,14 +216,20 @@ export default function InvoiceCreateForm({
                 <Input
                   type="datetime-local"
                   value={formatDateTimeLocal(invoiceDate)}
+                  readOnly
+                  disabled
                   onChange={(e) => onInvoiceDateChange(e.target.value)}
                 />
               </div>
               <div className="space-y-1">
-                <label className="text-sm font-medium">Fecha de vencimiento</label>
+                <label className="text-sm font-medium">
+                  Fecha de vencimiento
+                </label>
                 <Input
                   type="datetime-local"
                   value={formatDateTimeLocal(dueDate)}
+                  readOnly
+                  disabled
                   onChange={(e) => onDueDateChange(e.target.value)}
                 />
               </div>

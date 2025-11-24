@@ -7,6 +7,7 @@ import type { Invoice } from "@/types/invoice.type";
 import { useAuth } from "@/contexts/AuthContext";
 
 import RowActions from "@/components/shared/RowActions";
+import { Badge } from "@/components/ui/badge";
 
 export const columns: ColumnDef<Invoice>[] = [
   {
@@ -37,6 +38,24 @@ export const columns: ColumnDef<Invoice>[] = [
   {
     accessorKey: "sequential",
     header: "Código",
+  },
+  {
+    accessorKey: "status",
+    header: "Estado",
+    cell: ({ row }) => {
+      const status = row.original.status ?? "Sin estado";
+      const normalized = status.toUpperCase();
+
+      const variant = normalized.includes("AUTORIZ")
+        ? "default"
+        : normalized.includes("RECIBID")
+          ? "secondary"
+          : normalized.includes("RECHAZ") || normalized.includes("DEVUEL")
+            ? "destructive"
+            : "outline";
+
+      return <Badge variant={variant}>{status}</Badge>;
+    },
   },
   {
     accessorKey: "customer.document",
