@@ -206,16 +206,6 @@ export default function InvoiceUpdateView() {
   const invoiceDate = watch("invoiceDate");
   const dueDate = watch("dueDate");
 
-  const handleInvoiceDateChange = (value: string) => {
-    const parsedDate = value ? new Date(value) : new Date();
-    setValue("invoiceDate", parsedDate);
-  };
-
-  const handleDueDateChange = (value: string) => {
-    const parsedDate = value ? new Date(value) : invoiceDate;
-    setValue("dueDate", parsedDate ?? new Date());
-  };
-
   const onSubmit = async (data: CreateInvoiceForm) => {
     const details = products.map((p) => ({
       productId: p.id,
@@ -272,8 +262,6 @@ export default function InvoiceUpdateView() {
               totals={calculateTotals}
               invoiceDate={invoiceDate}
               dueDate={dueDate}
-              onInvoiceDateChange={handleInvoiceDateChange}
-              onDueDateChange={handleDueDateChange}
               openCustomerModal={openCustomerModal}
               setOpenCustomerModal={setOpenCustomerModal}
               openProductModal={openProductModal}

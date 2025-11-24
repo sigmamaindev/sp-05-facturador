@@ -10,7 +10,6 @@ import {
 } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 
 import InvoiceCustomerModal from "./InvoiceCustomerModal";
 import InvoiceProductModal from "./InvoiceProductModal";
@@ -25,8 +24,6 @@ interface InvoiceUpdateFormProps {
   totals: InvoiceTotals;
   invoiceDate?: Date;
   dueDate?: Date;
-  onInvoiceDateChange: (value: string) => void;
-  onDueDateChange: (value: string) => void;
   openCustomerModal: boolean;
   setOpenCustomerModal: React.Dispatch<React.SetStateAction<boolean>>;
   openProductModal: boolean;
@@ -45,8 +42,6 @@ export default function InvoiceUpdateForm({
   totals,
   invoiceDate,
   dueDate,
-  onInvoiceDateChange,
-  onDueDateChange,
   openCustomerModal,
   setOpenCustomerModal,
   openProductModal,
@@ -59,18 +54,9 @@ export default function InvoiceUpdateForm({
   savingInvoice,
 }: InvoiceUpdateFormProps) {
   const formatDateTimeLocal = (date?: Date) => {
-    if (!date) return "";
+    if (!date) return "No disponible";
 
-    const pad = (value: number) => String(value).padStart(2, "0");
-
-    const year = date.getFullYear();
-    const month = pad(date.getMonth() + 1);
-    const day = pad(date.getDate());
-    const hours = pad(date.getHours());
-    const minutes = pad(date.getMinutes());
-    const seconds = pad(date.getSeconds());
-
-    return `${year}-${month}-${day}T${hours}:${minutes}:${seconds}`;
+    return date.toLocaleString("es-EC");
   };
 
   return (
@@ -213,19 +199,15 @@ export default function InvoiceUpdateForm({
             <div className="grid grid-cols-1 gap-2">
               <div className="space-y-1">
                 <label className="text-sm font-medium">Fecha de emisión</label>
-                <Input
-                  type="datetime-local"
-                  value={formatDateTimeLocal(invoiceDate)}
-                  onChange={(e) => onInvoiceDateChange(e.target.value)}
-                />
+                <p className="text-sm text-muted-foreground">
+                  {formatDateTimeLocal(invoiceDate)}
+                </p>
               </div>
               <div className="space-y-1">
                 <label className="text-sm font-medium">Fecha de vencimiento</label>
-                <Input
-                  type="datetime-local"
-                  value={formatDateTimeLocal(dueDate)}
-                  onChange={(e) => onDueDateChange(e.target.value)}
-                />
+                <p className="text-sm text-muted-foreground">
+                  {formatDateTimeLocal(dueDate)}
+                </p>
               </div>
             </div>
             <div className="flex justify-between text-sm">
