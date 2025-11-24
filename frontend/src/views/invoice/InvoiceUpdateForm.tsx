@@ -17,6 +17,7 @@ import InvoiceProductModal from "./InvoiceProductModal";
 import type { InvoiceProduct, InvoiceTotals } from "@/types/invoice.type";
 import type { Customer } from "@/types/customer.types";
 import type { Product } from "@/types/product.types";
+import { Input } from "@/components/ui/input";
 
 interface InvoiceUpdateFormProps {
   customer: Customer | null;
@@ -204,7 +205,9 @@ export default function InvoiceUpdateForm({
                 </p>
               </div>
               <div className="space-y-1">
-                <label className="text-sm font-medium">Fecha de vencimiento</label>
+                <label className="text-sm font-medium">
+                  Fecha de vencimiento
+                </label>
                 <p className="text-sm text-muted-foreground">
                   {formatDateTimeLocal(dueDate)}
                 </p>
