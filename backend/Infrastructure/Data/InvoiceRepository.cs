@@ -140,21 +140,16 @@ public class InvoiceRepository(StoreContext context, IHttpContextAccessor httpCo
 
             var sequence = $"{nextNumber:D9}";
 
-            var emissionDate = invoiceCreateReqDto.InvoiceDate == default
-                ? DateTime.UtcNow
-                : invoiceCreateReqDto.InvoiceDate.ToUniversalTime();
-
-            var dueDate = invoiceCreateReqDto.DueDate == default
-                ? emissionDate.AddDays(invoiceCreateReqDto.PaymentTermDays)
-                : invoiceCreateReqDto.DueDate.ToUniversalTime();
+            var ecTime = TimeZoneInfo.ConvertTime(DateTime.UtcNow,
+              TimeZoneInfo.FindSystemTimeZoneById("America/Guayaquil"));
 
             var newInvoice = new Invoice
             {
                 DocumentType = customer.DocumentType,
                 Environment = invoiceCreateReqDto.Environment,
                 IsElectronic = invoiceCreateReqDto.IsElectronic,
-                InvoiceDate = emissionDate,
-                DueDate = dueDate,
+                InvoiceDate = ecTime,
+                DueDate = ecTime,
                 CustomerId = customer.Id,
                 BusinessId = businessId,
                 EstablishmentId = establishmentId,
@@ -727,19 +722,14 @@ public class InvoiceRepository(StoreContext context, IHttpContextAccessor httpCo
                 return response;
             }
 
-            var emissionDate = invoiceUpdateReqDto.InvoiceDate == default
-                ? DateTime.UtcNow
-                : invoiceUpdateReqDto.InvoiceDate.ToUniversalTime();
-
-            var dueDate = invoiceUpdateReqDto.DueDate == default
-                ? emissionDate.AddDays(invoiceUpdateReqDto.PaymentTermDays)
-                : invoiceUpdateReqDto.DueDate.ToUniversalTime();
+            var ecTime = TimeZoneInfo.ConvertTime(DateTime.UtcNow,
+              TimeZoneInfo.FindSystemTimeZoneById("America/Guayaquil"));
 
             invoice.DocumentType = invoiceUpdateReqDto.DocumentType;
             invoice.IsElectronic = invoiceUpdateReqDto.IsElectronic;
             invoice.Environment = invoiceUpdateReqDto.Environment;
-            invoice.InvoiceDate = emissionDate;
-            invoice.DueDate = dueDate;
+            invoice.InvoiceDate = ecTime;
+            invoice.DueDate = ecTime;
             invoice.PaymentMethod = invoiceUpdateReqDto.PaymentMethod;
             invoice.PaymentTermDays = invoiceUpdateReqDto.PaymentTermDays;
             invoice.Description = invoiceUpdateReqDto.Description;

@@ -276,8 +276,8 @@ public class StoreContext(DbContextOptions options) : DbContext(options)
             entity.Property(i => i.DocumentType).HasColumnName("TipoDocumento");
             entity.Property(i => i.Status).HasColumnName("Estado");
             entity.Property(i => i.IsElectronic).HasColumnName("Electronico");
-            entity.Property(i => i.InvoiceDate).HasColumnName("FechaFactura");
-            entity.Property(i => i.AuthorizationDate).HasColumnName("FechaAutorizacion");
+            entity.Property(i => i.InvoiceDate).HasColumnName("FechaFactura").HasColumnType("timestamp without time zone");;
+            entity.Property(i => i.AuthorizationDate).HasColumnName("FechaAutorizacion").HasColumnType("timestamp without time zone");
             entity.Property(i => i.UserId).HasColumnName("UsuarioId");
             entity.Property(i => i.CustomerId).HasColumnName("ClienteId");
             entity.Property(i => i.BusinessId).HasColumnName("EmpresaId");
@@ -290,7 +290,7 @@ public class StoreContext(DbContextOptions options) : DbContext(options)
             entity.Property(i => i.TotalInvoice).HasColumnName("Total");
             entity.Property(i => i.PaymentMethod).HasColumnName("MetodoPago");
             entity.Property(i => i.PaymentTermDays).HasColumnName("DiasPago");
-            entity.Property(i => i.DueDate).HasColumnName("FechaVencimiento");
+            entity.Property(i => i.DueDate).HasColumnName("FechaVencimiento").HasColumnType("timestamp without time zone");;
             entity.Property(i => i.Description).HasColumnName("Descripcion");
             entity.Property(i => i.AdditionalInformation).HasColumnName("InformacionAdicional");
             entity.Property(i => i.XmlSigned).HasColumnName("XmlFirmado");

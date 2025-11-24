@@ -10,7 +10,7 @@ public class Invoice : BaseEntity
     public string DocumentType { get; set; } = InvoiceTypes.INVOICE;
     public string Status { get; set; } = InvoiceStatuses.DRAFT;
     public bool IsElectronic { get; set; } = true;
-    public DateTime InvoiceDate { get; set; } = DateTime.UtcNow;
+    public DateTime InvoiceDate { get; set; }
     public DateTime? AuthorizationDate { get; set; }
     public int UserId { get; set; }
     public User? User { get; set; }

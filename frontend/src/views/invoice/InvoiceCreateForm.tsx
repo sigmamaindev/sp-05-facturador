@@ -17,6 +17,7 @@ import InvoiceProductModal from "./InvoiceProductModal";
 import type { InvoiceProduct, InvoiceTotals } from "@/types/invoice.type";
 import type { Customer } from "@/types/customer.types";
 import type { Product } from "@/types/product.types";
+import { Input } from "@/components/ui/input";
 
 interface InvoiceCreateFormProps {
   customer: Customer | null;

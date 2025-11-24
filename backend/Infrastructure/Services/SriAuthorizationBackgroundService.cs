@@ -24,6 +24,8 @@ public class SriAuthorizationBackgroundService(IServiceScopeFactory serviceScope
                     .Where(i => i.Status == InvoiceStatuses.SRI_RECEIVED && i.IsElectronic)
                     .ToListAsync(stoppingToken);
 
+                var ecTime = TimeZoneInfo.ConvertTime(DateTime.UtcNow, TimeZoneInfo.FindSystemTimeZoneById("America/Guayaquil"));
+
                 foreach (var invoice in pendingInvoices)
                 {
                     var response = await sriReceptionService.AuthorizeInvoiceSriAsync(
@@ -36,7 +38,7 @@ public class SriAuthorizationBackgroundService(IServiceScopeFactory serviceScope
                     {
                         invoice.Status = InvoiceStatuses.SRI_AUTHORIZED;
                         invoice.AuthorizationNumber = response.AuthorizationNumber;
-                        invoice.AuthorizationDate = DateTime.UtcNow;
+                        invoice.AuthorizationDate = ecTime;
                     }
                     else if (response.State == InvoiceStatuses.SRI_NOT_AUTHORIZED)
                     {

@@ -67,12 +67,11 @@ public class InvoiceXmlBuilder : IInvoiceXmlBuilder
 
     private static XElement InvoiceInfoBuilder(Invoice invoice, Business business, Customer customer)
     {
-        var emissionDate = invoice.InvoiceDate == default
-            ? DateTime.UtcNow
-            : invoice.InvoiceDate;
+        var ecTime = TimeZoneInfo.ConvertTime(DateTime.UtcNow,
+              TimeZoneInfo.FindSystemTimeZoneById("America/Guayaquil"));
 
         return new XElement("infoFactura",
-            new XElement("fechaEmision", emissionDate.ToString("dd/MM/yyyy", Culture)),
+            new XElement("fechaEmision", ecTime.ToString("dd/MM/yyyy", Culture)),
             new XElement("dirEstablecimiento", business.Address),
             new XElement("obligadoContabilidad", "NO"),
             new XElement("tipoIdentificacionComprador", customer.DocumentType),
