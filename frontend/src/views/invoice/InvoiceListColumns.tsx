@@ -68,6 +68,8 @@ export const columns: ColumnDef<Invoice>[] = [
 
       const invoice = row.original;
       const isAuthorized = invoice.status?.toUpperCase() === "AUTORIZADO";
+      const isReceived =
+        invoice.status?.toUpperCase().includes("RECIBIDO") ?? false;
 
       const handlePdfDownload = async () => {
         if (!token) return;
@@ -102,7 +104,7 @@ export const columns: ColumnDef<Invoice>[] = [
         });
       }
 
-      if (hasPermission) {
+      if (hasPermission && !isReceived && !isAuthorized) {
         actions.push({
           label: "Editar",
           onClick: () => navigate(`/facturas/actualizar/${invoice.id}`),

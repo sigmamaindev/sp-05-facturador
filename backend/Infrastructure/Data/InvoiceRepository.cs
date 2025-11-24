@@ -265,6 +265,65 @@ public class InvoiceRepository(StoreContext context, IHttpContextAccessor httpCo
 
             context.Invoices.Add(newInvoice);
             await context.SaveChangesAsync();
+
+            if (newInvoice.IsElectronic)
+            {
+                newInvoice.AccessKey = GenerateAccessKey(
+                    newInvoice.InvoiceDate,
+                    newInvoice.DocumentType,
+                    business.Document,
+                    newInvoice.Environment,
+                    establishment.Code,
+                    emissionPoint.Code,
+                    newInvoice.Sequential
+                );
+                var unsignedXml = invoiceXmlBuilder.BuildXMLInvoice(newInvoice, business, establishment, emissionPoint, customer);
+
+                var (pfxBytes, pfxPassword) = await GetCertificateAsync(businessId);
+
+                var signedXml = await electronicSignature.SignXmlAsync(
+                    unsignedXml,
+                    pfxBytes,
+                    pfxPassword,
+                    cancellationToken: default
+                );
+
+                newInvoice.XmlSigned = signedXml;
+                newInvoice.Status = InvoiceStatuses.SIGNED;
+
+                var receptionResponse = await sriReceptionService.SendInvoiceSriAsync(signedXml, newInvoice.Environment == "2");
+
+                if (receptionResponse.State == InvoiceStatuses.SRI_RECEIVED)
+                {
+                    newInvoice.Status = InvoiceStatuses.SRI_RECEIVED;
+                    newInvoice.SriMessage = receptionResponse.Message;
+                }
+                else if (receptionResponse.State == InvoiceStatuses.SRI_REJECTED)
+                {
+                    newInvoice.Status = InvoiceStatuses.SRI_REJECTED;
+                    newInvoice.SriMessage = receptionResponse.Message;
+                }
+                else if (receptionResponse.State == InvoiceStatuses.SRI_RETURNED)
+                {
+                    newInvoice.Status = InvoiceStatuses.SRI_RETURNED;
+                    newInvoice.SriMessage = receptionResponse.Message;
+                }
+                else if (receptionResponse.State is InvoiceStatuses.SRI_TIMEOUT or InvoiceStatuses.SRI_UNAVAILABLE)
+                {
+                    newInvoice.Status = InvoiceStatuses.SRI_UNAVAILABLE;
+                }
+                else
+                {
+                    newInvoice.Status = InvoiceStatuses.ERROR;
+                }
+            }
+            else
+            {
+                newInvoice.AccessKey = string.Empty;
+                newInvoice.XmlSigned = null;
+            }
+
+            await context.SaveChangesAsync();
             await transaction.CommitAsync();
 
             var invoice = new InvoiceSimpleResDto

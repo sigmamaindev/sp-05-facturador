@@ -58,6 +58,21 @@ export default function InvoiceCreateForm({
   handleSubmit,
   savingInvoice,
 }: InvoiceCreateFormProps) {
+  const formatDateTimeLocal = (date?: Date) => {
+    if (!date) return "";
+
+    const pad = (value: number) => String(value).padStart(2, "0");
+
+    const year = date.getFullYear();
+    const month = pad(date.getMonth() + 1);
+    const day = pad(date.getDate());
+    const hours = pad(date.getHours());
+    const minutes = pad(date.getMinutes());
+    const seconds = pad(date.getSeconds());
+
+    return `${year}-${month}-${day}T${hours}:${minutes}:${seconds}`;
+  };
+
   return (
     <form onSubmit={handleSubmit} className="flex flex-col md:flex-row gap-4">
       <div className="md:w-3/4">
@@ -199,22 +214,16 @@ export default function InvoiceCreateForm({
               <div className="space-y-1">
                 <label className="text-sm font-medium">Fecha de emisión</label>
                 <Input
-                  type="date"
-                  value={
-                    invoiceDate
-                      ? invoiceDate.toISOString().split("T")[0]
-                      : ""
-                  }
+                  type="datetime-local"
+                  value={formatDateTimeLocal(invoiceDate)}
                   onChange={(e) => onInvoiceDateChange(e.target.value)}
                 />
               </div>
               <div className="space-y-1">
                 <label className="text-sm font-medium">Fecha de vencimiento</label>
                 <Input
-                  type="date"
-                  value={
-                    dueDate ? dueDate.toISOString().split("T")[0] : ""
-                  }
+                  type="datetime-local"
+                  value={formatDateTimeLocal(dueDate)}
                   onChange={(e) => onDueDateChange(e.target.value)}
                 />
               </div>

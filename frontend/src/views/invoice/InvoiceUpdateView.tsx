@@ -207,12 +207,12 @@ export default function InvoiceUpdateView() {
   const dueDate = watch("dueDate");
 
   const handleInvoiceDateChange = (value: string) => {
-    const parsedDate = value ? new Date(`${value}T00:00:00`) : new Date();
+    const parsedDate = value ? new Date(value) : new Date();
     setValue("invoiceDate", parsedDate);
   };
 
   const handleDueDateChange = (value: string) => {
-    const parsedDate = value ? new Date(`${value}T00:00:00`) : invoiceDate;
+    const parsedDate = value ? new Date(value) : invoiceDate;
     setValue("dueDate", parsedDate ?? new Date());
   };
 
