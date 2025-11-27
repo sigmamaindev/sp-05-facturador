@@ -1,11 +1,10 @@
-using Core.Constants;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using Core.Enums;
 using Core.DTOs;
 using Core.DTOs.Invoice;
 using Core.Interfaces.Repository;
 using Core.Interfaces.Services;
-using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
 
 namespace API.Controllers
 {
@@ -67,7 +66,7 @@ namespace API.Controllers
                 return BadRequest(invoiceResponse);
             }
 
-            if (invoiceResponse.Data.Status != InvoiceStatuses.SRI_AUTHORIZED)
+            if (invoiceResponse.Data.Status != InvoiceStatus.SRI_AUTHORIZED)
             {
                 return BadRequest(new ApiResponse<string>
                 {

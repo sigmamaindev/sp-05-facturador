@@ -1,4 +1,5 @@
 using Core.DTOs.Customer;
+using Core.Enums;
 
 namespace Core.DTOs.Invoice;
 
@@ -9,7 +10,7 @@ public class InvoiceSimpleResDto
     public string AccessKey { get; set; } = string.Empty;
     public string Environment { get; set; } = string.Empty;
     public string DocumentType { get; set; } = string.Empty;
-    public string Status { get; set; } = string.Empty;
+    public InvoiceStatus Status { get; set; }
     public bool IsElectronic { get; set; }
     public DateTime InvoiceDate { get; set; }
     public DateTime? AuthorizationDate { get; set; }

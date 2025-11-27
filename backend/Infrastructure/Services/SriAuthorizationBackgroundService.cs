@@ -1,10 +1,11 @@
-using Core.Constants;
-using Core.Interfaces.Services;
-using Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using Infrastructure.Data;
+using Core.Interfaces.Services;
+using Core.Constants;
+using Core.Enums;
 
 namespace Infrastructure.Services;
 
@@ -21,7 +22,7 @@ public class SriAuthorizationBackgroundService(IServiceScopeFactory serviceScope
                 var sriReceptionService = scope.ServiceProvider.GetRequiredService<ISriReceptionService>();
 
                 var pendingInvoices = await context.Invoices
-                    .Where(i => i.Status == InvoiceStatuses.SRI_RECEIVED && i.IsElectronic)
+                    .Where(i => i.Status == InvoiceStatus.SRI_RECEIVED && i.IsElectronic)
                     .ToListAsync(stoppingToken);
 
                 var ecTime = TimeZoneInfo.ConvertTime(DateTime.UtcNow, TimeZoneInfo.FindSystemTimeZoneById("America/Guayaquil"));
@@ -34,23 +35,23 @@ public class SriAuthorizationBackgroundService(IServiceScopeFactory serviceScope
 
                     invoice.SriMessage = response.Message;
 
-                    if (response.State == InvoiceStatuses.SRI_AUTHORIZED)
+                    if (response.Status == InvoiceStatus.SRI_AUTHORIZED)
                     {
-                        invoice.Status = InvoiceStatuses.SRI_AUTHORIZED;
+                        invoice.Status = InvoiceStatus.SRI_AUTHORIZED;
                         invoice.AuthorizationNumber = response.AuthorizationNumber;
                         invoice.AuthorizationDate = ecTime;
                     }
-                    else if (response.State == InvoiceStatuses.SRI_NOT_AUTHORIZED)
+                    else if (response.Status == InvoiceStatus.SRI_NOT_AUTHORIZED)
                     {
-                        invoice.Status = InvoiceStatuses.SRI_REJECTED;
+                        invoice.Status = InvoiceStatus.SRI_REJECTED;
                     }
-                    else if (response.State is InvoiceStatuses.SRI_UNAVAILABLE or InvoiceStatuses.SRI_TIMEOUT)
+                    else if (response.Status is InvoiceStatus.SRI_UNAVAILABLE or InvoiceStatus.SRI_TIMEOUT)
                     {
-                        invoice.Status = InvoiceStatuses.SRI_RECEIVED;
+                        invoice.Status = InvoiceStatus.SRI_RECEIVED;
                     }
                     else
                     {
-                        invoice.Status = response.State;
+                        invoice.Status = response.Status;
                     }
                 }
 
@@ -58,14 +59,14 @@ public class SriAuthorizationBackgroundService(IServiceScopeFactory serviceScope
             }
             catch (OperationCanceledException)
             {
-                // Ignore cancellation exceptions when stopping
+                logger.LogError("Operación cancelada al verificar autorizaciones del SRI.");
             }
             catch (Exception ex)
             {
                 logger.LogError(ex, "Error al verificar autorizaciones del SRI.");
             }
 
-            await Task.Delay(TimeSpan.FromSeconds(30), stoppingToken);
+            await Task.Delay(TimeSpan.FromSeconds(60), stoppingToken);
         }
     }
 }

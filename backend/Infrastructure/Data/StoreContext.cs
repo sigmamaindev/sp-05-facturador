@@ -1,5 +1,7 @@
 using Core.Entities;
+using Core.Enums;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace Infrastructure.Data;
 
@@ -26,7 +28,7 @@ public class StoreContext(DbContextOptions options) : DbContext(options)
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
-        base.OnModelCreating(modelBuilder);
+        var invoiceStatusConverter = new EnumToStringConverter<InvoiceStatus>();
 
         modelBuilder.Entity<User>(entity =>
         {
@@ -316,6 +318,10 @@ public class StoreContext(DbContextOptions options) : DbContext(options)
             entity.HasOne(i => i.EmissionPoint)
             .WithMany(i => i.Invoices)
             .HasForeignKey(i => i.EmissionPointId);
+
+            entity.Property(i => i.Status)
+            .HasConversion(invoiceStatusConverter)
+            .HasMaxLength(50);
         });
 
         modelBuilder.Entity<InvoiceDetail>(entity =>
@@ -362,5 +368,7 @@ public class StoreContext(DbContextOptions options) : DbContext(options)
             .WithOne(bc => bc.BusinessCertificate)
             .HasForeignKey<BusinessCertificate>(bc => bc.BusinessId);
         });
+
+        base.OnModelCreating(modelBuilder);
     }
 }

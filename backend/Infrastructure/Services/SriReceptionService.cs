@@ -3,6 +3,7 @@ using System.Text;
 using System.Xml;
 using Core.Constants;
 using Core.DTOs.SRI;
+using Core.Enums;
 using Core.Interfaces.Services;
 
 namespace Infrastructure.Services;
@@ -49,7 +50,7 @@ $@"<?xml version=""1.0"" encoding=""UTF-8""?>
             return new SriReceptionResponseDto
             {
                 Success = false,
-                State = InvoiceStatuses.SRI_TIMEOUT,
+                Status = InvoiceStatus.SRI_TIMEOUT,
                 Message = "El SRI no respondió (timeout). Intente más tarde."
             };
         }
@@ -58,7 +59,7 @@ $@"<?xml version=""1.0"" encoding=""UTF-8""?>
             return new SriReceptionResponseDto
             {
                 Success = false,
-                State = InvoiceStatuses.SRI_UNAVAILABLE,
+                Status = InvoiceStatus.SRI_UNAVAILABLE,
                 Message = "No fue posible conectarse al SRI. Servicio no disponible."
             };
         }
@@ -67,7 +68,7 @@ $@"<?xml version=""1.0"" encoding=""UTF-8""?>
             return new SriReceptionResponseDto
             {
                 Success = false,
-                State = InvoiceStatuses.ERROR,
+                Status = InvoiceStatus.ERROR,
                 Message = $"Error desconocido al enviar comprobante: {ex.Message}"
             };
         }
@@ -108,7 +109,7 @@ $@"<?xml version=""1.0"" encoding=""UTF-8""?>
             return new SriAuthorizationResponseDto
             {
                 Success = false,
-                State = InvoiceStatuses.SRI_TIMEOUT,
+                Status = InvoiceStatus.SRI_TIMEOUT,
                 Message = "El SRI no respondió (timeout). Intente más tarde."
             };
         }
@@ -117,7 +118,7 @@ $@"<?xml version=""1.0"" encoding=""UTF-8""?>
             return new SriAuthorizationResponseDto
             {
                 Success = false,
-                State = InvoiceStatuses.SRI_UNAVAILABLE,
+                Status = InvoiceStatus.SRI_UNAVAILABLE,
                 Message = "No fue posible conectarse al SRI. Servicio no disponible."
             };
         }
@@ -126,7 +127,7 @@ $@"<?xml version=""1.0"" encoding=""UTF-8""?>
             return new SriAuthorizationResponseDto
             {
                 Success = false,
-                State = InvoiceStatuses.ERROR,
+                Status = InvoiceStatus.ERROR,
                 Message = $"Error desconocido al autorizar comprobante: {ex.Message}"
             };
         }
@@ -141,7 +142,7 @@ $@"<?xml version=""1.0"" encoding=""UTF-8""?>
             return new SriReceptionResponseDto
             {
                 Success = false,
-                State = InvoiceStatuses.SRI_TIMEOUT,
+                Status = InvoiceStatus.SRI_TIMEOUT,
                 Message = "El SRI no devolvió ninguna respuesta."
             };
         }
@@ -151,7 +152,7 @@ $@"<?xml version=""1.0"" encoding=""UTF-8""?>
             return new SriReceptionResponseDto
             {
                 Success = false,
-                State = InvoiceStatuses.SRI_UNAVAILABLE,
+                Status = InvoiceStatus.SRI_UNAVAILABLE,
                 Message = "El SRI está en mantenimiento o devolvió HTML."
             };
         }
@@ -167,7 +168,7 @@ $@"<?xml version=""1.0"" encoding=""UTF-8""?>
             return new SriReceptionResponseDto
             {
                 Success = false,
-                State = InvoiceStatuses.SRI_INVALID_RESPONSE,
+                Status = InvoiceStatus.SRI_INVALID_RESPONSE,
                 Message = "El SRI devolvió una respuesta no válida."
             };
         }
@@ -182,7 +183,7 @@ $@"<?xml version=""1.0"" encoding=""UTF-8""?>
                 return new SriReceptionResponseDto
                 {
                     Success = false,
-                    State = InvoiceStatuses.SRI_INVALID_RESPONSE,
+                    Status = InvoiceStatus.SRI_INVALID_RESPONSE,
                     Message = "El SRI no pudo interpretar el XML enviado (Unmarshalling Error). Revise que el comprobante coincida con el esquema y que la firma sea válida."
                 };
             }
@@ -190,7 +191,7 @@ $@"<?xml version=""1.0"" encoding=""UTF-8""?>
             return new SriReceptionResponseDto
             {
                 Success = false,
-                State = InvoiceStatuses.ERROR,
+                Status = InvoiceStatus.ERROR,
                 Message = $"SOAP Fault: {faultMessage}"
             };
         }
@@ -202,18 +203,19 @@ $@"<?xml version=""1.0"" encoding=""UTF-8""?>
             return new SriReceptionResponseDto
             {
                 Success = false,
-                State = "",
+                Status = InvoiceStatus.SRI_NO_STATE,
                 Message = "El SRI no devolvió estado en la respuesta."
             };
         }
 
         var status = statusNode.InnerText.Trim();
-        result.State = status;
 
         if (status == InvoiceStatuses.SRI_RECEIVED)
         {
             result.Success = true;
-            result.Message = "Comprobante recibido por el SRI.";
+            result.Status = InvoiceStatus.SRI_RECEIVED;
+            result.Message = "Comprobante recibido por el SRI";
+
             return result;
         }
 
@@ -221,13 +223,14 @@ $@"<?xml version=""1.0"" encoding=""UTF-8""?>
         {
             result.Success = false;
             result.Message = ParseErrors(doc);
+
             return result;
         }
 
         return new SriReceptionResponseDto
         {
             Success = false,
-            State = status,
+            Status = InvoiceStatus.SRI_NO_STATE,
             Message = $"Estado desconocido devuelto por el SRI: {status}"
         };
     }
@@ -259,8 +262,8 @@ $@"<?xml version=""1.0"" encoding=""UTF-8""?>
             return new SriAuthorizationResponseDto
             {
                 Success = false,
-                State = InvoiceStatuses.SRI_TIMEOUT,
-                Message = "El SRI no devolvió ninguna respuesta."
+                Status = InvoiceStatus.SRI_TIMEOUT,
+                Message = "El SRI no devolvió ninguna respuesta"
             };
         }
 
@@ -269,7 +272,7 @@ $@"<?xml version=""1.0"" encoding=""UTF-8""?>
             return new SriAuthorizationResponseDto
             {
                 Success = false,
-                State = InvoiceStatuses.SRI_UNAVAILABLE,
+                Status = InvoiceStatus.SRI_UNAVAILABLE,
                 Message = "El SRI está en mantenimiento o devolvió HTML."
             };
         }
@@ -285,7 +288,7 @@ $@"<?xml version=""1.0"" encoding=""UTF-8""?>
             return new SriAuthorizationResponseDto
             {
                 Success = false,
-                State = InvoiceStatuses.SRI_INVALID_RESPONSE,
+                Status = InvoiceStatus.SRI_INVALID_RESPONSE,
                 Message = "El SRI devolvió una respuesta no válida."
             };
         }
@@ -298,7 +301,7 @@ $@"<?xml version=""1.0"" encoding=""UTF-8""?>
             return new SriAuthorizationResponseDto
             {
                 Success = false,
-                State = InvoiceStatuses.ERROR,
+                Status = InvoiceStatus.ERROR,
                 Message = $"SOAP Fault: {faultMessage}"
             };
         }
@@ -311,7 +314,7 @@ $@"<?xml version=""1.0"" encoding=""UTF-8""?>
             return new SriAuthorizationResponseDto
             {
                 Success = false,
-                State = InvoiceStatuses.SRI_NO_STATE,
+                Status = InvoiceStatus.SRI_NO_STATE,
                 Message = "El SRI no devolvió estado en la autorización."
             };
         }
@@ -332,8 +335,8 @@ $@"<?xml version=""1.0"" encoding=""UTF-8""?>
             return new SriAuthorizationResponseDto
             {
                 Success = true,
-                State = InvoiceStatuses.SRI_AUTHORIZED,
-                Message = "Comprobante autorizado.",
+                Status = InvoiceStatus.SRI_AUTHORIZED,
+                Message = "Comprobante autorizado",
                 AuthorizationNumber = authorizationNumber,
                 AuthorizationDate = authorizationDate
             };
@@ -344,7 +347,7 @@ $@"<?xml version=""1.0"" encoding=""UTF-8""?>
             return new SriAuthorizationResponseDto
             {
                 Success = false,
-                State = InvoiceStatuses.SRI_NOT_AUTHORIZED,
+                Status = InvoiceStatus.SRI_NOT_AUTHORIZED,
                 Message = ParseAuthorizationMessages(authorizationNode)
             };
         }
@@ -352,7 +355,7 @@ $@"<?xml version=""1.0"" encoding=""UTF-8""?>
         return new SriAuthorizationResponseDto
         {
             Success = false,
-            State = status,
+            Status = InvoiceStatus.SRI_RECEIVED,
             Message = ParseAuthorizationMessages(authorizationNode)
         };
     }

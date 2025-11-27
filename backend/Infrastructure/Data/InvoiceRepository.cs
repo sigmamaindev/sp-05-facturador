@@ -1,17 +1,17 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Http;
 using System.Security.Claims;
-using Core.Constants;
 using Core.DTOs;
 using Core.DTOs.Customer;
 using Core.DTOs.Invoice;
 using Core.Entities;
 using Core.Interfaces.Repository;
 using Core.Interfaces.Services;
+using Core.Enums;
 
 namespace Infrastructure.Data;
 
-public class InvoiceRepository(StoreContext context, IHttpContextAccessor httpContextAccessor, IInvoiceXmlBuilder invoiceXmlBuilder, IAesEncryptionService aes, IElectronicSignature electronicSignature, ISriReceptionService sriReceptionService) : IInvoiceRepository
+public class InvoiceRepository(StoreContext context, IHttpContextAccessor httpContextAccessor, IAesEncryptionService aes) : IInvoiceRepository
 {
     public async Task<ApiResponse<InvoiceSimpleResDto>> CreateInvoiceAsync(InvoiceCreateReqDto invoiceCreateReqDto)
     {
@@ -161,7 +161,7 @@ public class InvoiceRepository(StoreContext context, IHttpContextAccessor httpCo
                 PaymentTermDays = invoiceCreateReqDto.PaymentTermDays,
                 Description = invoiceCreateReqDto.Description,
                 AdditionalInformation = invoiceCreateReqDto.AdditionalInformation,
-                Status = InvoiceStatuses.DRAFT,
+                Status = InvoiceStatus.DRAFT,
                 Business = business,
                 Establishment = establishment,
                 EmissionPoint = emissionPoint,
@@ -257,68 +257,12 @@ public class InvoiceRepository(StoreContext context, IHttpContextAccessor httpCo
             newInvoice.DiscountTotal = discountTotal;
             newInvoice.TaxTotal = taxTotal;
             newInvoice.TotalInvoice = subtotalWithTaxes;
+            newInvoice.AccessKey = string.Empty;
+            newInvoice.XmlSigned = null;
 
             context.Invoices.Add(newInvoice);
             await context.SaveChangesAsync();
 
-            if (newInvoice.IsElectronic)
-            {
-                newInvoice.AccessKey = GenerateAccessKey(
-                    newInvoice.InvoiceDate,
-                    newInvoice.DocumentType,
-                    business.Document,
-                    newInvoice.Environment,
-                    establishment.Code,
-                    emissionPoint.Code,
-                    newInvoice.Sequential
-                );
-                var unsignedXml = invoiceXmlBuilder.BuildXMLInvoice(newInvoice, business, establishment, emissionPoint, customer);
-
-                var (pfxBytes, pfxPassword) = await GetCertificateAsync(businessId);
-
-                var signedXml = await electronicSignature.SignXmlAsync(
-                    unsignedXml,
-                    pfxBytes,
-                    pfxPassword,
-                    cancellationToken: default
-                );
-
-                newInvoice.XmlSigned = signedXml;
-                newInvoice.Status = InvoiceStatuses.SIGNED;
-
-                var receptionResponse = await sriReceptionService.SendInvoiceSriAsync(signedXml, newInvoice.Environment == "2");
-
-                if (receptionResponse.State == InvoiceStatuses.SRI_RECEIVED)
-                {
-                    newInvoice.Status = InvoiceStatuses.SRI_RECEIVED;
-                    newInvoice.SriMessage = receptionResponse.Message;
-                }
-                else if (receptionResponse.State == InvoiceStatuses.SRI_REJECTED)
-                {
-                    newInvoice.Status = InvoiceStatuses.SRI_REJECTED;
-                    newInvoice.SriMessage = receptionResponse.Message;
-                }
-                else if (receptionResponse.State == InvoiceStatuses.SRI_RETURNED)
-                {
-                    newInvoice.Status = InvoiceStatuses.SRI_RETURNED;
-                    newInvoice.SriMessage = receptionResponse.Message;
-                }
-                else if (receptionResponse.State is InvoiceStatuses.SRI_TIMEOUT or InvoiceStatuses.SRI_UNAVAILABLE)
-                {
-                    newInvoice.Status = InvoiceStatuses.SRI_UNAVAILABLE;
-                }
-                else
-                {
-                    newInvoice.Status = InvoiceStatuses.ERROR;
-                }
-            }
-            else
-            {
-                newInvoice.AccessKey = string.Empty;
-                newInvoice.XmlSigned = null;
-            }
-
-            await context.SaveChangesAsync();
             await transaction.CommitAsync();
 
             var invoice = new InvoiceSimpleResDto
@@ -368,8 +312,8 @@ public class InvoiceRepository(StoreContext context, IHttpContextAccessor httpCo
                 Description = newInvoice.Description,
                 AdditionalInformation = newInvoice.AdditionalInformation,
                 AuthorizationDate = newInvoice.AuthorizationDate,
-                SriMessage = newInvoice.SriMessage,
-                XmlSigned = newInvoice.XmlSigned ?? ""
+                SriMessage = "",
+                XmlSigned = ""
             };
 
             response.Success = true;
@@ -763,56 +707,7 @@ public class InvoiceRepository(StoreContext context, IHttpContextAccessor httpCo
             invoice.DiscountTotal = discountTotal;
             invoice.TaxTotal = taxTotal;
             invoice.TotalInvoice = subtotalWithTaxes;
-
-            if (invoice.IsElectronic)
-            {
-                invoice.AccessKey = GenerateAccessKey(invoice.InvoiceDate, invoice.DocumentType, invoice.Business.Document, invoice.Environment, invoice.Establishment.Code, invoice.EmissionPoint.Code, invoice.Sequential);
-                var unsignedXml = invoiceXmlBuilder.BuildXMLInvoice(invoice, invoice.Business, invoice.Establishment, invoice.EmissionPoint, invoice.Customer);
-
-                var (pfxBytes, pfxPassword) = await GetCertificateAsync(businessId);
-
-
-                var signedXml = await electronicSignature.SignXmlAsync(
-                    unsignedXml,
-                    pfxBytes,
-                    pfxPassword,
-                    cancellationToken: default
-                );
-
-                invoice.XmlSigned = signedXml;
-                invoice.Status = InvoiceStatuses.SIGNED;
-
-                var receptionResponse = await sriReceptionService.SendInvoiceSriAsync(signedXml, invoice.Environment == "2");
-
-                if (receptionResponse.State == InvoiceStatuses.SRI_RECEIVED)
-                {
-                    invoice.Status = InvoiceStatuses.SRI_RECEIVED;
-                    invoice.SriMessage = receptionResponse.Message;
-                }
-                else if (receptionResponse.State == InvoiceStatuses.SRI_REJECTED)
-                {
-                    invoice.Status = InvoiceStatuses.SRI_REJECTED;
-                    invoice.SriMessage = receptionResponse.Message;
-                }
-                else if (receptionResponse.State == InvoiceStatuses.SRI_RETURNED)
-                {
-                    invoice.Status = InvoiceStatuses.SRI_RETURNED;
-                    invoice.SriMessage = receptionResponse.Message;
-                }
-                else if (receptionResponse.State is InvoiceStatuses.SRI_TIMEOUT or InvoiceStatuses.SRI_UNAVAILABLE)
-                {
-                    invoice.Status = InvoiceStatuses.SRI_UNAVAILABLE;
-                }
-                else
-                {
-                    invoice.Status = InvoiceStatuses.ERROR;
-                }
-            }
-            else
-            {
-                invoice.AccessKey = string.Empty;
-                invoice.XmlSigned = null;
-            }
+            invoice.Status = InvoiceStatus.DRAFT;
 
             await context.SaveChangesAsync();
             await transaction.CommitAsync();
@@ -907,53 +802,6 @@ public class InvoiceRepository(StoreContext context, IHttpContextAccessor httpCo
         }
 
         return response;
-    }
-
-    private static string GenerateAccessKey(DateTime date, string documentType, string businessDocument, string environment, string establishment, string emissionPoint, string sequencial)
-    {
-        string currentDate = date.ToString("ddMMyyyy");
-
-        string docType = documentType.PadLeft(2, '0');
-
-        string document = businessDocument.PadLeft(13, '0');
-
-        string invoiceEnvironment = environment;
-
-        string serie = $"{establishment}{emissionPoint}";
-
-        string sec = sequencial.PadLeft(9, '0');
-
-        string numericCode = new Random().Next(10000000, 99999999).ToString();
-
-        string emissionType = "1";
-
-        string preKey = $"{currentDate}{docType}{document}{invoiceEnvironment}{serie}{sec}{numericCode}{emissionType}";
-
-        string dv = CalculateCheckDigit(preKey).ToString();
-
-        return preKey + dv;
-    }
-
-    private static int CalculateCheckDigit(string chain)
-    {
-        int[] factors = [2, 3, 4, 5, 6, 7];
-        int factorIndex = 0;
-        int sum = 0;
-
-        for (int i = chain.Length - 1; i >= 0; i--)
-        {
-            int digit = int.Parse(chain[i].ToString());
-            sum += digit * factors[factorIndex];
-            factorIndex = (factorIndex + 1) % factors.Length;
-        }
-
-        int modulo = sum % 11;
-        int digitVerifier = 11 - modulo;
-
-        if (digitVerifier == 10) digitVerifier = 1;
-        if (digitVerifier == 11) digitVerifier = 0;
-
-        return digitVerifier;
     }
 
     private int GetUserIdFromToken()
