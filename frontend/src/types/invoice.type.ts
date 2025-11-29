@@ -31,7 +31,7 @@ export type Invoice = {
   discountTotal: number;
   taxTotal: number;
   totalInvoice: number;
-  paymentMethod: number;
+  paymentMethod: string;
   paymentTermDays: number;
   dueDate: Date;
   description: string;
@@ -80,6 +80,12 @@ export interface InvoiceTotals {
   tax: number;
   total: number;
 }
+
+export type InvoicePaymentUpdate = {
+  paymentMethod: string;
+  paymentTermDays: number;
+  totalInvoice: number;
+};
 
 export const invoiceDetailSchema = z.object({
   productId: z

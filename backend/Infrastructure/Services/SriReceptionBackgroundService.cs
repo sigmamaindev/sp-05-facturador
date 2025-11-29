@@ -102,7 +102,7 @@ public class SriReceptionBackgroundService(IServiceScopeFactory serviceScopeFact
                 logger.LogError(ex, "Error al enviar comprobantes a Recepción del SRI.");
             }
 
-            await Task.Delay(TimeSpan.FromMinutes(15), stoppingToken);
+            await Task.Delay(TimeSpan.FromSeconds(60), stoppingToken);
         }
     }
 

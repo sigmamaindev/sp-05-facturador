@@ -669,6 +669,8 @@ public class InvoiceRepository(StoreContext context, IHttpContextAccessor httpCo
             var ecTime = TimeZoneInfo.ConvertTime(DateTime.UtcNow,
               TimeZoneInfo.FindSystemTimeZoneById("America/Guayaquil"));
 
+        
+
             invoice.ReceiptType = invoiceUpdateReqDto.ReceiptType;
             invoice.IsElectronic = invoiceUpdateReqDto.IsElectronic;
             invoice.Environment = invoiceUpdateReqDto.Environment;
@@ -679,113 +681,19 @@ public class InvoiceRepository(StoreContext context, IHttpContextAccessor httpCo
             invoice.Description = invoiceUpdateReqDto.Description;
             invoice.AdditionalInformation = invoiceUpdateReqDto.AdditionalInformation;
 
-            decimal subtotalBase = 0;
-            decimal subtotalWithTaxes = 0;
-            decimal discountTotal = 0;
-            decimal taxTotal = 0;
+            var totals = RecalculateInvoiceTotals(invoice);
 
-            foreach (var detail in invoice.InvoiceDetails)
-            {
-                var taxableBase = (detail.Quantity * detail.UnitPrice) - detail.Discount;
-                var taxRate = detail.Tax?.Rate ?? detail.TaxRate;
-                var taxValue = taxableBase * (taxRate / 100);
-                var total = taxableBase + taxValue;
-
-                detail.Subtotal = taxableBase;
-                detail.TaxRate = taxRate;
-                detail.TaxValue = taxValue;
-                detail.Total = total;
-
-                subtotalBase += taxableBase;
-                discountTotal += detail.Discount;
-                taxTotal += taxValue;
-                subtotalWithTaxes += total;
-            }
-
-            invoice.SubtotalWithoutTaxes = subtotalBase;
-            invoice.SubtotalWithTaxes = subtotalWithTaxes;
-            invoice.DiscountTotal = discountTotal;
-            invoice.TaxTotal = taxTotal;
-            invoice.TotalInvoice = subtotalWithTaxes;
+            invoice.SubtotalWithoutTaxes = totals.SubtotalWithoutTaxes;
+            invoice.SubtotalWithTaxes = totals.SubtotalWithTaxes;
+            invoice.DiscountTotal = totals.DiscountTotal;
+            invoice.TaxTotal = totals.TaxTotal;
+            invoice.TotalInvoice = totals.SubtotalWithTaxes;
             invoice.Status = InvoiceStatus.DRAFT;
 
             await context.SaveChangesAsync();
             await transaction.CommitAsync();
 
-            response.Data = new InvoiceComplexResDto
-            {
-                Id = invoice.Id,
-                Sequential = invoice.Sequential,
-                AccessKey = invoice.AccessKey,
-                AuthorizationNumber = invoice.AuthorizationNumber,
-                Environment = invoice.Environment,
-                ReceiptType = invoice.ReceiptType,
-                Status = invoice.Status,
-                IsElectronic = invoice.IsElectronic,
-                InvoiceDate = invoice.InvoiceDate,
-                DueDate = invoice.DueDate,
-                BusinessId = invoice.Business.Id,
-                BusinessDocument = invoice.Business.Document,
-                BusinessName = invoice.Business.Name,
-                EstablishmentId = invoice.Establishment.Id,
-                EstablishmentCode = invoice.Establishment.Code,
-                EstablishmentName = invoice.Establishment.Name,
-                EmissionPointId = invoice.EmissionPoint.Id,
-                EmissionPointCode = invoice.EmissionPoint.Code,
-                EmissionPointDescription = invoice.EmissionPoint.Description,
-                UserId = invoice.User!.Id,
-                UserDocument = invoice.User.Document,
-                UserFullName = invoice.User.FullName,
-                Customer = new CustomerResDto
-                {
-                    Id = invoice.Customer.Id,
-                    DocumentType = invoice.Customer.DocumentType,
-                    Document = invoice.Customer.Document,
-                    Email = invoice.Customer.Email,
-                    Name = invoice.Customer.Name,
-                    Cellphone = invoice.Customer.Cellphone,
-                    Telephone = invoice.Customer.Telephone,
-                    Address = invoice.Customer.Address,
-                    IsActive = invoice.Customer.IsActive,
-                    CreatedAt = invoice.Customer.CreatedAt
-                },
-                SubtotalWithoutTaxes = invoice.SubtotalWithoutTaxes,
-                SubtotalWithTaxes = invoice.SubtotalWithTaxes,
-                DiscountTotal = invoice.DiscountTotal,
-                TaxTotal = invoice.TaxTotal,
-                TotalInvoice = invoice.TotalInvoice,
-                PaymentMethod = invoice.PaymentMethod,
-                PaymentTermDays = invoice.PaymentTermDays,
-                Description = invoice.Description ?? "",
-                AdditionalInformation = invoice.AdditionalInformation,
-                AuthorizationDate = invoice.AuthorizationDate,
-                SriMessage = invoice.SriMessage,
-                XmlSigned = invoice.XmlSigned ?? "",
-                Details = [.. invoice.InvoiceDetails.Select(d => new InvoiceDetailResDto
-                {
-                    Id = d.Id,
-                    InvoiceId = d.InvoiceId,
-                    ProductId = d.Product!.Id,
-                    ProductCode = d.Product.Sku,
-                    ProductName = d.Product.Name,
-                    UnitMeasureId = d.Product.UnitMeasureId,
-                    UnitMeasureCode = d.Product.UnitMeasure!.Code,
-                    UnitMeasureName = d.Product.UnitMeasure!.Name,
-                    WarehouseId = d.Warehouse!.Id,
-                    WarehouseCode = d.Warehouse.Code,
-                    WarehouseName = d.Warehouse.Name,
-                    TaxId = d.Tax!.Id,
-                    TaxCode = d.Tax.Code,
-                    TaxName = d.Tax.Name,
-                    TaxRate = d.TaxRate,
-                    TaxValue = d.TaxValue,
-                    Quantity = d.Quantity,
-                    UnitPrice = d.UnitPrice,
-                    Discount = d.Discount,
-                    Subtotal = d.Subtotal,
-                    Total = d.Total
-                })]
-            };
+            response.Data = MapInvoiceToComplexDto(invoice);
 
             response.Success = true;
             response.Message = invoice.SriMessage ?? "Factura actualizada correctamente.";
@@ -802,6 +710,242 @@ public class InvoiceRepository(StoreContext context, IHttpContextAccessor httpCo
         }
 
         return response;
+    }
+
+    public async Task<ApiResponse<InvoiceComplexResDto>> UpdateInvoicePaymentAsync(int invoiceId, InvoicePaymentUpdateReqDto invoicePaymentUpdateReqDto)
+    {
+        var response = new ApiResponse<InvoiceComplexResDto>();
+
+        await using var transaction = await context.Database.BeginTransactionAsync();
+
+        try
+        {
+            var businessId = GetBusinessIdFromToken();
+            var establishmentId = GetEstablishmentIdFromToken();
+            var emissionPointId = GetEmissionPointIdFromToken();
+            var userId = GetUserIdFromToken();
+
+            if (businessId == 0 || establishmentId == 0 || emissionPointId == 0 || userId == 0)
+            {
+                response.Success = false;
+                response.Message = "Datos de autenticación incompletos";
+                response.Error = "No se pudo validar el negocio, establecimiento, punto de emisión o usuario";
+
+                return response;
+            }
+
+            var invoice = await context.Invoices
+                .Include(i => i.Customer)
+                .Include(i => i.Business)
+                .Include(i => i.Establishment)
+                .Include(i => i.EmissionPoint)
+                .Include(i => i.User)
+                .Include(i => i.InvoiceDetails)
+                .ThenInclude(d => d.Product)
+                .Include(i => i.InvoiceDetails)
+                .ThenInclude(d => d.Warehouse)
+                .Include(i => i.InvoiceDetails)
+                .ThenInclude(d => d.Tax)
+                .FirstOrDefaultAsync(i =>
+                    i.Id == invoiceId &&
+                    i.BusinessId == businessId &&
+                    i.EstablishmentId == establishmentId &&
+                    i.EmissionPointId == emissionPointId &&
+                    i.UserId == userId);
+
+            if (invoice == null)
+            {
+                response.Success = false;
+                response.Message = "Factura no encontrada";
+                response.Error = "No existe una Factura con el ID especificado";
+
+                return response;
+            }
+
+            if (!invoice.InvoiceDetails.Any())
+            {
+                response.Success = false;
+                response.Message = "La factura no tiene detalles";
+                response.Error = "No se puede registrar un pago en una factura sin productos";
+
+                return response;
+            }
+
+            if (invoice.Status != InvoiceStatus.DRAFT)
+            {
+                response.Success = false;
+                response.Message = "Estado inválido";
+                response.Error = "Solo las facturas en borrador pueden registrar pago";
+
+                return response;
+            }
+
+            if (invoicePaymentUpdateReqDto.PaymentTermDays < 0)
+            {
+                response.Success = false;
+                response.Message = "Plazo de pago inválido";
+                response.Error = "Los días de pago no pueden ser negativos";
+
+                return response;
+            }
+
+            if (string.IsNullOrWhiteSpace(invoicePaymentUpdateReqDto.PaymentMethod))
+            {
+                response.Success = false;
+                response.Message = "Método de pago requerido";
+                response.Error = "Debe especificar un método de pago";
+
+                return response;
+            }
+
+            var totals = RecalculateInvoiceTotals(invoice);
+
+            invoice.SubtotalWithoutTaxes = totals.SubtotalWithoutTaxes;
+            invoice.SubtotalWithTaxes = totals.SubtotalWithTaxes;
+            invoice.DiscountTotal = totals.DiscountTotal;
+            invoice.TaxTotal = totals.TaxTotal;
+            invoice.TotalInvoice = totals.SubtotalWithTaxes;
+
+            if (invoicePaymentUpdateReqDto.TotalInvoice > 0 &&
+                invoicePaymentUpdateReqDto.TotalInvoice != invoice.TotalInvoice)
+            {
+                response.Success = false;
+                response.Message = "Los totales no coinciden";
+                response.Error = "El total enviado no coincide con el calculado";
+
+                return response;
+            }
+
+            invoice.PaymentMethod = invoicePaymentUpdateReqDto.PaymentMethod;
+            invoice.PaymentTermDays = invoicePaymentUpdateReqDto.PaymentTermDays;
+            invoice.DueDate = invoice.InvoiceDate.AddDays(invoicePaymentUpdateReqDto.PaymentTermDays);
+            invoice.Status = InvoiceStatus.PENDING;
+
+            await context.SaveChangesAsync();
+            await transaction.CommitAsync();
+
+            response.Success = true;
+            response.Message = "Pago registrado y factura marcada como pendiente";
+            response.Data = MapInvoiceToComplexDto(invoice);
+
+            return response;
+        }
+        catch (Exception ex)
+        {
+            await transaction.RollbackAsync();
+
+            response.Success = false;
+            response.Message = "Error al actualizar el pago de la factura";
+            response.Error = ex.Message;
+        }
+
+        return response;
+    }
+
+    private static (decimal SubtotalWithoutTaxes, decimal SubtotalWithTaxes, decimal DiscountTotal, decimal TaxTotal) RecalculateInvoiceTotals(Invoice invoice)
+    {
+        decimal subtotalBase = 0;
+        decimal subtotalWithTaxes = 0;
+        decimal discountTotal = 0;
+        decimal taxTotal = 0;
+
+        foreach (var detail in invoice.InvoiceDetails)
+        {
+            var taxableBase = (detail.Quantity * detail.UnitPrice) - detail.Discount;
+            var taxRate = detail.Tax?.Rate ?? detail.TaxRate;
+            var taxValue = taxableBase * (taxRate / 100);
+            var total = taxableBase + taxValue;
+
+            detail.Subtotal = taxableBase;
+            detail.TaxRate = taxRate;
+            detail.TaxValue = taxValue;
+            detail.Total = total;
+
+            subtotalBase += taxableBase;
+            discountTotal += detail.Discount;
+            taxTotal += taxValue;
+            subtotalWithTaxes += total;
+        }
+
+        return (subtotalBase, subtotalWithTaxes, discountTotal, taxTotal);
+    }
+
+    private static InvoiceComplexResDto MapInvoiceToComplexDto(Invoice invoice)
+    {
+        return new InvoiceComplexResDto
+        {
+            Id = invoice.Id,
+            Sequential = invoice.Sequential,
+            AccessKey = invoice.AccessKey,
+            AuthorizationNumber = invoice.AuthorizationNumber,
+            Environment = invoice.Environment,
+            ReceiptType = invoice.ReceiptType,
+            Status = invoice.Status,
+            IsElectronic = invoice.IsElectronic,
+            InvoiceDate = invoice.InvoiceDate,
+            DueDate = invoice.DueDate,
+            BusinessId = invoice.Business!.Id,
+            BusinessDocument = invoice.Business.Document,
+            BusinessName = invoice.Business.Name,
+            EstablishmentId = invoice.Establishment!.Id,
+            EstablishmentCode = invoice.Establishment.Code,
+            EstablishmentName = invoice.Establishment.Name,
+            EmissionPointId = invoice.EmissionPoint!.Id,
+            EmissionPointCode = invoice.EmissionPoint.Code,
+            EmissionPointDescription = invoice.EmissionPoint.Description,
+            UserId = invoice.User!.Id,
+            UserDocument = invoice.User.Document,
+            UserFullName = invoice.User.FullName,
+            Customer = new CustomerResDto
+            {
+                Id = invoice.Customer!.Id,
+                DocumentType = invoice.Customer.DocumentType,
+                Document = invoice.Customer.Document,
+                Email = invoice.Customer.Email,
+                Name = invoice.Customer.Name,
+                Cellphone = invoice.Customer.Cellphone,
+                Telephone = invoice.Customer.Telephone,
+                Address = invoice.Customer.Address,
+                IsActive = invoice.Customer.IsActive,
+                CreatedAt = invoice.Customer.CreatedAt
+            },
+            SubtotalWithoutTaxes = invoice.SubtotalWithoutTaxes,
+            SubtotalWithTaxes = invoice.SubtotalWithTaxes,
+            DiscountTotal = invoice.DiscountTotal,
+            TaxTotal = invoice.TaxTotal,
+            TotalInvoice = invoice.TotalInvoice,
+            PaymentMethod = invoice.PaymentMethod,
+            PaymentTermDays = invoice.PaymentTermDays,
+            Description = invoice.Description ?? string.Empty,
+            AdditionalInformation = invoice.AdditionalInformation,
+            AuthorizationDate = invoice.AuthorizationDate,
+            SriMessage = invoice.SriMessage,
+            XmlSigned = invoice.XmlSigned ?? string.Empty,
+            Details = [.. invoice.InvoiceDetails.Select(d => new InvoiceDetailResDto
+            {
+                Id = d.Id,
+                InvoiceId = d.InvoiceId,
+                ProductId = d.Product!.Id,
+                ProductCode = d.Product.Sku,
+                ProductName = d.Product.Name,
+                UnitMeasureId = d.Product.UnitMeasureId,
+                UnitMeasureCode = d.Product.UnitMeasure!.Code,
+                UnitMeasureName = d.Product.UnitMeasure!.Name,
+                WarehouseId = d.Warehouse!.Id,
+                WarehouseCode = d.Warehouse.Code,
+                WarehouseName = d.Warehouse.Name,
+                TaxId = d.Tax!.Id,
+                TaxCode = d.Tax.Code,
+                TaxName = d.Tax.Name,
+                TaxRate = d.TaxRate,
+                TaxValue = d.TaxValue,
+                Quantity = d.Quantity,
+                UnitPrice = d.UnitPrice,
+                Discount = d.Discount,
+                Subtotal = d.Subtotal,
+                Total = d.Total
+            })]
+        };
     }
 
     private int GetUserIdFromToken()

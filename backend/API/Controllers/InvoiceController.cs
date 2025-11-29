@@ -55,6 +55,20 @@ namespace API.Controllers
             return Ok(response);
         }
 
+        [HttpPatch("{id:int}/payment")]
+        [Authorize]
+        public async Task<ActionResult<ApiResponse<InvoiceComplexResDto>>> UpdateInvoicePayment(int id, [FromBody] InvoicePaymentUpdateReqDto invoicePaymentUpdateReqDto)
+        {
+            var response = await invoiceRepository.UpdateInvoicePaymentAsync(id, invoicePaymentUpdateReqDto);
+
+            if (!response.Success)
+            {
+                return BadRequest(response);
+            }
+
+            return Ok(response);
+        }
+
         [HttpGet("{id:int}/pdf")]
         [Authorize]
         public async Task<IActionResult> GetInvoicePdf(int id)

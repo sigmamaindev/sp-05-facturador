@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
@@ -7,18 +7,21 @@ import { useAuth } from "@/contexts/AuthContext";
 
 import type { Customer } from "@/types/customer.types";
 
-import { createInvoice } from "@/api/invoice";
+import { createInvoice, updateInvoicePayment } from "@/api/invoice";
 
 import { Card, CardContent } from "@/components/ui/card";
 
 import type {
   CreateInvoiceForm,
+  Invoice,
+  InvoicePaymentUpdate,
   InvoiceProduct,
   InvoiceTotals,
 } from "@/types/invoice.type";
 
 import InvoiceCreateHeader from "./InvoiceCreateHeader";
 import InvoiceCreateForm from "./InvoiceCreateForm";
+import InvoicePaymentStep from "./InvoicePaymentStep";
 import type { Product } from "@/types/product.types";
 
 export default function InvoiceCreateView() {
@@ -26,15 +29,21 @@ export default function InvoiceCreateView() {
 
   const { token } = useAuth();
 
-  const [savingInvoice, setSavingInvoice] = useState(false);
+  const [savingDraft, setSavingDraft] = useState(false);
+  const [savingAndContinue, setSavingAndContinue] = useState(false);
+  const [savingPayment, setSavingPayment] = useState(false);
   const [openCustomerModal, setOpenCustomerModal] = useState(false);
   const [customer, setCustomer] = useState<Customer | null>(null);
   const [openProductModal, setOpenProductModal] = useState(false);
   const [products, setProducts] = useState<InvoiceProduct[]>([]);
+  const [currentStep, setCurrentStep] = useState<1 | 2>(1);
+  const [draftInvoice, setDraftInvoice] = useState<Invoice | null>(null);
+  const [paymentMethod, setPaymentMethod] = useState("01");
+  const [paymentTermDays, setPaymentTermDays] = useState(0);
 
   const { setValue, handleSubmit, watch } = useForm<CreateInvoiceForm>({
     defaultValues: {
-      documentType: "",
+      documentType: "01",
       isElectronic: true,
       environment: "1",
       invoiceDate: new Date(),
@@ -45,7 +54,7 @@ export default function InvoiceCreateView() {
       discountTotal: 0,
       taxTotal: 0,
       totalInvoice: 0,
-      paymentMethod: "",
+      paymentMethod: "01",
       paymentTermDays: 0,
       description: "",
       additionalInformation: "",
@@ -59,9 +68,9 @@ export default function InvoiceCreateView() {
     setValue("dueDate", now);
   }, [setValue]);
 
-  const handleSelectCustomer = (customer: Customer) => {
-    setCustomer(customer);
-    setValue("customerId", customer.id);
+  const handleSelectCustomer = (selectedCustomer: Customer) => {
+    setCustomer(selectedCustomer);
+    setValue("customerId", selectedCustomer.id);
     setOpenCustomerModal(false);
   };
 
@@ -97,12 +106,12 @@ export default function InvoiceCreateView() {
         if (p.id === productId) {
           const base = (p.price - p.discount) * newQty;
           const ivaRate = p.tax.rate ?? 12;
-          const ivaValue = base * (ivaRate / 100);
+          const taxValue = base * (ivaRate / 100);
           return {
             ...p,
             quantity: newQty,
             subtotal: base,
-            ivaValue,
+            taxValue,
           };
         }
         return p;
@@ -114,16 +123,14 @@ export default function InvoiceCreateView() {
     setProducts((prev) => prev.filter((p) => p.id !== id));
   };
 
-  const calculateTotals = (): InvoiceTotals => {
+  const totals = useMemo((): InvoiceTotals => {
     const subtotal = products.reduce((sum, p) => sum + p.subtotal, 0);
     const discount = products.reduce((sum, p) => sum + p.discount, 0);
     const tax = products.reduce((sum, p) => sum + p.taxValue, 0);
     const total = subtotal + tax;
 
     return { subtotal, discount, tax, total };
-  };
-
-  const totals = calculateTotals();
+  }, [products]);
 
   useEffect(() => {
     setValue("subtotalWithoutTaxes", totals.subtotal);
@@ -131,67 +138,153 @@ export default function InvoiceCreateView() {
     setValue("discountTotal", totals.discount);
     setValue("taxTotal", totals.tax);
     setValue("totalInvoice", totals.total);
-  }, [totals]);
+  }, [totals, setValue]);
 
   const invoiceDate = watch("invoiceDate");
   const dueDate = watch("dueDate");
 
-  const onSubmit = async (data: CreateInvoiceForm) => {
+  const buildInvoicePayload = (data: CreateInvoiceForm) => {
     const details = products.map((p) => ({
       productId: p.id,
       quantity: p.quantity,
       unitPrice: p.price,
       discount: p.discount,
-      warehouseId: p.inventory[0].warehouseId,
+      warehouseId: p.inventory[0]?.warehouseId ?? 0,
       taxId: p.tax.id,
     }));
 
     const emissionDate = data.invoiceDate ?? new Date();
     const selectedDueDate = data.dueDate ?? emissionDate;
 
-    const payload = {
+    return {
       ...data,
       invoiceDate: emissionDate,
       dueDate: selectedDueDate,
       details,
     };
+  };
+
+  const saveInvoiceDraft = async (
+    data: CreateInvoiceForm,
+    exitAfterSave: boolean
+  ) => {
+    if (!customer) {
+      toast.error("Debe seleccionar un cliente");
+      return;
+    }
+
+    if (!products.length) {
+      toast.error("Debe agregar al menos un producto");
+      return;
+    }
+
+    if (totals.total <= 0) {
+      toast.error("El total de la factura debe ser mayor a 0");
+      return;
+    }
+
+    const payload = buildInvoicePayload(data);
 
     try {
-      setSavingInvoice(true);
+      if (exitAfterSave) {
+        setSavingDraft(true);
+      } else {
+        setSavingAndContinue(true);
+      }
 
       const response = await createInvoice(payload, token!);
 
-      navigate("/facturas");
+      if (response.data) {
+        setDraftInvoice(response.data);
+        setPaymentMethod(response.data.paymentMethod ?? payload.paymentMethod);
+        setPaymentTermDays(response.data.paymentTermDays ?? payload.paymentTermDays);
+      }
 
-      toast.success(response.message);
+      toast.success(response.message || "Factura guardada como borrador.");
+
+      if (exitAfterSave) {
+        navigate("/facturas");
+      } else {
+        setCurrentStep(2);
+      }
     } catch (err: any) {
       toast.error(err.message);
     } finally {
-      setSavingInvoice(false);
+      setSavingDraft(false);
+      setSavingAndContinue(false);
+    }
+  };
+
+  const handleSaveDraftAndExit = () =>
+    handleSubmit((data) => saveInvoiceDraft(data, true))();
+
+  const handleContinueToPayment = () =>
+    handleSubmit((data) => saveInvoiceDraft(data, false))();
+
+  const handleConfirmPayment = async () => {
+    if (!draftInvoice) return;
+
+    if (totals.total <= 0) {
+      toast.error("El total a pagar debe ser mayor a 0");
+      return;
+    }
+
+    const body: InvoicePaymentUpdate = {
+      paymentMethod,
+      paymentTermDays,
+      totalInvoice: totals.total,
+    };
+
+    try {
+      setSavingPayment(true);
+      const response = await updateInvoicePayment(draftInvoice.id, body, token!);
+      toast.success(response.message);
+      navigate("/facturas");
+    } catch (err: any) {
+      toast.error(err.message);
+    } finally {
+      setSavingPayment(false);
     }
   };
 
   return (
     <Card>
-      <CardContent>
-        <InvoiceCreateHeader />
-        <InvoiceCreateForm
-          customer={customer}
-          products={products}
-          totals={totals}
-          invoiceDate={invoiceDate}
-          dueDate={dueDate}
-          openCustomerModal={openCustomerModal}
-          setOpenCustomerModal={setOpenCustomerModal}
-          openProductModal={openProductModal}
-          setOpenProductModal={setOpenProductModal}
-          handleSelectCustomer={handleSelectCustomer}
-          handleSelectProduct={handleSelectProduct}
-          handleQuantityChange={handleQuantityChange}
-          handleRemoveProduct={handleRemoveProduct}
-          handleSubmit={handleSubmit(onSubmit)}
-          savingInvoice={savingInvoice}
-        />
+      <CardContent className="space-y-4">
+        <InvoiceCreateHeader currentStep={currentStep} />
+        {currentStep === 1 ? (
+          <InvoiceCreateForm
+            customer={customer}
+            products={products}
+            totals={totals}
+            invoiceDate={invoiceDate}
+            dueDate={dueDate}
+            openCustomerModal={openCustomerModal}
+            setOpenCustomerModal={setOpenCustomerModal}
+            openProductModal={openProductModal}
+            setOpenProductModal={setOpenProductModal}
+            handleSelectCustomer={handleSelectCustomer}
+            handleSelectProduct={handleSelectProduct}
+            handleQuantityChange={handleQuantityChange}
+            handleRemoveProduct={handleRemoveProduct}
+            onSaveDraft={handleSaveDraftAndExit}
+            onContinue={handleContinueToPayment}
+            savingDraft={savingDraft}
+            savingAndContinuing={savingAndContinue}
+          />
+        ) : (
+          <InvoicePaymentStep
+            customer={customer}
+            products={products}
+            totals={totals}
+            paymentMethod={paymentMethod}
+            paymentTermDays={paymentTermDays}
+            onPaymentMethodChange={setPaymentMethod}
+            onPaymentTermChange={setPaymentTermDays}
+            onConfirmPayment={handleConfirmPayment}
+            loading={savingPayment}
+            sequential={draftInvoice?.sequential}
+          />
+        )}
       </CardContent>
     </Card>
   );

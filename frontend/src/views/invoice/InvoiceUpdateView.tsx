@@ -113,7 +113,7 @@ export default function InvoiceUpdateView() {
       setValue("invoiceDate", new Date(invoiceData.invoiceDate));
       setValue("dueDate", new Date(invoiceData.dueDate));
       setValue("customerId", invoiceData.customer.id);
-      setValue("paymentMethod", String(invoiceData.paymentMethod));
+      setValue("paymentMethod", invoiceData.paymentMethod);
       setValue("paymentTermDays", invoiceData.paymentTermDays);
       setValue("description", invoiceData.description ?? "");
       setValue(

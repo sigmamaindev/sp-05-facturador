@@ -12,6 +12,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 
 import AlertMessage from "@/components/shared/AlertMessage";
@@ -19,6 +20,7 @@ import DataTable from "@/components/shared/DataTable";
 
 import InvoiceCustomerModalHeader from "./InvoiceCustomerModalHeader";
 import { columns } from "./InvoiceCustomerModalColumns";
+import InvoiceCustomerCreateModal from "./InvoiceCustomerCreateModal";
 
 interface InvoiceCustomerModalProps {
   open: boolean;
@@ -40,6 +42,7 @@ export default function InvoiceCustomerModal({
   const [keyword, setKeyword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [openCreateModal, setOpenCreateModal] = useState(false);
 
   const fetchData = async () => {
     if (!token) return;
@@ -74,27 +77,41 @@ export default function InvoiceCustomerModal({
         </DialogHeader>
         <Card>
           <CardContent>
-            <InvoiceCustomerModalHeader
-              keyword={keyword}
-              setKeyword={setKeyword}
-              setPage={setPage}
-            />
-            {error ? (
-              <AlertMessage message={error} variant="destructive" />
-            ) : (
-              <DataTable
-                columns={columns({ onSelect })}
-                data={data}
-                page={page}
-                pageSize={pageSize}
-                totalPages={totalPages}
-                onPageChange={setPage}
-                onPageSizeChange={setPageSize}
-                loading={loading}
-              />
-            )}
+            <div className="flex flex-col gap-3">
+              <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-2">
+                <InvoiceCustomerModalHeader
+                  keyword={keyword}
+                  setKeyword={setKeyword}
+                  setPage={setPage}
+                />
+                <Button onClick={() => setOpenCreateModal(true)}>Nuevo cliente</Button>
+              </div>
+              {error ? (
+                <AlertMessage message={error} variant="destructive" />
+              ) : (
+                <DataTable
+                  columns={columns({ onSelect })}
+                  data={data}
+                  page={page}
+                  pageSize={pageSize}
+                  totalPages={totalPages}
+                  onPageChange={setPage}
+                  onPageSizeChange={setPageSize}
+                  loading={loading}
+                />
+              )}
+            </div>
           </CardContent>
         </Card>
+        <InvoiceCustomerCreateModal
+          open={openCreateModal}
+          onClose={() => setOpenCreateModal(false)}
+          onCreated={(customer) => {
+            onSelect(customer);
+            setOpenCreateModal(false);
+            onClose();
+          }}
+        />
       </DialogContent>
     </Dialog>
   );

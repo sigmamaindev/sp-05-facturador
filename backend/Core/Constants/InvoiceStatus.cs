@@ -4,7 +4,7 @@ public static class InvoiceStatus
 {
     public const string DRAFT = "BORRADOR";
     public const string SIGNED = "FIRMADO";
-    public const string PENDING = "FIRMADO";
+    public const string PENDING = "PENDIENTE";
     public const string SRI_RECEIVED = "RECIBIDA";
     public const string SRI_RETURNED = "DEVUELTA";
     public const string SRI_REJECTED = "RECHAZADO";
