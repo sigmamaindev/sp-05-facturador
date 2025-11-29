@@ -5,7 +5,6 @@ using Microsoft.Extensions.Logging;
 using Infrastructure.Data;
 using Core.Interfaces.Services;
 using Core.Constants;
-using Core.Enums;
 
 namespace Infrastructure.Services;
 

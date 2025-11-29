@@ -5,7 +5,6 @@ using Microsoft.Extensions.Logging;
 using Infrastructure.Data;
 using Core.Interfaces.Services;
 using Core.Constants;
-using Core.Enums;
 
 namespace Infrastructure.Services;
 
@@ -20,8 +19,18 @@ public class SriReceptionBackgroundService(IServiceScopeFactory serviceScopeFact
                 using var scope = serviceScopeFactory.CreateScope();
                 var context = scope.ServiceProvider.GetRequiredService<StoreContext>();
                 var sriReceptionService = scope.ServiceProvider.GetRequiredService<ISriReceptionService>();
+                var invoiceXmlBuilder = scope.ServiceProvider.GetRequiredService<IInvoiceXmlBuilder>();
+                var electronicSignature = scope.ServiceProvider.GetRequiredService<IElectronicSignature>();
+                var aesEncryptionService = scope.ServiceProvider.GetRequiredService<IAesEncryptionService>();
 
                 var pendingInvoices = await context.Invoices
+                    .Include(i => i.Customer)
+                    .Include(i => i.Business).ThenInclude(b => b!.BusinessCertificate)
+                    .Include(i => i.Establishment)
+                    .Include(i => i.EmissionPoint)
+                    .Include(i => i.InvoiceDetails).ThenInclude(d => d.Product)
+                    .Include(i => i.InvoiceDetails).ThenInclude(d => d.Warehouse)
+                    .Include(i => i.InvoiceDetails).ThenInclude(d => d.Tax)
                     .Where(i =>
                         i.IsElectronic &&
                         (i.Status == InvoiceStatus.SRI_TIMEOUT ||
@@ -31,27 +40,54 @@ public class SriReceptionBackgroundService(IServiceScopeFactory serviceScopeFact
 
                 foreach (var invoice in pendingInvoices)
                 {
-                    var response = await sriReceptionService.SendInvoiceSriAsync(
-                        invoice.XmlSigned!,
-                        invoice.Environment == EnvironmentStatuses.PROD);
+                    try
+                    {
+                        if (invoice.Business?.BusinessCertificate == null)
+                        {
+                            invoice.Status = InvoiceStatus.ERROR;
+                            invoice.SriMessage = "El negocio no tiene un certificado configurado para firmar la factura.";
+                            continue;
+                        }
 
-                    invoice.SriMessage = response.Message;
+                        invoice.AccessKey = string.IsNullOrWhiteSpace(invoice.AccessKey)
+                            ? GenerateAccessKey(
+                                invoice.InvoiceDate,
+                                invoice.ReceiptType,
+                                invoice.Business.Document,
+                                invoice.Environment,
+                                invoice.Establishment?.Code ?? string.Empty,
+                                invoice.EmissionPoint?.Code ?? string.Empty,
+                                invoice.Sequential)
+                            : invoice.AccessKey;
 
-                    if (response.Status == InvoiceStatus.SRI_RECEIVED)
-                    {
-                        invoice.Status = InvoiceStatus.SRI_RECEIVED;
-                    }
-                    else if (response.Status == InvoiceStatus.SRI_REJECTED)
-                    {
-                        invoice.Status = InvoiceStatus.SRI_REJECTED;
-                    }
-                    else if (response.Status is InvoiceStatus.SRI_TIMEOUT or InvoiceStatus.SRI_UNAVAILABLE)
-                    {
+                        var xml = invoiceXmlBuilder.BuildXMLInvoice(
+                            invoice,
+                            invoice.Business!,
+                            invoice.Establishment!,
+                            invoice.EmissionPoint!,
+                            invoice.Customer!);
+
+                        var certificateBytes = Convert.FromBase64String(invoice.Business.BusinessCertificate.CertificateBase64);
+                        var certificatePassword = aesEncryptionService.Decrypt(invoice.Business.BusinessCertificate.Password);
+
+                        invoice.XmlSigned = await electronicSignature.SignXmlAsync(
+                            xml,
+                            certificateBytes,
+                            certificatePassword,
+                            stoppingToken);
+
+                        var response = await sriReceptionService.SendInvoiceSriAsync(
+                            invoice.XmlSigned,
+                            invoice.Environment == EnvironmentStatuses.PROD);
+
+                        invoice.SriMessage = response.Message;
                         invoice.Status = response.Status;
                     }
-                    else
+                    catch (Exception ex)
                     {
-                        invoice.Status = response.Status;
+                        logger.LogError(ex, "Error al firmar o enviar la factura {InvoiceId} al SRI.", invoice.Id);
+                        invoice.Status = InvoiceStatus.ERROR;
+                        invoice.SriMessage = "Error al firmar o enviar la factura al SRI.";
                     }
                 }
 
@@ -66,7 +102,7 @@ public class SriReceptionBackgroundService(IServiceScopeFactory serviceScopeFact
                 logger.LogError(ex, "Error al enviar comprobantes a Recepción del SRI.");
             }
 
-            await Task.Delay(TimeSpan.FromSeconds(60), stoppingToken);
+            await Task.Delay(TimeSpan.FromMinutes(15), stoppingToken);
         }
     }
 

@@ -1,13 +1,13 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Http;
 using System.Security.Claims;
+using Core.Entities;
+using Core.Constants;
 using Core.DTOs;
 using Core.DTOs.Customer;
 using Core.DTOs.Invoice;
-using Core.Entities;
 using Core.Interfaces.Repository;
 using Core.Interfaces.Services;
-using Core.Enums;
 
 namespace Infrastructure.Data;
 
@@ -145,7 +145,7 @@ public class InvoiceRepository(StoreContext context, IHttpContextAccessor httpCo
 
             var newInvoice = new Invoice
             {
-                DocumentType = customer.DocumentType,
+                ReceiptType = invoiceCreateReqDto.ReceiptType,
                 Environment = invoiceCreateReqDto.Environment,
                 IsElectronic = invoiceCreateReqDto.IsElectronic,
                 InvoiceDate = ecTime,
@@ -217,7 +217,7 @@ public class InvoiceRepository(StoreContext context, IHttpContextAccessor httpCo
                     return response;
                 }
 
-                var subtotal = detail.Quantity * detail.UnitPrice;
+                var subtotal = detail.Quantity * product.Price;
                 var discount = detail.Discount;
                 var taxableBase = subtotal - discount;
 
@@ -272,7 +272,7 @@ public class InvoiceRepository(StoreContext context, IHttpContextAccessor httpCo
                 AccessKey = newInvoice.AccessKey,
                 AuthorizationNumber = newInvoice.AuthorizationNumber,
                 Environment = newInvoice.Environment,
-                DocumentType = customer.DocumentType,
+                ReceiptType = newInvoice.ReceiptType,
                 Status = newInvoice.Status,
                 IsElectronic = newInvoice.IsElectronic,
                 InvoiceDate = newInvoice.InvoiceDate,
@@ -380,7 +380,7 @@ public class InvoiceRepository(StoreContext context, IHttpContextAccessor httpCo
                 AccessKey = existingInvoice.AccessKey,
                 AuthorizationNumber = existingInvoice.AuthorizationNumber,
                 Environment = existingInvoice.Environment,
-                DocumentType = existingInvoice.DocumentType,
+                ReceiptType = existingInvoice.ReceiptType,
                 Status = existingInvoice.Status,
                 IsElectronic = existingInvoice.IsElectronic,
                 InvoiceDate = existingInvoice.InvoiceDate,
@@ -515,7 +515,7 @@ public class InvoiceRepository(StoreContext context, IHttpContextAccessor httpCo
                     AccessKey = i.AccessKey,
                     AuthorizationNumber = i.AuthorizationNumber,
                     Environment = i.Environment,
-                    DocumentType = i.DocumentType,
+                    ReceiptType = i.ReceiptType,
                     Status = i.Status,
                     IsElectronic = i.IsElectronic,
                     InvoiceDate = i.InvoiceDate,
@@ -669,7 +669,7 @@ public class InvoiceRepository(StoreContext context, IHttpContextAccessor httpCo
             var ecTime = TimeZoneInfo.ConvertTime(DateTime.UtcNow,
               TimeZoneInfo.FindSystemTimeZoneById("America/Guayaquil"));
 
-            invoice.DocumentType = invoiceUpdateReqDto.DocumentType;
+            invoice.ReceiptType = invoiceUpdateReqDto.ReceiptType;
             invoice.IsElectronic = invoiceUpdateReqDto.IsElectronic;
             invoice.Environment = invoiceUpdateReqDto.Environment;
             invoice.InvoiceDate = ecTime;
@@ -719,7 +719,7 @@ public class InvoiceRepository(StoreContext context, IHttpContextAccessor httpCo
                 AccessKey = invoice.AccessKey,
                 AuthorizationNumber = invoice.AuthorizationNumber,
                 Environment = invoice.Environment,
-                DocumentType = invoice.DocumentType,
+                ReceiptType = invoice.ReceiptType,
                 Status = invoice.Status,
                 IsElectronic = invoice.IsElectronic,
                 InvoiceDate = invoice.InvoiceDate,

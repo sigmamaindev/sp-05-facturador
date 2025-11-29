@@ -1,5 +1,4 @@
 using Core.Constants;
-using Core.Enums;
 
 namespace Core.Entities;
 
@@ -7,9 +6,9 @@ public class Invoice : BaseEntity
 {
     public required string Sequential { get; set; }
     public string AccessKey { get; set; } = string.Empty;
-    public string Environment { get; set; } = EnvironmentStatuses.DEV;
-    public string DocumentType { get; set; } = InvoiceTypes.INVOICE;
-    public InvoiceStatus Status { get; set; }
+    public string Environment { get; set; } =string.Empty;
+    public string ReceiptType { get; set; } = ReceiptCodeType.INVOICE;
+    public string Status { get; set; } = InvoiceStatus.DRAFT;
     public bool IsElectronic { get; set; } = true;
     public DateTime InvoiceDate { get; set; }
     public DateTime? AuthorizationDate { get; set; }

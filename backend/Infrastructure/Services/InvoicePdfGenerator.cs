@@ -81,7 +81,7 @@ public class InvoicePdfGenerator : IInvoicePdfGenerator
                         meta.Item().Row(row =>
                         {
                             row.RelativeItem().Text($"Estado: {invoice.Status}");
-                            row.RelativeItem().Text($"Documento: {invoice.DocumentType}");
+                            row.RelativeItem().Text($"Comprobante: {invoice.ReceiptType}");
                             row.RelativeItem().Text($"Usuario: {invoice.UserFullName}");
                         });
                         meta.Item().Row(row =>

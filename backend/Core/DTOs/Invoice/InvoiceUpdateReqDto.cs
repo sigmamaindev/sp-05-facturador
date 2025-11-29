@@ -2,7 +2,7 @@ namespace Core.DTOs.Invoice;
 
 public class InvoiceUpdateReqDto
 {
-    public string DocumentType { get; set; } = string.Empty;
+    public string ReceiptType { get; set; } = string.Empty;
     public bool IsElectronic { get; set; }
     public string Environment { get; set; } = string.Empty;
     public DateTime InvoiceDate { get; set; }

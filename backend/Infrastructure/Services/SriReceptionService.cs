@@ -3,7 +3,6 @@ using System.Text;
 using System.Xml;
 using Core.Constants;
 using Core.DTOs.SRI;
-using Core.Enums;
 using Core.Interfaces.Services;
 
 namespace Infrastructure.Services;
@@ -210,7 +209,7 @@ $@"<?xml version=""1.0"" encoding=""UTF-8""?>
 
         var status = statusNode.InnerText.Trim();
 
-        if (status == InvoiceStatuses.SRI_RECEIVED)
+        if (status == InvoiceStatus.SRI_RECEIVED)
         {
             result.Success = true;
             result.Status = InvoiceStatus.SRI_RECEIVED;
@@ -219,7 +218,7 @@ $@"<?xml version=""1.0"" encoding=""UTF-8""?>
             return result;
         }
 
-        if (status == InvoiceStatuses.SRI_RETURNED || status == InvoiceStatuses.SRI_REJECTED)
+        if (status == InvoiceStatus.SRI_RETURNED || status == InvoiceStatus.SRI_REJECTED)
         {
             result.Success = false;
             result.Message = ParseErrors(doc);
@@ -321,7 +320,7 @@ $@"<?xml version=""1.0"" encoding=""UTF-8""?>
 
         var status = statusNode.InnerText.Trim().ToUpperInvariant();
 
-        if (status == InvoiceStatuses.SRI_AUTHORIZED)
+        if (status == InvoiceStatus.SRI_AUTHORIZED)
         {
             var authorizationNumber = authorizationNode?["numeroAutorizacion"]?.InnerText.Trim() ?? string.Empty;
             DateTime? authorizationDate = null;
@@ -342,7 +341,7 @@ $@"<?xml version=""1.0"" encoding=""UTF-8""?>
             };
         }
 
-        if (status == InvoiceStatuses.SRI_NOT_AUTHORIZED)
+        if (status == InvoiceStatus.SRI_NOT_AUTHORIZED)
         {
             return new SriAuthorizationResponseDto
             {

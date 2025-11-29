@@ -1,7 +1,5 @@
-using Core.Entities;
-using Core.Enums;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
+using Core.Entities;
 
 namespace Infrastructure.Data;
 
@@ -28,7 +26,6 @@ public class StoreContext(DbContextOptions options) : DbContext(options)
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
-        var invoiceStatusConverter = new EnumToStringConverter<InvoiceStatus>();
 
         modelBuilder.Entity<User>(entity =>
         {
@@ -275,7 +272,7 @@ public class StoreContext(DbContextOptions options) : DbContext(options)
             entity.Property(i => i.Sequential).HasColumnName("Secuencial");
             entity.Property(i => i.AccessKey).HasColumnName("ClaveAcceso");
             entity.Property(i => i.Environment).HasColumnName("Ambiente");
-            entity.Property(i => i.DocumentType).HasColumnName("TipoDocumento");
+            entity.Property(i => i.ReceiptType).HasColumnName("TipoRecibo");
             entity.Property(i => i.Status).HasColumnName("Estado");
             entity.Property(i => i.IsElectronic).HasColumnName("Electronico");
             entity.Property(i => i.InvoiceDate).HasColumnName("FechaFactura").HasColumnType("timestamp without time zone");;
@@ -318,10 +315,6 @@ public class StoreContext(DbContextOptions options) : DbContext(options)
             entity.HasOne(i => i.EmissionPoint)
             .WithMany(i => i.Invoices)
             .HasForeignKey(i => i.EmissionPointId);
-
-            entity.Property(i => i.Status)
-            .HasConversion(invoiceStatusConverter)
-            .HasMaxLength(50);
         });
 
         modelBuilder.Entity<InvoiceDetail>(entity =>

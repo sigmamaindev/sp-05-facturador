@@ -53,10 +53,6 @@ builder.Services.AddScoped<ISriSignService, SriSignService>();
 builder.Services.AddHttpClient<ISriReceptionService, SriReceptionService>();
 builder.Services.AddHostedService<SriAuthorizationBackgroundService>();
 builder.Services.AddHostedService<SriReceptionBackgroundService>();
-builder.Services.AddControllers().AddJsonOptions(options =>
-{
-    options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
-});
 
 var jwtSettings = builder.Configuration.GetSection("Jwt");
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)

@@ -57,7 +57,7 @@ public class InvoiceXmlBuilder : IInvoiceXmlBuilder
             new XElement("nombreComercial", establishment.Name),
             new XElement("ruc", business.Document),
             new XElement("claveAcceso", invoice.AccessKey),
-            new XElement("codDoc", invoice.DocumentType),
+            new XElement("codDoc", invoice.ReceiptType),
             new XElement("estab", establishment.Code),
             new XElement("ptoEmi", emissionPoint.Code),
             new XElement("secuencial", invoice.Sequential),
