@@ -46,7 +46,7 @@ export default function InvoiceUpdateView() {
 
   const { setValue, handleSubmit, watch } = useForm<CreateInvoiceForm>({
     defaultValues: {
-      documentType: "05",
+      receiptType: "01",
       isElectronic: true,
       environment: "1",
       invoiceDate: new Date(),
@@ -119,7 +119,7 @@ export default function InvoiceUpdateView() {
       setProducts(mapDetailsToProducts(invoiceData));
       setPaymentMethod(invoiceData.paymentMethod ?? "01");
       setPaymentTermDays(invoiceData.paymentTermDays ?? 0);
-      setValue("documentType", "01");
+      setValue("receiptType", "01");
       setValue("isElectronic", invoiceData.isElectronic);
       setValue("environment", invoiceData.environment);
       setValue("invoiceDate", new Date(invoiceData.invoiceDate));

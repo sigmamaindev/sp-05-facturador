@@ -8,7 +8,7 @@ export type Invoice = {
   sequential: string;
   accessKey: string;
   environment: string;
-  documentType: string;
+  receiptType: string;
   status: string;
   isElectronic: boolean;
   invoiceDate: Date;
@@ -84,7 +84,6 @@ export interface InvoiceTotals {
 export type InvoicePaymentUpdate = {
   paymentMethod: string;
   paymentTermDays: number;
-  totalInvoice: number;
 };
 
 export const invoiceDetailSchema = z.object({
@@ -112,7 +111,7 @@ export const invoiceDetailSchema = z.object({
 });
 
 export const createInvoiceSchema = z.object({
-  documentType: z.string().min(1, "Debe seleccionar un tipo de documento"),
+  receiptType: z.string().min(1, "Debe seleccionar un tipo de documento"),
   isElectronic: z.boolean(),
   environment: z.string().min(1, "Debe seleccionar un ambiente"),
   invoiceDate: z.date(),

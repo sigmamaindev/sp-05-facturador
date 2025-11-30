@@ -43,7 +43,7 @@ export default function InvoiceCreateView() {
 
   const { setValue, handleSubmit, watch } = useForm<CreateInvoiceForm>({
     defaultValues: {
-      documentType: "01",
+      receiptType: "01",
       isElectronic: true,
       environment: "1",
       invoiceDate: new Date(),
@@ -197,7 +197,9 @@ export default function InvoiceCreateView() {
       if (response.data) {
         setDraftInvoice(response.data);
         setPaymentMethod(response.data.paymentMethod ?? payload.paymentMethod);
-        setPaymentTermDays(response.data.paymentTermDays ?? payload.paymentTermDays);
+        setPaymentTermDays(
+          response.data.paymentTermDays ?? payload.paymentTermDays
+        );
       }
 
       toast.success(response.message || "Factura guardada como borrador.");
@@ -232,12 +234,15 @@ export default function InvoiceCreateView() {
     const body: InvoicePaymentUpdate = {
       paymentMethod,
       paymentTermDays,
-      totalInvoice: totals.total,
     };
 
     try {
       setSavingPayment(true);
-      const response = await updateInvoicePayment(draftInvoice.id, body, token!);
+      const response = await updateInvoicePayment(
+        draftInvoice.id,
+        body,
+        token!
+      );
       toast.success(response.message);
       navigate("/facturas");
     } catch (err: any) {

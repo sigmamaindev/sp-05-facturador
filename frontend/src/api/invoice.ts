@@ -136,7 +136,7 @@ export async function updateInvoicePayment(
   try {
     const url = `/invoice/${id}/payment`;
 
-    const { data } = await api.patch<ApiResponseSingle<Invoice>>(url, body, {
+    const { data } = await api.put<ApiResponseSingle<Invoice>>(url, body, {
       headers: {
         Authorization: `Bearer ${token}`,
         "Content-Type": "application/json",
