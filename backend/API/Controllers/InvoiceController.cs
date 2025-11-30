@@ -55,7 +55,7 @@ namespace API.Controllers
             return Ok(response);
         }
 
-        [HttpPatch("{id:int}/payment")]
+        [HttpPut("{id:int}/payment")]
         [Authorize]
         public async Task<ActionResult<ApiResponse<InvoiceComplexResDto>>> UpdateInvoicePayment(int id, [FromBody] InvoicePaymentUpdateReqDto invoicePaymentUpdateReqDto)
         {

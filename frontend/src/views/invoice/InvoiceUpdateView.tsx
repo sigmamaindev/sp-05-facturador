@@ -10,7 +10,11 @@ import type { CreateInvoiceForm, InvoiceProduct } from "@/types/invoice.type";
 import type { Product } from "@/types/product.types";
 import type { Invoice } from "@/types/invoice.type";
 
-import { getInvoiceById, updateInvoice } from "@/api/invoice";
+import {
+  getInvoiceById,
+  updateInvoice,
+  updateInvoicePayment,
+} from "@/api/invoice";
 
 import { Card, CardContent } from "@/components/ui/card";
 
@@ -18,6 +22,7 @@ import InvoiceUpdateHeader from "./InvoiceUpdateHeader";
 import InvoiceUpdateForm from "./InvoiceUpdateForm";
 import Loading from "@/components/shared/Loading";
 import AlertMessage from "@/components/shared/AlertMessage";
+import InvoicePaymentStep from "./InvoicePaymentStep";
 
 export default function InvoiceUpdateView() {
   const { id } = useParams<{ id: string }>();
@@ -26,13 +31,18 @@ export default function InvoiceUpdateView() {
   const { token } = useAuth();
 
   const [invoice, setInvoice] = useState<Invoice | null>(null);
-  const [savingInvoice, setSavingInvoice] = useState(false);
+  const [savingDraft, setSavingDraft] = useState(false);
+  const [savingAndContinue, setSavingAndContinue] = useState(false);
+  const [savingPayment, setSavingPayment] = useState(false);
   const [openCustomerModal, setOpenCustomerModal] = useState(false);
   const [customer, setCustomer] = useState<Customer | null>(null);
   const [openProductModal, setOpenProductModal] = useState(false);
   const [products, setProducts] = useState<InvoiceProduct[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [currentStep, setCurrentStep] = useState<1 | 2>(1);
+  const [paymentMethod, setPaymentMethod] = useState("01");
+  const [paymentTermDays, setPaymentTermDays] = useState(0);
 
   const { setValue, handleSubmit, watch } = useForm<CreateInvoiceForm>({
     defaultValues: {
@@ -47,7 +57,7 @@ export default function InvoiceUpdateView() {
       discountTotal: 0,
       taxTotal: 0,
       totalInvoice: 0,
-      paymentMethod: "",
+      paymentMethod: "01",
       paymentTermDays: 0,
       description: "",
       additionalInformation: "",
@@ -107,6 +117,8 @@ export default function InvoiceUpdateView() {
       setInvoice(invoiceData);
       setCustomer(invoiceData.customer);
       setProducts(mapDetailsToProducts(invoiceData));
+      setPaymentMethod(invoiceData.paymentMethod ?? "01");
+      setPaymentTermDays(invoiceData.paymentTermDays ?? 0);
       setValue("documentType", "01");
       setValue("isElectronic", invoiceData.isElectronic);
       setValue("environment", invoiceData.environment);
@@ -206,7 +218,7 @@ export default function InvoiceUpdateView() {
   const invoiceDate = watch("invoiceDate");
   const dueDate = watch("dueDate");
 
-  const onSubmit = async (data: CreateInvoiceForm) => {
+  const buildInvoicePayload = (data: CreateInvoiceForm) => {
     const details = products.map((p) => ({
       productId: p.id,
       quantity: p.quantity,
@@ -219,25 +231,91 @@ export default function InvoiceUpdateView() {
     const emissionDate = data.invoiceDate ?? new Date();
     const selectedDueDate = data.dueDate ?? emissionDate;
 
-    const payload = {
+    return {
       ...data,
       invoiceDate: new Date(emissionDate),
       dueDate: new Date(selectedDueDate),
       details,
     };
+  };
+
+  const saveInvoice = async (data: CreateInvoiceForm, exitAfterSave: boolean) => {
+    if (!customer) {
+      toast.error("Debe seleccionar un cliente");
+      return;
+    }
+
+    if (!products.length) {
+      toast.error("Debe agregar al menos un producto");
+      return;
+    }
+
+    if (calculateTotals.total <= 0) {
+      toast.error("El total de la factura debe ser mayor a 0");
+      return;
+    }
+
+    const payload = buildInvoicePayload(data);
 
     try {
-      setSavingInvoice(true);
+      if (exitAfterSave) {
+        setSavingDraft(true);
+      } else {
+        setSavingAndContinue(true);
+      }
 
       const response = await updateInvoice(Number(id), payload, token!);
 
-      navigate("/facturas");
+      if (response.data) {
+        setInvoice(response.data);
+        setPaymentMethod(response.data.paymentMethod ?? payload.paymentMethod);
+        setPaymentTermDays(response.data.paymentTermDays ?? payload.paymentTermDays);
+      }
 
-      toast.success(response.message);
+      toast.success(response.message || "Factura actualizada correctamente.");
+
+      if (exitAfterSave) {
+        navigate("/facturas");
+      } else {
+        setCurrentStep(2);
+      }
     } catch (err: any) {
       toast.error(err.message);
     } finally {
-      setSavingInvoice(false);
+      setSavingDraft(false);
+      setSavingAndContinue(false);
+    }
+  };
+
+  const handleUpdateDraft = () =>
+    handleSubmit((data) => saveInvoice(data, true))();
+
+  const handleContinueToPayment = () =>
+    handleSubmit((data) => saveInvoice(data, false))();
+
+  const handleConfirmPayment = async () => {
+    if (!invoice) return;
+
+    if (calculateTotals.total <= 0) {
+      toast.error("El total a pagar debe ser mayor a 0");
+      return;
+    }
+
+    const body = {
+      paymentMethod,
+      paymentTermDays,
+      totalInvoice: calculateTotals.total,
+    };
+
+    try {
+      setSavingPayment(true);
+      const response = await updateInvoicePayment(invoice.id, body, token!);
+      toast.success(response.message);
+      navigate("/facturas");
+    } catch (err: any) {
+      toast.error(err.message);
+    } finally {
+      setSavingPayment(false);
     }
   };
 
@@ -256,23 +334,40 @@ export default function InvoiceUpdateView() {
         ) : (
           <>
             <InvoiceUpdateHeader sequential={invoice.sequential} />
-            <InvoiceUpdateForm
-              customer={customer}
-              products={products}
-              totals={calculateTotals}
-              invoiceDate={invoiceDate}
-              dueDate={dueDate}
-              openCustomerModal={openCustomerModal}
-              setOpenCustomerModal={setOpenCustomerModal}
-              openProductModal={openProductModal}
-              setOpenProductModal={setOpenProductModal}
-              handleSelectCustomer={handleSelectCustomer}
-              handleSelectProduct={handleSelectProduct}
-              handleQuantityChange={handleQuantityChange}
-              handleRemoveProduct={handleRemoveProduct}
-              handleSubmit={handleSubmit(onSubmit)}
-              savingInvoice={savingInvoice}
-            />
+            {currentStep === 1 ? (
+              <InvoiceUpdateForm
+                customer={customer}
+                products={products}
+                totals={calculateTotals}
+                invoiceDate={invoiceDate}
+                dueDate={dueDate}
+                openCustomerModal={openCustomerModal}
+                setOpenCustomerModal={setOpenCustomerModal}
+                openProductModal={openProductModal}
+                setOpenProductModal={setOpenProductModal}
+                handleSelectCustomer={handleSelectCustomer}
+                handleSelectProduct={handleSelectProduct}
+                handleQuantityChange={handleQuantityChange}
+                handleRemoveProduct={handleRemoveProduct}
+                onSaveDraft={handleUpdateDraft}
+                onContinue={handleContinueToPayment}
+                savingDraft={savingDraft}
+                savingAndContinuing={savingAndContinue}
+              />
+            ) : (
+              <InvoicePaymentStep
+                customer={customer}
+                products={products}
+                totals={calculateTotals}
+                paymentMethod={paymentMethod}
+                paymentTermDays={paymentTermDays}
+                onPaymentMethodChange={setPaymentMethod}
+                onPaymentTermChange={setPaymentTermDays}
+                onConfirmPayment={handleConfirmPayment}
+                loading={savingPayment}
+                sequential={invoice?.sequential}
+              />
+            )}
           </>
         )}
       </CardContent>

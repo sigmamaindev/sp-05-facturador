@@ -1,0 +1,1267 @@
+type: collection.insomnia.rest/5.0
+name: Sigma
+meta:
+  id: wrk_c3bf715a2e064bb19e650130528fb40b
+  created: 1761240762718
+  modified: 1761240762718
+  description: ""
+collection:
+  - name: Empresa
+    meta:
+      id: fld_7ab38fd3a5a24b61aa28e00541b54c92
+      created: 1761241136738
+      modified: 1762696938017
+      sortKey: -1762641663286
+      description: ""
+    children:
+      - url: "{{ _.URL }}/api/business"
+        name: Obtener negocios
+        meta:
+          id: req_5c436402e39a419aa046fd1b8425a19f
+          created: 1761241453416
+          modified: 1761409171512
+          isPrivate: false
+          description: ""
+          sortKey: -1761241453416
+        method: GET
+        headers:
+          - name: User-Agent
+            value: insomnia/11.6.2
+        authentication:
+          type: bearer
+          token: "{% response 'body', 'req_b56e41fe5adc4eabb6115ad929d4b76c',
+            'b64::JC5kYXRhLnRva2Vu::46b', 'never', 60 %}"
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.URL }}/api/business/:id"
+        name: Obtener negocio por Id
+        meta:
+          id: req_411b94d3e5a84b169d5d1002e8c9e63a
+          created: 1761422605391
+          modified: 1761422722041
+          isPrivate: false
+          description: ""
+          sortKey: -1761422605391
+        method: GET
+        headers:
+          - name: User-Agent
+            value: insomnia/11.6.2
+        authentication:
+          type: bearer
+          token: "{% response 'body', 'req_b56e41fe5adc4eabb6115ad929d4b76c',
+            'b64::JC5kYXRhLnRva2Vu::46b', 'never', 60 %}"
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+        pathParameters:
+          - name: id
+            value: "1"
+  - name: Usuario
+    meta:
+      id: fld_c20f41621f284c149b2b675a723ed859
+      created: 1761246888411
+      modified: 1762696940148
+      sortKey: -1762641663236
+      description: ""
+    children:
+      - url: "{{ _.URL }}/api/user/login"
+        name: Iniciar Sesión
+        meta:
+          id: req_b56e41fe5adc4eabb6115ad929d4b76c
+          created: 1761246892335
+          modified: 1764425433085
+          isPrivate: false
+          description: ""
+          sortKey: -1761251962870
+        method: POST
+        body:
+          mimeType: application/json
+          text: |-
+            {
+            	"username":"cacuna",
+            	"password":"123456"
+            }
+        headers:
+          - name: Content-Type
+            value: application/json
+          - name: User-Agent
+            value: insomnia/11.6.2
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.URL }}/api/user"
+        name: Obtener usuarios
+        meta:
+          id: req_e1da6ba398664555bf1efa8a6c29c8b9
+          created: 1761247192673
+          modified: 1761247511211
+          isPrivate: false
+          description: ""
+          sortKey: -1761247192673
+        method: GET
+        parameters:
+          - id: pair_0e86aa974c9d4cbc93d3bfefe529770a
+            name: keyword
+            value: "17"
+            description: ""
+            disabled: false
+          - id: pair_926b5929c36f4897a47da294eed9f6da
+            name: page
+            value: "1"
+            description: ""
+            disabled: false
+          - id: pair_ac2d535b9a97485bb4990807a801744a
+            name: limit
+            value: "10"
+            description: ""
+            disabled: false
+        headers:
+          - name: User-Agent
+            value: insomnia/11.6.2
+        authentication:
+          type: bearer
+          token: "{% response 'body', 'req_b56e41fe5adc4eabb6115ad929d4b76c',
+            'b64::JC5kYXRhLnRva2Vu::46b', 'never', 60 %}"
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.URL }}/api/user/:id"
+        name: Obtener usuario por Id
+        meta:
+          id: req_335556f839a24b859d5d20cd647d2eed
+          created: 1761251783297
+          modified: 1761272053737
+          isPrivate: false
+          description: ""
+          sortKey: -1761247042504
+        method: GET
+        parameters:
+          - id: pair_235cb685ba8648dcbd1a91b6032609fa
+            name: ""
+            value: ""
+            description: ""
+            disabled: false
+        headers:
+          - name: User-Agent
+            value: insomnia/11.6.2
+        authentication:
+          type: bearer
+          token: "{% response 'body', 'req_b56e41fe5adc4eabb6115ad929d4b76c',
+            'b64::JC5kYXRhLnRva2Vu::46b', 'never', 60 %}"
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+        pathParameters:
+          - name: id
+            value: " 9"
+      - url: "{{ _.URL }}/api/user"
+        name: Crear usuario
+        meta:
+          id: req_f3f4760d6196442c8e0401d7e8997efe
+          created: 1761251962770
+          modified: 1761384278215
+          isPrivate: false
+          description: ""
+          sortKey: -1761251962770
+        method: POST
+        body:
+          mimeType: application/json
+          text: |-
+            {
+            	"document": "1800008748",
+            	"username": "billy",
+            	"password": "123456",
+            	"fullname": "José Temistocles Acuña García",
+            	"email": "clsjs2294@gmail.com",
+            	"address": "Quis Quis y Tungurahua, Ambato, Tungurahua 180202",
+            	"cellphone": "0984988451",
+            	"telephone": "2841035",
+            	"imageUrl": "",
+            	"companyName": "",
+            	"rolIds": [
+            		2
+            	],
+            	"establishmentId": 1,
+            	"emissionPointId": 1
+            }
+        headers:
+          - name: Content-Type
+            value: application/json
+          - name: User-Agent
+            value: insomnia/11.6.2
+        authentication:
+          type: bearer
+          token: "{% response 'body', 'req_b56e41fe5adc4eabb6115ad929d4b76c',
+            'b64::JC5kYXRhLnRva2Vu::46b', 'never', 60 %}"
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.URL }}/api/user/:id"
+        name: Actualizar usuario
+        meta:
+          id: req_65e725b1320749bc93b64fae5c0345c2
+          created: 1761268830557
+          modified: 1761384284669
+          isPrivate: false
+          description: ""
+          sortKey: -1761249577721.5
+        method: PUT
+        body:
+          mimeType: application/json
+          text: |-
+            {
+            	"document": "1800008748",
+            	"username": "billy",
+            	"fullname": "José Temistocles Acuña García",
+            	"email": "clsjs2294@gmail.com",
+            	"address": "Quis Quis y Tungurahua, Ambato, Tungurahua 180202",
+            	"cellphone": "0984988451",
+            	"telephone": "2841035",
+            	"rolIds": [
+            		3
+            	],
+            	"establishmentId": 1,
+            	"emissionPointId": 1
+            }
+        headers:
+          - name: Content-Type
+            value: application/json
+          - name: User-Agent
+            value: insomnia/11.6.2
+        authentication:
+          type: bearer
+          token: "{% response 'body', 'req_b56e41fe5adc4eabb6115ad929d4b76c',
+            'b64::JC5kYXRhLnRva2Vu::46b', 'never', 60 %}"
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+        pathParameters:
+          - name: id
+            value: "9"
+  - name: Establecimiento
+    meta:
+      id: fld_b19c50504f3a49d2a8bf9234c2a6d83a
+      created: 1761499976961
+      modified: 1762696954498
+      sortKey: -1762641663211
+      description: ""
+    children:
+      - url: "{{ _.URL }}/api/establishment"
+        name: Obtener establecimientos
+        meta:
+          id: req_8233251bc54c423087b906f701804909
+          created: 1761499981896
+          modified: 1761500041414
+          isPrivate: false
+          description: ""
+          sortKey: -1761499981896
+        method: GET
+        headers:
+          - name: User-Agent
+            value: insomnia/11.6.2
+        authentication:
+          type: bearer
+          token: "{% response 'body', 'req_b56e41fe5adc4eabb6115ad929d4b76c',
+            'b64::JC5kYXRhLnRva2Vu::46b', 'never', 60 %}"
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.URL }}/api/establishment/:id"
+        name: Obtener establecimiento por Id
+        meta:
+          id: req_03fe58c5df8d468e8b1616b022080fff
+          created: 1761510069045
+          modified: 1761510083485
+          isPrivate: false
+          description: ""
+          sortKey: -1761461293643.5
+        method: GET
+        headers:
+          - name: User-Agent
+            value: insomnia/11.6.2
+        authentication:
+          type: bearer
+          token: "{% response 'body', 'req_b56e41fe5adc4eabb6115ad929d4b76c',
+            'b64::JC5kYXRhLnRva2Vu::46b', 'never', 60 %}"
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+        pathParameters:
+          - name: id
+            value: "1"
+      - url: "{{ _.URL }}/api/establishment"
+        name: Crear establecimiento
+        meta:
+          id: req_8f6786de87f148429dac747249301528
+          created: 1761777579260
+          modified: 1761781301712
+          isPrivate: false
+          description: ""
+          sortKey: -1761777579260
+        method: POST
+        body:
+          mimeType: application/json
+          text: |-
+            {
+            	"name": "Centro Sur"
+            }
+        headers:
+          - name: Content-Type
+            value: application/json
+          - name: User-Agent
+            value: insomnia/11.6.2
+        authentication:
+          type: bearer
+          token: "{% response 'body', 'req_b56e41fe5adc4eabb6115ad929d4b76c',
+            'b64::JC5kYXRhLnRva2Vu::46b', 'never', 60 %}"
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.URL }}/api/establishment/:id"
+        name: Actualizar establecimiento
+        meta:
+          id: req_19125adde351428293d9acc73ed95bac
+          created: 1761779667026
+          modified: 1761779691840
+          isPrivate: false
+          description: ""
+          sortKey: -1761766893765.5
+        method: PUT
+        body:
+          mimeType: application/json
+          text: |-
+            {
+            	"name": "Centro Norte"
+            }
+        headers:
+          - name: Content-Type
+            value: application/json
+          - name: User-Agent
+            value: insomnia/11.6.2
+        authentication:
+          type: bearer
+          token: "{% response 'body', 'req_b56e41fe5adc4eabb6115ad929d4b76c',
+            'b64::JC5kYXRhLnRva2Vu::46b', 'never', 60 %}"
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+        pathParameters:
+          - name: id
+            value: "3"
+  - name: Punto de emisión
+    meta:
+      id: fld_0408acedac9f49869cf71394512e27d0
+      created: 1761556314612
+      modified: 1762696957750
+      sortKey: -1762641663198.5
+      description: ""
+    children:
+      - url: "{{ _.URL }}/api/emissionPoint"
+        name: Obtener puntos de emisión
+        meta:
+          id: req_2e2138eedb324771aaf1d05359c07b0f
+          created: 1761556325692
+          modified: 1761556596805
+          isPrivate: false
+          description: ""
+          sortKey: -1761556325692
+        method: GET
+        parameters:
+          - id: pair_555fe2add73b499c95fc2d1f41424d00
+            name: establishmentId
+            value: "1"
+            description: ""
+            disabled: false
+        headers:
+          - name: User-Agent
+            value: insomnia/11.6.2
+        authentication:
+          type: bearer
+          token: "{% response 'body', 'req_b56e41fe5adc4eabb6115ad929d4b76c',
+            'b64::JC5kYXRhLnRva2Vu::46b', 'never', 60 %}"
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.URL }}/api/emissionPoint/:id"
+        name: Obtener puntos de emisión por Id
+        meta:
+          id: req_0601a8eefd744c7ab158fac79b4585a0
+          created: 1761756052065
+          modified: 1761756120651
+          isPrivate: false
+          description: ""
+          sortKey: -1761528153794
+        method: GET
+        parameters:
+          - id: pair_555fe2add73b499c95fc2d1f41424d00
+            name: establishmentId
+            value: "1"
+            description: ""
+            disabled: false
+        headers:
+          - name: User-Agent
+            value: insomnia/11.6.2
+        authentication:
+          type: bearer
+          token: "{% response 'body', 'req_b56e41fe5adc4eabb6115ad929d4b76c',
+            'b64::JC5kYXRhLnRva2Vu::46b', 'never', 60 %}"
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+        pathParameters:
+          - name: id
+            value: "1"
+      - url: "{{ _.URL }}/api/emissionPoint"
+        name: Crear Punto de emision
+        meta:
+          id: req_751dcf5d3e2b4e6191c826b81ca25c2b
+          created: 1761756208271
+          modified: 1761756422721
+          isPrivate: false
+          description: ""
+          sortKey: -1761756208271
+        method: POST
+        body:
+          mimeType: application/json
+          text: |-
+            {
+            	"description": "Caja N01"
+            }
+        parameters:
+          - id: pair_32f61754d5714dab8985307d81693b66
+            name: establishmentId
+            value: "1"
+            description: ""
+            disabled: false
+        headers:
+          - name: Content-Type
+            value: application/json
+          - name: User-Agent
+            value: insomnia/11.6.2
+        authentication:
+          type: bearer
+          token: "{% response 'body', 'req_b56e41fe5adc4eabb6115ad929d4b76c',
+            'b64::JC5kYXRhLnRva2Vu::46b', 'never', 60 %}"
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.URL }}/api/emissionPoint/:id"
+        name: Actualizar Punto de emision
+        meta:
+          id: req_920d29747f7d4721beb76cb3282aa50f
+          created: 1761756568402
+          modified: 1761756713295
+          isPrivate: false
+          description: ""
+          sortKey: -1761656266981.5
+        method: PUT
+        body:
+          mimeType: application/json
+          text: |-
+            {
+            	"description": "Caja N001"
+            }
+        headers:
+          - name: Content-Type
+            value: application/json
+          - name: User-Agent
+            value: insomnia/11.6.2
+        authentication:
+          type: bearer
+          token: "{% response 'body', 'req_b56e41fe5adc4eabb6115ad929d4b76c',
+            'b64::JC5kYXRhLnRva2Vu::46b', 'never', 60 %}"
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+        pathParameters:
+          - name: id
+            value: "2"
+  - name: Producto
+    meta:
+      id: fld_a7eebedaa7e04a0d9d070c48dbc0d17e
+      created: 1762191235749
+      modified: 1762697060599
+      sortKey: -1762641663192.25
+      description: ""
+    children:
+      - url: "{{ _.URL }}/api/product"
+        name: Obtener productos
+        meta:
+          id: req_9f54c5ad6c154bf5b6a362544e677e23
+          created: 1762191399393
+          modified: 1762191505735
+          isPrivate: false
+          description: ""
+          sortKey: -1762191399393
+        method: GET
+        headers:
+          - name: User-Agent
+            value: insomnia/11.6.2
+        authentication:
+          type: bearer
+          token: "{% response 'body', 'req_b56e41fe5adc4eabb6115ad929d4b76c',
+            'b64::JC5kYXRhLnRva2Vu::46b', 'never', 60 %}"
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.URL }}/api/product"
+        name: Crear producto
+        meta:
+          id: req_3dfc2c497bde4bb1bd333524f002a64b
+          created: 1762530180307
+          modified: 1762531310238
+          isPrivate: false
+          description: ""
+          sortKey: -1762530180307
+        method: POST
+        body:
+          mimeType: application/json
+          text: |-
+            {
+            	"sku": "H011",
+            	"name": "Carne de borrego",
+            	"description": "Carne de borrego por kilos",
+            	"price": 3.00,
+            	"iva": true,
+            	"taxId": 4,
+            	"unitMeasureId": 2,
+            	"type": "BIEN"
+            }
+        headers:
+          - name: Content-Type
+            value: application/json
+          - name: User-Agent
+            value: insomnia/11.6.2
+        authentication:
+          type: bearer
+          token: "{% response 'body', 'req_b56e41fe5adc4eabb6115ad929d4b76c',
+            'b64::JC5kYXRhLnRva2Vu::46b', 'never', 60 %}"
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+  - name: Cliente
+    meta:
+      id: fld_c6d1a9473863443b93ad2d14bbf00a1e
+      created: 1762192495184
+      modified: 1763086123029
+      sortKey: -1762192495184
+      description: ""
+    children:
+      - url: "{{ _.URL }}/api/customer"
+        name: Obtener clientes
+        meta:
+          id: req_07dc087ff31b447bb97d1fbe122a98b6
+          created: 1762192498325
+          modified: 1762369166209
+          isPrivate: false
+          description: ""
+          sortKey: -1762192498325
+        method: GET
+        headers:
+          - name: User-Agent
+            value: insomnia/11.6.2
+        authentication:
+          type: bearer
+          token: "{% response 'body', 'req_b56e41fe5adc4eabb6115ad929d4b76c',
+            'b64::JC5kYXRhLnRva2Vu::46b', 'never', 60 %}"
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.URL }}/api/customer/:id"
+        name: Obtener cliente por Id
+        meta:
+          id: req_11f74ac78e0f4808afdea05162f3e169
+          created: 1762372721022
+          modified: 1762372823079
+          isPrivate: false
+          description: ""
+          sortKey: -1762372721022
+        method: GET
+        headers:
+          - name: User-Agent
+            value: insomnia/11.6.2
+        authentication:
+          type: bearer
+          token: "{% response 'body', 'req_b56e41fe5adc4eabb6115ad929d4b76c',
+            'b64::JC5kYXRhLnRva2Vu::46b', 'never', 60 %}"
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+        pathParameters:
+          - name: id
+            value: "1"
+      - url: "{{ _.URL }}/api/customer"
+        name: Crear cliente
+        meta:
+          id: req_a1543a027beb4d99928ee7a7602016e3
+          created: 1762372853568
+          modified: 1762373956549
+          isPrivate: false
+          description: ""
+          sortKey: -1762372853568
+        method: POST
+        body:
+          mimeType: application/json
+          text: |-
+            {
+            	"document": "1804413373",
+            	"documentType": "04",
+            	"name": "CARLOS ACUÑA",
+            	"email": "clsjos2294@gmail.com",
+            	"address": "Ambato",
+            	"cellphone": "0984988451",
+            	"telephone": "2841035"
+            }
+        parameters:
+          - id: pair_388eccd6a9854772aa6ef88eb9097dab
+            name: ""
+            value: ""
+            description: ""
+            disabled: true
+        headers:
+          - name: Content-Type
+            value: application/json
+          - name: User-Agent
+            value: insomnia/11.6.2
+        authentication:
+          type: bearer
+          token: "{% response 'body', 'req_b56e41fe5adc4eabb6115ad929d4b76c',
+            'b64::JC5kYXRhLnRva2Vu::46b', 'never', 60 %}"
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.URL }}/api/customer/:id"
+        name: Actualizar cliente
+        meta:
+          id: req_213897f5cfee438ab473599de835aece
+          created: 1762373739307
+          modified: 1762373866317
+          isPrivate: false
+          description: ""
+          sortKey: -1762372787295
+        method: PUT
+        body:
+          mimeType: application/json
+          text: |-
+            {
+            	"document": "0201131810",
+            	"documentType": "04",
+            	"name": "CARLOTA AGUAGUIÑA",
+            	"email": "glaclt68@gmail.com",
+            	"address": "Ambato",
+            	"cellphone": "+593990098580",
+            	"telephone": "2841035"
+            }
+        headers:
+          - name: Content-Type
+            value: application/json
+          - name: User-Agent
+            value: insomnia/11.6.2
+        authentication:
+          type: bearer
+          token: "{% response 'body', 'req_b56e41fe5adc4eabb6115ad929d4b76c',
+            'b64::JC5kYXRhLnRva2Vu::46b', 'never', 60 %}"
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+        pathParameters:
+          - name: id
+            value: "45"
+  - name: Inventario
+    meta:
+      id: fld_389ada1a9b72435e8fc3501b72b7e782
+      created: 1762624216039
+      modified: 1762624216039
+      sortKey: -1762624216039
+      description: ""
+    children:
+      - url: "{{ _.URL }}/api/inventory/:id"
+        name: Crear Inventario
+        meta:
+          id: req_3af00bc5c821429895907e572d784dd8
+          created: 1762624219747
+          modified: 1762624949469
+          isPrivate: false
+          description: ""
+          sortKey: -1762624219747
+        method: POST
+        body:
+          mimeType: application/json
+          text: |-
+            {
+            	"inventories": [
+            		{
+            			"warehouseId": 1,
+            			"stock": 115
+            		}
+            	]
+            }
+        headers:
+          - name: Content-Type
+            value: application/json
+          - name: User-Agent
+            value: insomnia/11.6.2
+        authentication:
+          type: bearer
+          token: "{% response 'body', 'req_b56e41fe5adc4eabb6115ad929d4b76c',
+            'b64::JC5kYXRhLnRva2Vu::46b', 'never', 60 %}"
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+        pathParameters:
+          - name: id
+            value: "10"
+  - name: Unidad de medida
+    meta:
+      id: fld_efe1c53448a044cead89c8e3e4ec1025
+      created: 1762632181835
+      modified: 1762632198722
+      sortKey: -1762632181835
+      description: ""
+    children:
+      - url: "{{ _.URL }}/api/unitMeasure"
+        name: Obtener unidades de medida
+        meta:
+          id: req_062bdd07451e42ae99f5ea0fc84b426f
+          created: 1762632192223
+          modified: 1762632274233
+          isPrivate: false
+          description: ""
+          sortKey: -1762632192223
+        method: GET
+        headers:
+          - name: User-Agent
+            value: insomnia/11.6.2
+        authentication:
+          type: bearer
+          token: "{% response 'body', 'req_b56e41fe5adc4eabb6115ad929d4b76c',
+            'b64::JC5kYXRhLnRva2Vu::46b', 'never', 60 %}"
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+  - name: Impuesto
+    meta:
+      id: fld_320d5e43c58346c0ac85068fd0578191
+      created: 1762641663186
+      modified: 1762696981787
+      sortKey: -1762641663186
+      description: ""
+    children:
+      - url: "{{ _.URL }}/api/tax"
+        name: Obtener impuestos
+        meta:
+          id: req_857ef36bfb5b432082d333c2adb8066c
+          created: 1762641670132
+          modified: 1762696347824
+          isPrivate: false
+          description: ""
+          sortKey: -1762641670132
+        method: GET
+        headers:
+          - name: User-Agent
+            value: insomnia/11.6.2
+        authentication:
+          type: bearer
+          token: "{% response 'body', 'req_b56e41fe5adc4eabb6115ad929d4b76c',
+            'b64::JC5kYXRhLnRva2Vu::46b', 'never', 60 %}"
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+  - name: Bodega
+    meta:
+      id: fld_ed239e054069413e969f2e5db3187287
+      created: 1762697070615
+      modified: 1762698150976
+      sortKey: -1762641663195.375
+      description: ""
+    children:
+      - url: "{{ _.URL }}/api/warehouse"
+        name: Obtener bodegas
+        meta:
+          id: req_41a78da6cd22428a9be2a2111cf91203
+          created: 1762697078156
+          modified: 1762698102816
+          isPrivate: false
+          description: ""
+          sortKey: -1762697078156
+        method: GET
+        headers:
+          - name: User-Agent
+            value: insomnia/11.6.2
+        authentication:
+          type: bearer
+          token: "{% response 'body', 'req_b56e41fe5adc4eabb6115ad929d4b76c',
+            'b64::JC5kYXRhLnRva2Vu::46b', 'never', 60 %}"
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+  - name: Factura
+    meta:
+      id: fld_1198cfc6cc154f60b8e4de8b99c782b3
+      created: 1763085664783
+      modified: 1763085664783
+      sortKey: -1763085664783
+      description: ""
+    children:
+      - url: "{{ _.URL }}/api/invoice"
+        name: Crear factura
+        meta:
+          id: req_7a26b1eba38c4ab69083c7c735ea8d22
+          created: 1763085668800
+          modified: 1764523790184
+          isPrivate: false
+          description: ""
+          sortKey: -1763123431044
+        method: POST
+        body:
+          mimeType: application/json
+          text: |-
+            {
+            	"receiptType": "01",
+            	"isElectronic": true,
+            	"environment": "1",
+            	"customerId": 45,
+            	"paymentMethod": "01",
+            	"paymentTermDays": 0,
+            	"description": "",
+            	"additionalInformation": "",
+            	"details": [
+            		{
+            			"productId": 9,
+            			"warehouseId": 1,
+            			"quantity": 6,
+            			"discount": 0.00,
+            			"additionalDetail": ""
+            		}
+            	]
+            }
+        headers:
+          - name: Content-Type
+            value: application/json
+          - name: User-Agent
+            value: insomnia/11.6.2
+        authentication:
+          type: bearer
+          token: "{% response 'body', 'req_b56e41fe5adc4eabb6115ad929d4b76c',
+            'b64::JC5kYXRhLnRva2Vu::46b', 'never', 60 %}"
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.URL }}/api/invoice"
+        name: Obtener facturas
+        meta:
+          id: req_be0c9a61acd745aab1f325292061a703
+          created: 1763123430944
+          modified: 1764322820307
+          isPrivate: false
+          description: ""
+          sortKey: -1763123430944
+        method: GET
+        body:
+          mimeType: multipart/form-data
+        headers:
+          - name: Content-Type
+            value: multipart/form-data
+          - name: User-Agent
+            value: insomnia/11.6.2
+        authentication:
+          type: bearer
+          token: "{% response 'body', 'req_b56e41fe5adc4eabb6115ad929d4b76c',
+            'b64::JC5kYXRhLnRva2Vu::46b', 'never', 60 %}"
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.URL }}/api/invoice/:id"
+        name: Obtener factura por ID
+        meta:
+          id: req_0e91214ba0474abe9c7141b24dccd98d
+          created: 1763363182263
+          modified: 1764522860455
+          isPrivate: false
+          description: ""
+          sortKey: -1763104549872
+        method: GET
+        headers:
+          - name: User-Agent
+            value: insomnia/11.6.2
+        authentication:
+          type: bearer
+          token: "{% response 'body', 'req_b56e41fe5adc4eabb6115ad929d4b76c',
+            'b64::JC5kYXRhLnRva2Vu::46b', 'never', 60 %}"
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+        pathParameters:
+          - name: id
+            value: "32"
+      - url: "{{ _.URL }}/api/invoice/:id"
+        name: Actualizar factura por ID
+        meta:
+          id: req_0d5152e5018a4848a6ffaa7669e5a0ce
+          created: 1763792711583
+          modified: 1764520852167
+          isPrivate: false
+          description: ""
+          sortKey: -1763123430994
+        method: PUT
+        body:
+          mimeType: application/json
+          text: |-
+            {
+            	"isElectronic": true,
+            	"environment": "1",
+            	"paymentMethod": "01",
+            	"description": "Venta de productos varios",
+            	"additionalInformation": "",
+            	"details": [
+            		{
+            			"productId": 8,
+            			"warehouseId": 1,
+            			"quantity": 4,
+            			"discount": 0.00,
+            			"additionalDetail": ""
+            		},
+            		{
+            			"productId": 9,
+            			"warehouseId": 1,
+            			"quantity": 3,
+            			"discount": 0.00,
+            			"additionalDetail": ""
+            		}
+            	]
+            }
+        headers:
+          - name: Content-Type
+            value: application/json
+          - name: User-Agent
+            value: insomnia/11.6.2
+        authentication:
+          type: bearer
+          token: "{% response 'body', 'req_b56e41fe5adc4eabb6115ad929d4b76c',
+            'b64::JC5kYXRhLnRva2Vu::46b', 'never', 60 %}"
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+        pathParameters:
+          - name: id
+            value: "31"
+      - url: "{{ _.URL }}/api/invoice/:id/payment"
+        name: Actualizar pago de factura por ID
+        meta:
+          id: req_76e5ee9d1a3a4dce83ec40ad8439cdb0
+          created: 1764521892102
+          modified: 1764529120291
+          isPrivate: false
+          description: ""
+          sortKey: -1763123430969
+        method: PUT
+        body:
+          mimeType: application/json
+          text: |-
+            {
+            	"paymentMethod": "01",
+            	"paymentTermDays": 0
+            }
+        headers:
+          - name: Content-Type
+            value: application/json
+          - name: User-Agent
+            value: insomnia/11.6.2
+        authentication:
+          type: bearer
+          token: "{% response 'body', 'req_b56e41fe5adc4eabb6115ad929d4b76c',
+            'b64::JC5kYXRhLnRva2Vu::46b', 'never', 60 %}"
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+        pathParameters:
+          - name: id
+            value: "36"
+  - name: Certificado
+    meta:
+      id: fld_49384c32dc7242c1b41a7b5310331ec4
+      created: 1763692769251
+      modified: 1763692769251
+      sortKey: -1763692769251
+      description: ""
+    children:
+      - url: "{{ _.URL_PROD }}/api/certificate/upload"
+        name: Guardar Certificado
+        meta:
+          id: req_63caf33cd4c149ce92a7a8a9ef07e958
+          created: 1763692773645
+          modified: 1763933236982
+          isPrivate: false
+          description: ""
+          sortKey: -1763692773645
+        method: POST
+        body:
+          mimeType: multipart/form-data
+          params:
+            - id: pair_2dd25a0283e74065a394747b36f52a6f
+              name: businessId
+              value: "1"
+              description: ""
+              disabled: false
+            - id: pair_3334b2dcaf0a45e79249848f41c5c06f
+              name: certificate
+              value: ""
+              description: ""
+              disabled: false
+              type: file
+              fileName: /home/helekin/Documents/personal-data/secure-data/Firma-1804413373.p12
+            - id: pair_dced0f83162f484c9cc0f991057e93e9
+              name: password
+              value: Yugi_@lbaz_28
+              description: ""
+              disabled: false
+        headers:
+          - name: Content-Type
+            value: multipart/form-data
+          - name: User-Agent
+            value: insomnia/11.6.2
+        authentication:
+          type: bearer
+          token: "{% response 'body', 'req_b56e41fe5adc4eabb6115ad929d4b76c',
+            'b64::JC5kYXRhLnRva2Vu::46b', 'never', 60 %}"
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+  - name: SRI
+    meta:
+      id: fld_977dacebc6b7420bb682e747dd4469f3
+      created: 1763907688111
+      modified: 1763907688111
+      sortKey: -1763907688111
+      description: ""
+    children:
+      - url: https://celcer.sri.gob.ec/comprobantes-electronicos-ws/RecepcionComprobantesOffline
+        name: Recepcion XML Firmado
+        meta:
+          id: req_a24d1f5e38e24ab2a48bdb89128f1cbc
+          created: 1763907701368
+          modified: 1763932188045
+          isPrivate: false
+          description: ""
+          sortKey: -1763907701368
+        method: POST
+        body:
+          mimeType: application/xml
+          text: >-
+            <soapenv:Envelope
+            	xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/"
+            	xmlns:ec="http://ec.gob.sri.ws.recepcion">
+            	<soapenv:Header/>
+            	<soapenv:Body>
+            		<ec:validarComprobante>
+            			<xml>
+            				<![CDATA[<factura id="comprobante" version="1.1.0"><infoTributaria><ambiente>1</ambiente><tipoEmision>1</tipoEmision><razonSocial>AVICOLA LA HERENCIA</razonSocial><nombreComercial>Matriz</nombreComercial><ruc>1714259221001</ruc><claveAcceso>231120250100018000087481001003000000001140134121</claveAcceso><codDoc>01</codDoc><estab>001</estab><ptoEmi>003</ptoEmi><secuencial>000000001</secuencial><dirMatriz>Llano Grande</dirMatriz></infoTributaria><infoFactura><fechaEmision>23/11/2025</fechaEmision><dirEstablecimiento>Llano Grande</dirEstablecimiento><obligadoContabilidad>NO</obligadoContabilidad><tipoIdentificacionComprador>05</tipoIdentificacionComprador><razonSocialComprador>Joselito Acuña</razonSocialComprador><identificacionComprador>1800008748</identificacionComprador><direccionComprador>Ambato</direccionComprador><totalSinImpuestos>39.04</totalSinImpuestos><totalDescuento>0.00</totalDescuento><totalConImpuestos><totalImpuesto><codigo>4</codigo><codigoPorcentaje>2</codigoPorcentaje><baseImponible>39.04</baseImponible><tarifa>15.00</tarifa><valor>5.86</valor></totalImpuesto></totalConImpuestos><propina>0.00</propina><importeTotal>44.90</importeTotal><moneda>USD</moneda><pagos><pago><formaPago>01</formaPago><total>44.90</total></pago></pagos></infoFactura><detalles><detalle><codigoPrincipal>H008</codigoPrincipal><descripcion>GALLINAS</descripcion><cantidad>5.000000</cantidad><precioUnitario>6.00</precioUnitario><descuento>0.00</descuento><precioTotalSinImpuesto>30.00</precioTotalSinImpuesto><impuestos><impuesto><codigo>4</codigo><codigoPorcentaje>2</codigoPorcentaje><tarifa>15.00</tarifa><baseImponible>30.00</baseImponible><valor>4.50</valor></impuesto></impuestos><detallesAdicionales><detAdicional nombre="Bodega">Bodega Matriz</detAdicional></detallesAdicionales></detalle><detalle><codigoPrincipal>H009</codigoPrincipal><descripcion>Pollos Completos</descripcion><cantidad>8.000000</cantidad><precioUnitario>1.13</precioUnitario><descuento>0.00</descuento><precioTotalSinImpuesto>9.04</precioTotalSinImpuesto><impuestos><impuesto><codigo>4</codigo><codigoPorcentaje>2</codigoPorcentaje><tarifa>15.00</tarifa><baseImponible>9.04</baseImponible><valor>1.36</valor></impuesto></impuestos><detallesAdicionales><detAdicional nombre="Bodega">Bodega Matriz</detAdicional></detallesAdicionales></detalle></detalles><infoAdicional><campoAdicional nombre="Email">clsjs0994@gmail.com</campoAdicional><campoAdicional nombre="Celular">0984988451</campoAdicional><campoAdicional nombre="Telefono">2841035</campoAdicional><campoAdicional nombre="Adicional1">Cliente frecuente, pago en efectivo</campoAdicional></infoAdicional><ds:Signature
+            				xmlns:ds="http://www.w3.org/2000/09/xmldsig#" Id="Signature-06763de2-6cc3-48e9-87dc-0a6d3d78ca89"><ds:SignedInfo><ds:CanonicalizationMethod Algorithm="http://www.w3.org/TR/2001/REC-xml-c14n-20010315" /><ds:SignatureMethod Algorithm="http://www.w3.org/2000/09/xmldsig#rsa-sha1" /><ds:Reference Id="Reference-85fe9ef2-0291-4bbc-8f23-b409709d2f44" URI="#comprobante"><ds:Transforms><ds:Transform Algorithm="http://www.w3.org/2000/09/xmldsig#enveloped-signature" /></ds:Transforms><ds:DigestMethod Algorithm="http://www.w3.org/2000/09/xmldsig#sha1" /><ds:DigestValue>0v59ngIFlO8FM/14bVzwMs6AXQA=</ds:DigestValue></ds:Reference><ds:Reference Id="ReferenceKeyInfo" URI="#KeyInfoId-Signature-06763de2-6cc3-48e9-87dc-0a6d3d78ca89"><ds:DigestMethod Algorithm="http://www.w3.org/2000/09/xmldsig#sha1" /><ds:DigestValue>GMGvHFTZ5nZDkdwfp0JNcGNErMQ=</ds:DigestValue></ds:Reference><ds:Reference Type="http://uri.etsi.org/01903#SignedProperties" URI="#SignedProperties-Signature-06763de2-6cc3-48e9-87dc-0a6d3d78ca89"><ds:DigestMethod Algorithm="http://www.w3.org/2000/09/xmldsig#sha1" /><ds:DigestValue>UM2+iee9Nmv5Qy/dboU2V8dGkzk=</ds:DigestValue></ds:Reference></ds:SignedInfo><ds:SignatureValue Id="SignatureValue-06763de2-6cc3-48e9-87dc-0a6d3d78ca89">SkmsI+et9UCDfgC30Pi+75dq/0XHHiM2ux/pJE7Y2wBOCyRSdp5xTN+RztGpHYGpf82Ca6POOk68tnvr/9nkN+uMLLAMGsOyTQx8tFbQ/DEcU9gq7Fmx864FUI7Bf8e+dHDDrV3e+JsiyLnhCeVZLu/ZsQf7f9tQY0SskeShTQQAyK4Q0IFBHlfvwCupdNj32UrciiNnJIrFyiCt90RBX2OCpopIV5XmviwWJzgT1xdz0/tT7amUiXGdHpf28J/eCQpU39V/tjMzr5lDSC9ylnlBYdVIdL5a89ZF3p02z3WbKcGTLfdbpWMkJseZHi0u/5UUlAeDEZ7C6uT+xc9xtw==</ds:SignatureValue><ds:KeyInfo Id="KeyInfoId-Signature-06763de2-6cc3-48e9-87dc-0a6d3d78ca89"><ds:X509Data><ds:X509Certificate>MIIKuTCCCKGgAwIBAgIINg/cPspwXWwwDQYJKoZIhvcNAQELBQAwgZkxCzAJBgNVBAYTAkVDMR0wGwYDVQQKDBRTRUNVUklUWSBEQVRBIFMuQS4gMjEwMC4GA1UECwwnRU5USURBRCBERSBDRVJUSUZJQ0FDSU9OIERFIElORk9STUFDSU9OMTkwNwYDVQQDDDBBVVRPUklEQUQgREUgQ0VSVElGSUNBQ0lPTiBTVUJDQS0yIFNFQ1VSSVRZIERBVEEwHhcNMjUwOTE2MjM0MTUyWhcNMjYwOTE2MjM0MTUyWjCBpjEkMCIGA1UEAwwbQ0FSTE9TIEpPU0UgQUNVTkEgQUdVQUdVSU5BMSAwHgYDVQQFExcxODA0NDEzMzczLTE2MDkyNTE4NTE0MzEwMC4GA1UECwwnRU5USURBRCBERSBDRVJUSUZJQ0FDSU9OIERFIElORk9STUFDSU9OMR0wGwYDVQQKDBRTRUNVUklUWSBEQVRBIFMuQS4gMjELMAkGA1UEBhMCRUMwggEiMA0GCSqGSIb3DQEBAQUAA4IBDwAwggEKAoIBAQCLrgHXQXASZxyxUKR8kEoi1xbKIdwRFmR0F/XXtI67UPJ+umRXioJ0cvSBDSz9Mwgq9zGOjO+ehEofhnd8nY8Ypavi3jRrufTh5CMbiQOTemvQviIg4+/uWoMvOrchxzQcyXI5mrXpZR3/hPOV48SFV5UqUFl1ShISLPZy+lB0VS5dAsDi0mREM+HLeboAGyPPcRulPnpnlDfYKZV2Gg7rpbPggEGS4MgX9y2RgJOgCM2muFN0xL1UB3aSgPg3p2d6rvOJltrnxZMFM5tu86UTlVmQMjwxL/i3yS67cuEfB8zFYHpttmjIKrXT5+w+96HN7E05F1btoB+kxvrlF/HFAgMBAAGjggX0MIIF8DAMBgNVHRMBAf8EAjAAMB8GA1UdIwQYMBaAFIy6yhFXeCWAHWsKS1W/ja5i3b2PMFkGCCsGAQUFBwEBBE0wSzBJBggrBgEFBQcwAYY9aHR0cDovL29jc3Bndy5zZWN1cml0eWRhdGEubmV0LmVjL2VqYmNhL3B1YmxpY3dlYi9zdGF0dXMvb2NzcDAeBgNVHREEFzAVgRNjbHNqczk0QGhvdG1haWwuY29tMIIBBgYDVR0gBIH+MIH7MFoGCisGAQQBgqZyAgcwTDBKBggrBgEFBQcCAjA+HjwAQwBlAHIAdABpAGYAaQBjAGEAZABvACAAZABlACAAUABlAHIAcwBvAG4AYQAgAE4AYQB0AHUAcgBhAGwwgZwGCisGAQQBgqZyAgEwgY0wgYoGCCsGAQUFBwIBFn5odHRwczovL3d3dy5zZWN1cml0eWRhdGEubmV0LmVjL3dwLWNvbnRlbnQvZG93bmxvYWRzL05vcm1hdGl2YXMvUF9kZV9DZXJ0aWZpY2Fkb3MvUG9saXRpY2FzIGRlIENlcnRpZmljYWRvIFBlcnNvbmEgTmF0dXJhbC5wZGYwHQYDVR0lBBYwFAYIKwYBBQUHAwIGCCsGAQUFBwMEMIICDwYDVR0fBIICBjCCAgIwgd6gOqA4hjZodHRwOi8vY3JsMS5zZWN1cml0eWRhdGEubmV0LmVjL3N1YmNhMmNybDEvY3JsZmlsZS5jcmyigZ+kgZwwgZkxOTA3BgNVBAMMMEFVVE9SSURBRCBERSBDRVJUSUZJQ0FDSU9OIFNVQkNBLTIgU0VDVVJJVFkgREFUQTEwMC4GA1UECwwnRU5USURBRCBERSBDRVJUSUZJQ0FDSU9OIERFIElORk9STUFDSU9OMR0wGwYDVQQKDBRTRUNVUklUWSBEQVRBIFMuQS4gMjELMAkGA1UEBhMCRUMwPKA6oDiGNmh0dHA6Ly9jcmwyLnNlY3VyaXR5ZGF0YS5uZXQuZWMvc3ViY2EyY3JsMi9jcmxmaWxlLmNybDCB4KCB3aCB2oaB12h0dHBzOi8vcG9ydGFsLW9wZXJhZG9yMi5zZWN1cml0eWRhdGEubmV0LmVjL2VqYmNhL3B1YmxpY3dlYi93ZWJkaXN0L2NlcnRkaXN0P2NtZD1jcmwmaXNzdWVyPUNOPUFVVE9SSURBRCBERSBDRVJUSUZJQ0FDSU9OIFNVQkNBLTIgU0VDVVJJVFkgREFUQSxPVT1FTlRJREFEIERFIENFUlRJRklDQUNJT04gREUgSU5GT1JNQUNJT04sTz1TRUNVUklUWSBEQVRBIFMuQS4gMixDPUVDMB0GA1UdDgQWBBRZLB4J2DITjEWF2yKZR0AtnXMHfjArBgNVHRAEJDAigA8yMDI1MDkxNjIzNDE1MlqBDzIwMjYwOTE2MjM0MTUyWjALBgNVHQ8EBAMCBeAwGgYKKwYBBAGCpnIDAQQMDAoxODA0NDEzMzczMD0GCisGAQQBgqZyAwkELwwtQU1CQVRPIENBQkVDRVJBIENBTlRPTkFMIFkgQ0FQSVRBTCBQUk9WSU5DSUFMMBEGCisGAQQBgqZyAyIEAwwBLjAnBgorBgEEAYKmcgMHBBkMF1FVSVMgUVVJUyBZIFRVTkdVQVJBSFVBMBsGCisGAQQBgqZyAwIEDQwLQ0FSTE9TIEpPU0UwHwYKKwYBBAGCpnIDIAQRDA8wMTUwMDEwMDAwMjQxMTgwEQYKKwYBBAGCpnIDIwQDDAEuMBMGCisGAQQBgqZyAyEEBQwDUEZYMBcGCisGAQQBgqZyAwwECQwHRUNVQURPUjAVBgorBgEEAYKmcgMDBAcMBUFDVU5BMBkGCisGAQQBgqZyAx4ECwwJSU5HRU5JRVJPMB0GCisGAQQBgqZyAwsEDwwNMTgwNDQxMzM3MzAwMTARBgorBgEEAYKmcgMdBAMMAS4wGQYKKwYBBAGCpnIDBAQLDAlBR1VBR1VJTkEwGgYKKwYBBAGCpnIDCAQMDAowOTg0OTg4NDUxMA0GCSqGSIb3DQEBCwUAA4ICAQAVqtuV4nqnwzlJzqO7vDO/XisQ7LaGjolMktLAlMgf0JWAL7DVAJlq4ZWpwwOBhAoKskInMLqY3dKqezn6mG+xxB+gbBuvb+nRSX7cEEXrpwo1Ynf4Q1coF+o6eONXronLY7gujo9sREnIWko6/NeKGVOXGGWSt8YatkXaPgZe/gEwgTAWWFbx6rgDY20poXKya9EGNEoBCl63Bi6hC9Zv1+1AZUgJtIuPSh4KufQtSnMxAj5uBjMRjAFIYQrBHxaxLILWrTwZOwb8S7rMm8rBzqtuLFofL4WRts2027WuAQvG21JCcVcdZS4l1nWgcQaYOfmJemZq0SDjkKgdnqounuZL4oezoVKbQU/ceCQpo3zJ9eICfWMGlmhHTTgOG20I8d3uOicAVv50D/sMy89w4FIOpZQrBd7mEadir1gj3A5Iyk5E7zNCNhxa1vTMgkgxO68T9xponf3gdNt5I3PqNLAiT2gYJJa9BDaCXuG3Pvpkvrsh/8PxJFJIVS0R4Zr90fFOyVe4OK6F2HLI7zra2pVILAKchAQ+Gg7V6p/J1HRQK/RC6bgnLp/qMxDiq8nmFfe+7FDknFF5i+//zDAEAQzwV+DcbSbuUqNk6zeQvic1mgSyhcxspN65eZkekDDWc41hrAkXsKjEAyjImttDVAmdevsAEsdNmBqFMnavtg==</ds:X509Certificate></ds:X509Data><ds:KeyValue><ds:RSAKeyValue><ds:Modulus>i64B10FwEmccsVCkfJBKItcWyiHcERZkdBf117SOu1DyfrpkV4qCdHL0gQ0s/TMIKvcxjozvnoRKH4Z3fJ2PGKWr4t40a7n04eQjG4kDk3pr0L4iIOPv7lqDLzq3Icc0HMlyOZq16WUd/4TzlePEhVeVKlBZdUoSEiz2cvpQdFUuXQLA4tJkRDPhy3m6ABsjz3EbpT56Z5Q32CmVdhoO66Wz4IBBkuDIF/ctkYCToAjNprhTdMS9VAd2koD4N6dneq7ziZba58WTBTObbvOlE5VZkDI8MS/4t8kuu3LhHwfMxWB6bbZoyCq10+fsPvehzexNORdW7aAfpMb65RfxxQ==</ds:Modulus><ds:Exponent>AQAB</ds:Exponent></ds:RSAKeyValue></ds:KeyValue></ds:KeyInfo><ds:Object Id="XadesObjectId-20e7a4c8-465a-494e-8ced-ea249018edd4"><xades:QualifyingProperties
+            				xmlns:xades="http://uri.etsi.org/01903/v1.3.2#" Id="QualifyingProperties-fa46cc55-736c-4a9b-a47f-35f59c818de0" Target="#Signature-06763de2-6cc3-48e9-87dc-0a6d3d78ca89"><xades:SignedProperties Id="SignedProperties-Signature-06763de2-6cc3-48e9-87dc-0a6d3d78ca89"><xades:SignedSignatureProperties><xades:SigningTime>2025-11-23T08:07:48-05:00</xades:SigningTime><xades:SigningCertificate><xades:Cert><xades:CertDigest><ds:DigestMethod Algorithm="http://www.w3.org/2000/09/xmldsig#sha1" /><ds:DigestValue>HxfEha7BgUZM4naPxWkjmfvlh6A=</ds:DigestValue></xades:CertDigest><xades:IssuerSerial><ds:X509IssuerName>CN=AUTORIDAD DE CERTIFICACION SUBCA-2 SECURITY DATA, OU=ENTIDAD DE CERTIFICACION DE INFORMACION, O=SECURITY DATA S.A. 2, C=EC</ds:X509IssuerName><ds:X509SerialNumber>3895574364941213036</ds:X509SerialNumber></xades:IssuerSerial></xades:Cert></xades:SigningCertificate></xades:SignedSignatureProperties><xades:SignedDataObjectProperties><xades:DataObjectFormat ObjectReference="#Reference-85fe9ef2-0291-4bbc-8f23-b409709d2f44"><xades:MimeType>text/xml</xades:MimeType><xades:Encoding>UTF-8</xades:Encoding></xades:DataObjectFormat><xades:CommitmentTypeIndication><xades:CommitmentTypeId><xades:Identifier>http://uri.etsi.org/01903/v1.2.2#ProofOfOrigin</xades:Identifier><xades:Description /></xades:CommitmentTypeId><xades:AllSignedDataObjects /></xades:CommitmentTypeIndication></xades:SignedDataObjectProperties></xades:SignedProperties></xades:QualifyingProperties></ds:Object></ds:Signature></factura>]]>
+            			</xml>
+            		</ec:validarComprobante>
+            	</soapenv:Body>
+            </soapenv:Envelope>
+        headers:
+          - name: Content-Type
+            value: application/xml
+          - name: User-Agent
+            value: insomnia/11.6.2
+            id: pair_850961931f8f4e4eb296002e82baae43
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+cookieJar:
+  name: Default Jar
+  meta:
+    id: jar_f28c8fd808be5055168f1802cdbd192bc1a4566e
+    created: 1761240762721
+    modified: 1763908798659
+  cookies:
+    - key: TS010a7529
+      value: 0115ac86d2b27a7863ebbe70fdd16523caffb705f746fd72a5cc2bbef7201eeae3fd6a6a06e76113c4a8ea40f59c6a5585e2676a38
+      domain: cel.sri.gob.ec
+      path: /
+      hostOnly: false
+      creation: 2025-11-23T14:23:57.130Z
+      lastAccessed: 2025-11-23T14:31:44.621Z
+      id: cf6ca369-3b36-4b54-98d9-975dafe47d9f
+    - key: TS01a66f7f
+      value: 0115ac86d2e2e0ca3fdc0c0846d08915cadba27f8fc6044b14f5e1d92b9d491a4cc5ba65a0986c4050d6f4fb293a1bc4fc52824f5b
+      domain: celcer.sri.gob.ec
+      path: /
+      hostOnly: false
+      creation: 2025-11-23T14:39:58.658Z
+      lastAccessed: 2025-11-23T14:39:58.658Z
+      id: c0991231-1941-4c95-9b06-c54f2be1cacb
+environments:
+  name: Base Environment
+  meta:
+    id: env_f28c8fd808be5055168f1802cdbd192bc1a4566e
+    created: 1761240762720
+    modified: 1763932151384
+    isPrivate: false
+  data:
+    URL: http://localhost:5000
+    URL_PROD: https://sp-05-facturador-production.up.railway.app

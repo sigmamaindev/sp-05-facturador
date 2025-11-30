@@ -11,4 +11,5 @@ public class InvoiceUpdateReqDto
     public int PaymentTermDays { get; set; }
     public string Description { get; set; } = string.Empty;
     public string AdditionalInformation { get; set; } = string.Empty;
+    public List<InvoiceDetailUpdateReqDto> Details { get; set; } = [];
 }

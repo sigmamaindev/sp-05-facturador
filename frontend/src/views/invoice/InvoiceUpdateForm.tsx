@@ -33,8 +33,10 @@ interface InvoiceUpdateFormProps {
   handleSelectProduct: (product: Product) => void;
   handleQuantityChange: (productId: number, qty: number) => void;
   handleRemoveProduct: (productId: number) => void;
-  handleSubmit: React.FormEventHandler<HTMLFormElement>;
-  savingInvoice: boolean;
+  onSaveDraft: () => void;
+  onContinue: () => void;
+  savingDraft: boolean;
+  savingAndContinuing: boolean;
 }
 
 export default function InvoiceUpdateForm({
@@ -51,8 +53,10 @@ export default function InvoiceUpdateForm({
   handleSelectProduct,
   handleQuantityChange,
   handleRemoveProduct,
-  handleSubmit,
-  savingInvoice,
+  onSaveDraft,
+  onContinue,
+  savingDraft,
+  savingAndContinuing,
 }: InvoiceUpdateFormProps) {
   const formatDateTimeLocal = (date?: Date) => {
     if (!date) return "No disponible";
@@ -60,8 +64,10 @@ export default function InvoiceUpdateForm({
     return date.toLocaleString("es-EC");
   };
 
+  const canProceed = customer !== null && products.length > 0;
+
   return (
-    <form onSubmit={handleSubmit} className="flex flex-col md:flex-row gap-4">
+    <div className="flex flex-col md:flex-row gap-4">
       <div className="md:w-3/4">
         <Card className="h-full">
           <CardHeader>
@@ -231,8 +237,22 @@ export default function InvoiceUpdateForm({
             </div>
 
             <div className="flex flex-col gap-2 mt-4">
-              <Button type="submit" disabled={savingInvoice}>
-                {savingInvoice ? "Actualizando..." : "Actualizar"}
+              <Button
+                type="button"
+                variant="outline"
+                onClick={onSaveDraft}
+                disabled={savingDraft || !canProceed}
+              >
+                {savingDraft ? "Actualizando borrador..." : "Actualizar borrador"}
+              </Button>
+              <Button
+                type="button"
+                onClick={onContinue}
+                disabled={savingAndContinuing || !canProceed}
+              >
+                {savingAndContinuing
+                  ? "Preparando pago..."
+                  : "Continuar al paso 2"}
               </Button>
             </div>
           </CardContent>
@@ -248,6 +268,6 @@ export default function InvoiceUpdateForm({
           onSelect={handleSelectProduct}
         />
       </div>
-    </form>
+    </div>
   );
 }
