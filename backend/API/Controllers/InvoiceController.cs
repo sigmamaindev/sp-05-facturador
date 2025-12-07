@@ -2,16 +2,16 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Core.Constants;
 using Core.DTOs;
-using Core.DTOs.Invoice;
+using Core.DTOs.InvoiceDto;
 using Core.Interfaces.Repository;
-using Core.Interfaces.Services;
+using Core.Interfaces.Services.IInvoiceService;
 
 namespace API.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
 
-    public class InvoiceController(IInvoiceRepository invoiceRepository, IInvoicePdfGenerator invoicePdfGenerator) : ControllerBase
+    public class InvoiceController(IInvoiceRepository invoiceRepository, IInvoicePdfGeneratorService invoicePdfGenerator) : ControllerBase
     {
         [HttpGet]
         [Authorize]

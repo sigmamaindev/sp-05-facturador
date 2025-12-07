@@ -1,13 +1,15 @@
-using System.Text.Json.Serialization;
 using System.Text;
 using Yamgooo.SRI.Sign;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.EntityFrameworkCore;
 using Core.Interfaces.Repository;
-using Core.Interfaces.Services;
+using Core.Interfaces.Services.IInvoiceService;
 using Infrastructure.Data;
-using Infrastructure.Services;
+using Infrastructure.Services.InvoiceService;
+using Infrastructure.Services.UtilService;
+using Infrastructure.Services.SriService;
+using Core.Interfaces.Services.IUtilService;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -45,10 +47,16 @@ builder.Services.AddScoped<ICustomerRepository, CustomerRepository>();
 builder.Services.AddScoped<IInvoiceRepository, InvoiceRepository>();
 builder.Services.AddScoped<ICertificateRepository, CertificateRepository>();
 // Services
-builder.Services.AddScoped<IInvoiceXmlBuilder, InvoiceXmlBuilder>();
-builder.Services.AddScoped<IElectronicSignature, ElectronicSignature>();
+builder.Services.AddScoped<IInvoiceXmlBuilderService, InvoiceXmlBuilderService>();
+builder.Services.AddScoped<IElectronicSignatureService, ElectronicSignatureService>();
 builder.Services.AddScoped<IAesEncryptionService, AesEncryptionService>();
-builder.Services.AddScoped<IInvoicePdfGenerator, InvoicePdfGenerator>();
+builder.Services.AddScoped<IInvoicePdfGeneratorService, InvoicePdfGeneratorService>();
+builder.Services.AddScoped<IUserContextService, UserContextService>();
+builder.Services.AddScoped<IInvoiceValidationService, InvoiceValidationService>();
+builder.Services.AddScoped<IInvoiceStockService, InvoiceStockService>();
+builder.Services.AddScoped<IInvoiceCalculationService, InvoiceCalculationService>();
+builder.Services.AddScoped<IInvoiceSequentialService, InvoiceSequentialService>();
+builder.Services.AddScoped<IInvoiceDtoFactory, InvoiceDtoFactory>();
 builder.Services.AddScoped<ISriSignService, SriSignService>();
 builder.Services.AddHttpClient<ISriReceptionService, SriReceptionService>();
 builder.Services.AddHostedService<SriAuthorizationBackgroundService>();

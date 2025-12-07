@@ -2,7 +2,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Core.Interfaces.Repository;
 using Core.DTOs;
-using Core.DTOs.EmissionPoint;
+using Core.DTOs.EmissionPointDto;
 using Core.Entities;
 
 namespace Infrastructure.Data;

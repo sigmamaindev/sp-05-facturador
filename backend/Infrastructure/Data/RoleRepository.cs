@@ -1,6 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Core.DTOs;
-using Core.DTOs.Role;
+using Core.DTOs.RoleDto;
 using Core.Interfaces.Repository;
 
 namespace Infrastructure.Data;

@@ -1,139 +1,53 @@
 using Microsoft.EntityFrameworkCore;
-using Microsoft.AspNetCore.Http;
-using System.Security.Claims;
 using Core.Entities;
 using Core.Constants;
 using Core.DTOs;
-using Core.DTOs.Customer;
-using Core.DTOs.Invoice;
+using Core.DTOs.InvoiceDto;
 using Core.Interfaces.Repository;
-using Core.Interfaces.Services;
+using Core.Interfaces.Services.IUtilService;
+using Core.Interfaces.Services.IInvoiceService;
 
 namespace Infrastructure.Data;
 
-public class InvoiceRepository(StoreContext context, IHttpContextAccessor httpContextAccessor, IAesEncryptionService aes) : IInvoiceRepository
+public class InvoiceRepository(
+    StoreContext context,
+    IUserContextService currentUser,
+    IInvoiceSequentialService seq,
+    IInvoiceStockService stock,
+    IInvoiceValidationService validate,
+    IInvoiceCalculationService calc,
+    IInvoiceDtoFactory invoiceDtoFactory) : IInvoiceRepository
 {
     public async Task<ApiResponse<InvoiceSimpleResDto>> CreateInvoiceAsync(InvoiceCreateReqDto invoiceCreateReqDto)
     {
         var response = new ApiResponse<InvoiceSimpleResDto>();
 
-        var businessId = GetBusinessIdFromToken();
-        var establishmentId = GetEstablishmentIdFromToken();
-        var emissionPointId = GetEmissionPointIdFromToken();
-        var userId = GetUserIdFromToken();
-
-        if (businessId == 0)
-        {
-            response.Success = false;
-            response.Message = "Negocio no encontrado";
-            response.Error = "No existe un negocio con el ID especificado";
-
-            return response;
-        }
-
-        if (establishmentId == 0)
-        {
-            response.Success = false;
-            response.Message = "Establecimiento no encontrado";
-            response.Error = "No existe un establecimiento con el ID especificado";
-
-            return response;
-        }
-
-        if (emissionPointId == 0)
-        {
-            response.Success = false;
-            response.Message = "Punto de emisión no encontrado";
-            response.Error = "No existe un punto de emisión con el ID especificado";
-
-            return response;
-        }
-
-        if (userId == 0)
-        {
-            response.Success = false;
-            response.Message = "Usuario no encontrado";
-            response.Error = "No existe un usuario con el ID especificado";
-
-            return response;
-        }
-
-        var customer = await context.Customers.FirstOrDefaultAsync(c => c.Id == invoiceCreateReqDto.CustomerId);
-
-        if (customer == null)
-        {
-            response.Success = false;
-            response.Message = "Cliente no encontrado";
-            response.Error = "No existe un cliente con el ID especificado";
-
-            return response;
-        }
-
-        var business = await context.Businesses.FirstOrDefaultAsync(b => b.Id == businessId);
-
-        if (business == null)
-        {
-            response.Success = false;
-            response.Message = "Negocio no encontrado";
-            response.Error = "No existe un negocio con el ID especificado";
-
-            return response;
-        }
-
-        var establishment = await context.Establishments.FirstOrDefaultAsync(e => e.Id == establishmentId);
-
-        if (establishment == null)
-        {
-            response.Success = false;
-            response.Message = "Establecimiento no encontrado";
-            response.Error = "No existe un establecimiento con el ID especificado";
-
-            return response;
-        }
-
-        var emissionPoint = await context.EmissionPoints.FirstOrDefaultAsync(ep => ep.Id == emissionPointId);
-
-        if (emissionPoint == null)
-        {
-            response.Success = false;
-            response.Message = "Punto de emisión no encontrado";
-            response.Error = "No existe un punto de emisión con el ID especificado";
-
-            return response;
-        }
-
-        var user = await context.Users.FirstOrDefaultAsync(u => u.Id == userId);
-
-        if (user == null)
-        {
-            response.Success = false;
-            response.Message = "Usuario no encontrado";
-            response.Error = "No existe un usuario con el ID especificado";
-
-            return response;
-        }
-
         using var transaction = await context.Database.BeginTransactionAsync();
 
         try
         {
-            var lastInvoice = await context.Invoices
-            .Where(
-                i =>
-                i.BusinessId == businessId &&
-                i.EstablishmentId == establishmentId &&
-                i.EmissionPointId == emissionPointId)
-            .OrderByDescending(i => i.Id)
-            .FirstOrDefaultAsync();
-
-            int nextNumber = 1;
-
-            if (lastInvoice != null && int.TryParse(lastInvoice.Sequential, out var lastSeq))
+            if (currentUser.BusinessId == 0 ||
+            currentUser.EstablishmentId == 0 ||
+            currentUser.EmissionPointId == 0 ||
+            currentUser.UserId == 0)
             {
-                nextNumber = lastSeq + 1;
+                response.Success = false;
+                response.Message = "Datos de autenticación incompletos";
+                response.Error = "No se pudo validar el negocio, establecimiento, punto de emisión o usuario";
+
+                return response;
             }
 
-            var sequence = $"{nextNumber:D9}";
+            var customer = await validate.ValidateCustomerAsync(invoiceCreateReqDto.CustomerId);
+            var business = await validate.ValidateBusinessAsync(currentUser.BusinessId);
+            var establishment = await validate.ValidateEstablishmentAsync(currentUser.EstablishmentId);
+            var emissionPoint = await validate.ValidateEmissionPointAsync(currentUser.EmissionPointId);
+            var user = await validate.ValidateUserAsync(currentUser.UserId);
+
+            var sequence = await seq.GetNextSequentialAsync(
+                business.Id,
+                establishment.Id,
+                emissionPoint.Id);
 
             var ecTime = TimeZoneInfo.ConvertTime(DateTime.UtcNow,
               TimeZoneInfo.FindSystemTimeZoneById("America/Guayaquil"));
@@ -146,10 +60,10 @@ public class InvoiceRepository(StoreContext context, IHttpContextAccessor httpCo
                 InvoiceDate = ecTime,
                 DueDate = ecTime,
                 CustomerId = customer.Id,
-                BusinessId = businessId,
-                EstablishmentId = establishmentId,
-                EmissionPointId = emissionPointId,
-                UserId = userId,
+                BusinessId = business.Id,
+                EstablishmentId = establishment.Id,
+                EmissionPointId = emissionPoint.Id,
+                UserId = user.Id,
                 Sequential = sequence,
                 AccessKey = "",
                 PaymentMethod = invoiceCreateReqDto.PaymentMethod,
@@ -163,11 +77,6 @@ public class InvoiceRepository(StoreContext context, IHttpContextAccessor httpCo
                 Customer = customer
             };
 
-            decimal subtotalBase = 0;
-            decimal subtotalWithTaxes = 0;
-            decimal discountTotal = 0;
-            decimal taxTotal = 0;
-
             foreach (var detail in invoiceCreateReqDto.Details)
             {
                 var product = await context.Products
@@ -180,7 +89,7 @@ public class InvoiceRepository(StoreContext context, IHttpContextAccessor httpCo
                     response.Message = "Producto no encontrado";
                     response.Error = $"Producto {detail.ProductId} no encontrado";
 
-                    return response;
+                    continue;
                 }
 
                 var warehouse = await context.Warehouses
@@ -194,23 +103,10 @@ public class InvoiceRepository(StoreContext context, IHttpContextAccessor httpCo
                     response.Message = "Bodega no encontrada";
                     response.Error = $"No existe una bodega con el ID especificado";
 
-                    return response;
-                }
-
-                var stockRecord = await context.ProductWarehouses
-                .FirstOrDefaultAsync(
-                    pw =>
-                    pw.ProductId == detail.ProductId &&
-                    pw.WarehouseId == detail.WarehouseId);
-
-                if (stockRecord == null || stockRecord.Stock < detail.Quantity)
-                {
-                    response.Success = false;
-                    response.Message = "Stock insuficiente";
-                    response.Error = $"Stock insuficiente del producto {product.Name} en bodega {warehouse.Code}";
-
                     continue;
                 }
+
+                await stock.ReserveStockAsync(detail.ProductId, detail.WarehouseId, detail.Quantity);
 
                 var subtotal = detail.Quantity * product.Price;
                 var discount = detail.Discount;
@@ -219,13 +115,6 @@ public class InvoiceRepository(StoreContext context, IHttpContextAccessor httpCo
                 var taxRate = product.Tax?.Rate ?? 0;
                 var taxValue = taxableBase * (taxRate / 100);
                 var total = taxableBase + taxValue;
-
-                subtotalBase += taxableBase;
-                discountTotal += discount;
-                taxTotal += taxValue;
-                subtotalWithTaxes += total;
-
-                stockRecord.Stock -= detail.Quantity;
 
                 var newInvoiceDetail = new InvoiceDetail
                 {
@@ -247,11 +136,13 @@ public class InvoiceRepository(StoreContext context, IHttpContextAccessor httpCo
                 newInvoice.InvoiceDetails.Add(newInvoiceDetail);
             }
 
-            newInvoice.SubtotalWithoutTaxes = subtotalBase;
-            newInvoice.SubtotalWithTaxes = subtotalWithTaxes;
-            newInvoice.DiscountTotal = discountTotal;
-            newInvoice.TaxTotal = taxTotal;
-            newInvoice.TotalInvoice = subtotalWithTaxes;
+            var totals = calc.Calculate(newInvoice);
+
+            newInvoice.SubtotalWithoutTaxes = totals.SubtotalWithTaxes;
+            newInvoice.SubtotalWithTaxes = totals.SubtotalWithTaxes;
+            newInvoice.DiscountTotal = totals.DiscountTotal;
+            newInvoice.TaxTotal = totals.TaxTotal;
+            newInvoice.TotalInvoice = totals.SubtotalWithTaxes;
             newInvoice.AccessKey = string.Empty;
             newInvoice.XmlSigned = null;
 
@@ -260,60 +151,9 @@ public class InvoiceRepository(StoreContext context, IHttpContextAccessor httpCo
 
             await transaction.CommitAsync();
 
-            var invoice = new InvoiceSimpleResDto
-            {
-                Id = newInvoice.Id,
-                Sequential = newInvoice.Sequential,
-                AccessKey = newInvoice.AccessKey,
-                AuthorizationNumber = newInvoice.AuthorizationNumber,
-                Environment = newInvoice.Environment,
-                ReceiptType = newInvoice.ReceiptType,
-                Status = newInvoice.Status,
-                IsElectronic = newInvoice.IsElectronic,
-                InvoiceDate = newInvoice.InvoiceDate,
-                DueDate = newInvoice.DueDate,
-                BusinessId = business!.Id,
-                BusinessDocument = business.Document,
-                BusinessName = business.Name,
-                EstablishmentId = establishment!.Id,
-                EstablishmentCode = establishment.Code,
-                EstablishmentName = establishment.Name,
-                EmissionPointId = emissionPoint!.Id,
-                EmissionPointCode = emissionPoint.Code,
-                EmissionPointDescription = emissionPoint.Description,
-                UserId = user!.Id,
-                UserDocument = user.Document,
-                UserFullName = user.FullName,
-                Customer = new CustomerResDto
-                {
-                    Id = customer.Id,
-                    DocumentType = customer.DocumentType,
-                    Document = customer.Document,
-                    Email = customer.Email,
-                    Name = customer.Name,
-                    Cellphone = customer.Cellphone,
-                    Telephone = customer.Telephone,
-                    Address = customer.Address,
-                    IsActive = customer.IsActive,
-                    CreatedAt = customer.CreatedAt
-                },
-                SubtotalWithoutTaxes = newInvoice.SubtotalWithoutTaxes,
-                SubtotalWithTaxes = newInvoice.SubtotalWithTaxes,
-                DiscountTotal = newInvoice.DiscountTotal,
-                TaxTotal = newInvoice.TaxTotal,
-                TotalInvoice = newInvoice.TotalInvoice,
-                PaymentMethod = newInvoice.PaymentMethod,
-                PaymentTermDays = newInvoice.PaymentTermDays,
-                Description = newInvoice.Description,
-                AdditionalInformation = newInvoice.AdditionalInformation,
-                AuthorizationDate = newInvoice.AuthorizationDate,
-                SriMessage = "",
-                XmlSigned = ""
-            };
-
             response.Success = true;
             response.Message = "Factura creada exitosamente.";
-            response.Data = invoice;
+            response.Data = invoiceDtoFactory.InvoiceSimpleRes(newInvoice);
 
             return response;
         }
@@ -335,9 +175,7 @@ public class InvoiceRepository(StoreContext context, IHttpContextAccessor httpCo
 
         try
         {
-            var businessId = GetBusinessIdFromToken();
-
-            if (businessId == 0)
+            if (currentUser.BusinessId == 0)
             {
                 response.Success = false;
                 response.Message = "Negocio no asociado a esta usuario";
@@ -357,7 +195,7 @@ public class InvoiceRepository(StoreContext context, IHttpContextAccessor httpCo
             .ThenInclude(p => p!.UnitMeasure)
             .Include(i => i.InvoiceDetails).ThenInclude(d => d.Warehouse)
             .Include(i => i.InvoiceDetails).ThenInclude(d => d.Tax)
-            .FirstOrDefaultAsync(i => i.BusinessId == businessId && i.Id == id);
+            .FirstOrDefaultAsync(i => i.BusinessId == currentUser.BusinessId && i.Id == id);
 
             if (existingInvoice == null)
             {
@@ -368,84 +206,9 @@ public class InvoiceRepository(StoreContext context, IHttpContextAccessor httpCo
                 return response;
             }
 
-            var invoice = new InvoiceComplexResDto
-            {
-                Id = existingInvoice.Id,
-                Sequential = existingInvoice.Sequential,
-                AccessKey = existingInvoice.AccessKey,
-                AuthorizationNumber = existingInvoice.AuthorizationNumber,
-                Environment = existingInvoice.Environment,
-                ReceiptType = existingInvoice.ReceiptType,
-                Status = existingInvoice.Status,
-                IsElectronic = existingInvoice.IsElectronic,
-                InvoiceDate = existingInvoice.InvoiceDate,
-                DueDate = existingInvoice.DueDate,
-                BusinessId = existingInvoice.Business!.Id,
-                BusinessDocument = existingInvoice.Business.Document,
-                BusinessName = existingInvoice.Business.Name,
-                EstablishmentId = existingInvoice.Establishment!.Id,
-                EstablishmentCode = existingInvoice.Establishment.Code,
-                EstablishmentName = existingInvoice.Establishment.Name,
-                EmissionPointId = existingInvoice.EmissionPoint!.Id,
-                EmissionPointCode = existingInvoice.EmissionPoint.Code,
-                EmissionPointDescription = existingInvoice.EmissionPoint.Description,
-                UserId = existingInvoice.User!.Id,
-                UserDocument = existingInvoice.User.Document,
-                UserFullName = existingInvoice.User.FullName,
-                Customer = new CustomerResDto
-                {
-                    Id = existingInvoice.Customer!.Id,
-                    DocumentType = existingInvoice.Customer.DocumentType,
-                    Document = existingInvoice.Customer.Document,
-                    Email = existingInvoice.Customer.Email,
-                    Name = existingInvoice.Customer.Name,
-                    Cellphone = existingInvoice.Customer.Cellphone,
-                    Telephone = existingInvoice.Customer.Telephone,
-                    Address = existingInvoice.Customer.Address,
-                    IsActive = existingInvoice.Customer.IsActive,
-                    CreatedAt = existingInvoice.Customer.CreatedAt
-                },
-                SubtotalWithoutTaxes = existingInvoice.SubtotalWithoutTaxes,
-                SubtotalWithTaxes = existingInvoice.SubtotalWithTaxes,
-                DiscountTotal = existingInvoice.DiscountTotal,
-                TaxTotal = existingInvoice.TaxTotal,
-                TotalInvoice = existingInvoice.TotalInvoice,
-                PaymentMethod = existingInvoice.PaymentMethod,
-                PaymentTermDays = existingInvoice.PaymentTermDays,
-                Description = existingInvoice.Description ?? "",
-                AdditionalInformation = existingInvoice.AdditionalInformation,
-                AuthorizationDate = existingInvoice.AuthorizationDate,
-                SriMessage = existingInvoice.SriMessage,
-                XmlSigned = existingInvoice.XmlSigned ?? "",
-                Details = [.. existingInvoice.InvoiceDetails.Select(d => new InvoiceDetailResDto
-                {
-                    Id = d.Id,
-                    InvoiceId = d.InvoiceId,
-                    ProductId = d.Product!.Id,
-                    ProductCode = d.Product.Sku,
-                    ProductName = d.Product.Name,
-                    UnitMeasureId = d.Product.UnitMeasureId,
-                    UnitMeasureCode = d.Product.UnitMeasure!.Code,
-                    UnitMeasureName = d.Product.UnitMeasure!.Name,
-                    WarehouseId = d.Warehouse!.Id,
-                    WarehouseCode = d.Warehouse.Code,
-                    WarehouseName = d.Warehouse.Name,
-                    TaxId = d.Tax!.Id,
-                    TaxCode = d.Tax.Code,
-                    TaxName = d.Tax.Name,
-                    TaxRate = d.TaxRate,
-                    TaxValue = d.TaxValue,
-                    Quantity = d.Quantity,
-                    UnitPrice = d.UnitPrice,
-                    Discount = d.Discount,
-                    Subtotal = d.Subtotal,
-                    Total = d.Total
-                })]
-            };
-
             response.Success = true;
             response.Message = "Factura obtenida correctamente";
-            response.Data = invoice;
+            response.Data = invoiceDtoFactory.InvoiceComplexRes(existingInvoice);
 
         }
         catch (Exception ex)
@@ -464,12 +227,7 @@ public class InvoiceRepository(StoreContext context, IHttpContextAccessor httpCo
 
         try
         {
-            var businessId = GetBusinessIdFromToken();
-            var establishmentId = GetEstablishmentIdFromToken();
-            var emissionPointId = GetEmissionPointIdFromToken();
-            var userId = GetUserIdFromToken();
-
-            if (businessId == 0)
+            if (currentUser.BusinessId == 0)
             {
                 response.Success = false;
                 response.Message = "Negocio no encontrado";
@@ -478,13 +236,17 @@ public class InvoiceRepository(StoreContext context, IHttpContextAccessor httpCo
             }
 
             var query = context.Invoices
-                .Include(i => i.Customer)
-                .Where(
-                    i =>
-                    i.BusinessId == businessId &&
-                    i.EmissionPointId == emissionPointId &&
-                    i.EstablishmentId == establishmentId &&
-                    i.UserId == userId);
+            .Include(i => i.Customer)
+            .Include(i => i.Business)
+            .Include(i => i.Establishment)
+            .Include(i => i.EmissionPoint)
+            .Include(i => i.User)
+            .Where(
+                i =>
+                i.BusinessId == currentUser.BusinessId &&
+                i.EmissionPointId == currentUser.EmissionPointId &&
+                i.EstablishmentId == currentUser.EstablishmentId &&
+                i.UserId == currentUser.UserId);
 
             if (!string.IsNullOrEmpty(keyword))
             {
@@ -497,62 +259,15 @@ public class InvoiceRepository(StoreContext context, IHttpContextAccessor httpCo
             }
 
             var total = await query.CountAsync();
-
             var skip = (page - 1) * limit;
-            var invoices = await query
+
+            var invoiceList = await query
                 .OrderByDescending(i => i.InvoiceDate)
                 .Skip(skip)
                 .Take(limit)
-                .Select(i => new InvoiceSimpleResDto
-                {
-                    Id = i.Id,
-                    Sequential = i.Sequential,
-                    AccessKey = i.AccessKey,
-                    AuthorizationNumber = i.AuthorizationNumber,
-                    Environment = i.Environment,
-                    ReceiptType = i.ReceiptType,
-                    Status = i.Status,
-                    IsElectronic = i.IsElectronic,
-                    InvoiceDate = i.InvoiceDate,
-                    DueDate = i.DueDate,
-                    BusinessId = i.Business!.Id,
-                    BusinessDocument = i.Business.Document,
-                    BusinessName = i.Business.Name,
-                    EstablishmentId = i.Establishment!.Id,
-                    EstablishmentCode = i.Establishment.Code,
-                    EstablishmentName = i.Establishment.Name,
-                    EmissionPointId = i.EmissionPoint!.Id,
-                    EmissionPointCode = i.EmissionPoint.Code,
-                    EmissionPointDescription = i.EmissionPoint.Description,
-                    UserId = i.User!.Id,
-                    UserDocument = i.User.Document,
-                    UserFullName = i.User.FullName,
-                    Customer = new CustomerResDto
-                    {
-                        Id = i.Customer!.Id,
-                        DocumentType = i.Customer.DocumentType,
-                        Document = i.Customer.Document,
-                        Email = i.Customer.Email,
-                        Name = i.Customer.Name,
-                        Cellphone = i.Customer.Cellphone,
-                        Telephone = i.Customer.Telephone,
-                        Address = i.Customer.Address,
-                        IsActive = i.Customer.IsActive,
-                        CreatedAt = i.Customer.CreatedAt
-                    },
-                    SubtotalWithoutTaxes = i.SubtotalWithoutTaxes,
-                    SubtotalWithTaxes = i.SubtotalWithTaxes,
-                    DiscountTotal = i.DiscountTotal,
-                    TaxTotal = i.TaxTotal,
-                    TotalInvoice = i.TotalInvoice,
-                    PaymentMethod = i.PaymentMethod,
-                    PaymentTermDays = i.PaymentTermDays,
-                    Description = i.Description ?? "",
-                    AdditionalInformation = i.AdditionalInformation,
-                    AuthorizationDate = i.AuthorizationDate,
-                    SriMessage = i.SriMessage,
-                    XmlSigned = i.XmlSigned ?? ""
-                }).ToListAsync();
+                .ToListAsync();
+
+            var invoices = invoiceList.Select(i => invoiceDtoFactory.InvoiceSimpleRes(i)).ToList();
 
             response.Success = true;
             response.Message = "Listado de facturas obtenido correctamente.";
@@ -579,88 +294,51 @@ public class InvoiceRepository(StoreContext context, IHttpContextAccessor httpCo
     {
         var response = new ApiResponse<InvoiceComplexResDto>();
 
-        var businessId = GetBusinessIdFromToken();
-        var establishmentId = GetEstablishmentIdFromToken();
-        var emissionPointId = GetEmissionPointIdFromToken();
-        var userId = GetUserIdFromToken();
-
-        if (businessId == 0)
-        {
-            response.Success = false;
-            response.Message = "Negocio no encontrado";
-            response.Error = "No existe un negocio con el ID especificado";
-
-            return response;
-        }
-
-        if (establishmentId == 0)
-        {
-            response.Success = false;
-            response.Message = "Establecimiento no encontrado";
-            response.Error = "No existe un establecimiento con el ID especificado";
-
-            return response;
-        }
-
-        if (emissionPointId == 0)
-        {
-            response.Success = false;
-            response.Message = "Punto de emisión no encontrado";
-            response.Error = "No existe un punto de emisión con el ID especificado";
-
-            return response;
-        }
-
-        if (userId == 0)
-        {
-            response.Success = false;
-            response.Message = "Usuario no encontrado";
-            response.Error = "No existe un usuario con el ID especificado";
-
-            return response;
-        }
-
-        var existingInvoice = await context.Invoices
-        .Include(i => i.Customer)
-        .Include(i => i.Business)
-        .Include(i => i.Establishment)
-        .Include(i => i.EmissionPoint)
-        .Include(i => i.User)
-        .Include(i => i.InvoiceDetails)
-        .ThenInclude(d => d.Product)
-        .ThenInclude(p => p!.UnitMeasure)
-        .Include(i => i.InvoiceDetails).ThenInclude(d => d.Warehouse)
-        .Include(i => i.InvoiceDetails).ThenInclude(d => d.Tax)
-        .FirstOrDefaultAsync(
-            i =>
-            i.Id == invoiceId &&
-            i.BusinessId == businessId &&
-            i.EstablishmentId == establishmentId &&
-            i.EmissionPointId == emissionPointId &&
-            i.UserId == userId);
-
-        if (existingInvoice == null)
-        {
-            response.Success = false;
-            response.Message = "Factura no encontrada";
-            response.Error = "No existe una Factura con el ID especificado";
-
-            return response;
-        }
-
-        if (existingInvoice.Customer == null || existingInvoice.Business == null || existingInvoice.Establishment == null || existingInvoice.EmissionPoint == null)
-        {
-            response.Success = false;
-            response.Message = "Datos incompletos para la factura";
-            response.Error = "No se encontraron datos de negocio, establecimiento, punto de emisión o cliente asociados";
-
-            return response;
-        }
-
         using var transaction = await context.Database.BeginTransactionAsync();
 
         try
         {
+            if (currentUser.BusinessId == 0 ||
+            currentUser.EstablishmentId == 0 ||
+            currentUser.EmissionPointId == 0 ||
+            currentUser.UserId == 0)
+            {
+                response.Success = false;
+                response.Message = "Datos de autenticación incompletos";
+                response.Error = "No se pudo validar el negocio, establecimiento, punto de emisión o usuario";
+
+                return response;
+            }
+
+            var existingInvoice = await context.Invoices
+            .Include(i => i.Customer)
+            .Include(i => i.Business)
+            .Include(i => i.Establishment)
+            .Include(i => i.EmissionPoint)
+            .Include(i => i.User)
+            .Include(i => i.InvoiceDetails)
+            .ThenInclude(d => d.Product).ThenInclude(p => p!.UnitMeasure)
+            .Include(i => i.InvoiceDetails)
+            .ThenInclude(d => d.Warehouse)
+            .Include(i => i.InvoiceDetails)
+            .ThenInclude(d => d.Tax)
+            .FirstOrDefaultAsync(
+                i =>
+                i.Id == invoiceId &&
+                i.BusinessId == currentUser.BusinessId &&
+                i.EstablishmentId == currentUser.EstablishmentId &&
+                i.EmissionPointId == currentUser.EmissionPointId &&
+                i.UserId == currentUser.UserId);
+
+            if (existingInvoice == null)
+            {
+                response.Success = false;
+                response.Message = "Factura no encontrada";
+                response.Error = "No existe una factura con el ID especificado";
+
+                return response;
+            }
+
             var ecTime = TimeZoneInfo.ConvertTime(DateTime.UtcNow, TimeZoneInfo.FindSystemTimeZoneById("America/Guayaquil"));
 
             existingInvoice.Environment = invoiceUpdateReqDto.Environment;
@@ -680,16 +358,7 @@ public class InvoiceRepository(StoreContext context, IHttpContextAccessor httpCo
 
                 if (!incomingKeys.Contains(key))
                 {
-                    var stockRecord = await context.ProductWarehouses
-                    .FirstOrDefaultAsync(
-                        pw =>
-                        pw.ProductId == oldDetail.ProductId &&
-                        pw.WarehouseId == oldDetail.WarehouseId);
-
-                    if (stockRecord != null)
-                    {
-                        stockRecord.Stock += oldDetail.Quantity;
-                    }
+                    await stock.ReturnStockAsync(oldDetail.ProductId, oldDetail.WarehouseId, oldDetail.Quantity);
 
                     context.InvoiceDetails.Remove(oldDetail);
                     existingInvoice.InvoiceDetails.Remove(oldDetail);
@@ -708,52 +377,18 @@ public class InvoiceRepository(StoreContext context, IHttpContextAccessor httpCo
                 {
                     var product = await context.Products
                     .Include(p => p.Tax)
-                    .FirstOrDefaultAsync(p => p.Id == dtoDetail.ProductId);
-
-                    var warehouse = await context.Warehouses
-                    .FirstOrDefaultAsync(w => w.Id == dtoDetail.WarehouseId);
-
-                    var stockRecord = await context.ProductWarehouses
-                    .FirstOrDefaultAsync(
-                        pw =>
-                        pw.ProductId == dtoDetail.ProductId &&
-                        pw.WarehouseId == dtoDetail.WarehouseId);
-
-                    if (product == null)
-                    {
-                        response.Success = false;
-                        response.Message = "Producto no encontrado";
-                        response.Error = $"Producto {dtoDetail.ProductId} no encontrado";
-
-                        continue;
-                    }
+                    .FirstOrDefaultAsync(p => p.Id == dtoDetail.ProductId) ??
+                    throw new Exception($"Producto {dtoDetail.ProductId} no encontrado");
 
                     var diff = dtoDetail.Quantity - existingDetail.Quantity;
 
-                    if (stockRecord == null)
-                    {
-                        response.Success = false;
-                        response.Message = "Stock no encontrado";
-                        response.Error = "No existe Stock con el ID especificado";
-
-                        continue;
-                    }
-
                     if (diff > 0)
                     {
-                        if (stockRecord.Stock < diff)
-                        {
-                            response.Success = false;
-                            response.Message = "Stock insuficiente";
-                            response.Error = $"Stock insuficiente del producto {product.Name} en bodega {warehouse!.Code}";
-                            continue;
-                        }
-
-                        stockRecord.Stock -= diff;
+                        await stock.ReserveStockAsync(dtoDetail.ProductId, dtoDetail.WarehouseId, diff);
                     }
                     else if (diff < 0)
                     {
-                        stockRecord.Stock += diff;
+                        await stock.ReturnStockAsync(dtoDetail.ProductId, dtoDetail.WarehouseId, -diff);
                     }
 
                     existingDetail.Quantity = dtoDetail.Quantity;
@@ -803,7 +438,7 @@ public class InvoiceRepository(StoreContext context, IHttpContextAccessor httpCo
                         continue;
                     }
 
-                    stockRecord.Stock -= dtoDetail.Quantity;
+                    await stock.ReserveStockAsync(dtoDetail.ProductId, dtoDetail.WarehouseId, dtoDetail.Quantity);
 
                     var subtotal = dtoDetail.Quantity * product.Price;
                     var taxableBase = subtotal - dtoDetail.Discount;
@@ -833,96 +468,21 @@ public class InvoiceRepository(StoreContext context, IHttpContextAccessor httpCo
                 }
             }
 
-            var (SubtotalWithoutTaxes, SubtotalWithTaxes, DiscountTotal, TaxTotal) = RecalculateInvoiceTotals(existingInvoice);
+            var totals = calc.Calculate(existingInvoice);
 
-            existingInvoice.SubtotalWithoutTaxes = SubtotalWithoutTaxes;
-            existingInvoice.SubtotalWithTaxes = SubtotalWithTaxes;
-            existingInvoice.DiscountTotal = DiscountTotal;
-            existingInvoice.TaxTotal = TaxTotal;
-            existingInvoice.TotalInvoice = SubtotalWithTaxes;
+            existingInvoice.SubtotalWithoutTaxes = totals.SubtotalWithoutTaxes;
+            existingInvoice.SubtotalWithTaxes = totals.SubtotalWithTaxes;
+            existingInvoice.DiscountTotal = totals.DiscountTotal;
+            existingInvoice.TaxTotal = totals.TaxTotal;
+            existingInvoice.TotalInvoice = totals.SubtotalWithTaxes;
             existingInvoice.Status = InvoiceStatus.DRAFT;
 
             await context.SaveChangesAsync();
 
             await transaction.CommitAsync();
 
-            var invoice = new InvoiceComplexResDto
-            {
-                Id = existingInvoice.Id,
-                Sequential = existingInvoice.Sequential,
-                AccessKey = existingInvoice.AccessKey,
-                AuthorizationNumber = existingInvoice.AuthorizationNumber,
-                Environment = existingInvoice.Environment,
-                ReceiptType = existingInvoice.ReceiptType,
-                Status = existingInvoice.Status,
-                IsElectronic = existingInvoice.IsElectronic,
-                InvoiceDate = existingInvoice.InvoiceDate,
-                DueDate = existingInvoice.DueDate,
-                BusinessId = existingInvoice.Business!.Id,
-                BusinessDocument = existingInvoice.Business.Document,
-                BusinessName = existingInvoice.Business.Name,
-                EstablishmentId = existingInvoice.Establishment!.Id,
-                EstablishmentCode = existingInvoice.Establishment.Code,
-                EstablishmentName = existingInvoice.Establishment.Name,
-                EmissionPointId = existingInvoice.EmissionPoint!.Id,
-                EmissionPointCode = existingInvoice.EmissionPoint.Code,
-                EmissionPointDescription = existingInvoice.EmissionPoint.Description,
-                UserId = existingInvoice.User!.Id,
-                UserDocument = existingInvoice.User.Document,
-                UserFullName = existingInvoice.User.FullName,
-                Customer = new CustomerResDto
-                {
-                    Id = existingInvoice.Customer!.Id,
-                    DocumentType = existingInvoice.Customer.DocumentType,
-                    Document = existingInvoice.Customer.Document,
-                    Email = existingInvoice.Customer.Email,
-                    Name = existingInvoice.Customer.Name,
-                    Cellphone = existingInvoice.Customer.Cellphone,
-                    Telephone = existingInvoice.Customer.Telephone,
-                    Address = existingInvoice.Customer.Address,
-                    IsActive = existingInvoice.Customer.IsActive,
-                    CreatedAt = existingInvoice.Customer.CreatedAt
-                },
-                SubtotalWithoutTaxes = existingInvoice.SubtotalWithoutTaxes,
-                SubtotalWithTaxes = existingInvoice.SubtotalWithTaxes,
-                DiscountTotal = existingInvoice.DiscountTotal,
-                TaxTotal = existingInvoice.TaxTotal,
-                TotalInvoice = existingInvoice.TotalInvoice,
-                PaymentMethod = existingInvoice.PaymentMethod,
-                PaymentTermDays = existingInvoice.PaymentTermDays,
-                Description = existingInvoice.Description ?? string.Empty,
-                AdditionalInformation = existingInvoice.AdditionalInformation,
-                AuthorizationDate = existingInvoice.AuthorizationDate,
-                SriMessage = existingInvoice.SriMessage,
-                XmlSigned = existingInvoice.XmlSigned ?? string.Empty,
-                Details = [.. existingInvoice.InvoiceDetails.Select(d => new InvoiceDetailResDto
-            {
-                Id = d.Id,
-                InvoiceId = d.InvoiceId,
-                ProductId = d.Product!.Id,
-                ProductCode = d.Product.Sku,
-                ProductName = d.Product.Name,
-                UnitMeasureId = d.Product.UnitMeasureId,
-                UnitMeasureCode = d.Product.UnitMeasure!.Code,
-                UnitMeasureName = d.Product.UnitMeasure!.Name,
-                WarehouseId = d.Warehouse!.Id,
-                WarehouseCode = d.Warehouse.Code,
-                WarehouseName = d.Warehouse.Name,
-                TaxId = d.Tax!.Id,
-                TaxCode = d.Tax.Code,
-                TaxName = d.Tax.Name,
-                TaxRate = d.TaxRate,
-                TaxValue = d.TaxValue,
-                Quantity = d.Quantity,
-                UnitPrice = d.UnitPrice,
-                Discount = d.Discount,
-                Subtotal = d.Subtotal,
-                Total = d.Total
-            })]
-            };
-
             response.Success = true;
-            response.Data = invoice;
+            response.Data = invoiceDtoFactory.InvoiceComplexRes(existingInvoice);
             response.Message = "Factura actualizada correctamente";
 
             return response;
@@ -945,16 +505,15 @@ public class InvoiceRepository(StoreContext context, IHttpContextAccessor httpCo
 
         try
         {
-            var businessId = GetBusinessIdFromToken();
-            var establishmentId = GetEstablishmentIdFromToken();
-            var emissionPointId = GetEmissionPointIdFromToken();
-            var userId = GetUserIdFromToken();
-
-            if (businessId == 0 || establishmentId == 0 || emissionPointId == 0 || userId == 0)
+            if (currentUser.BusinessId == 0 ||
+             currentUser.EstablishmentId == 0 ||
+             currentUser.EmissionPointId == 0 ||
+             currentUser.UserId == 0)
             {
                 response.Success = false;
                 response.Message = "Datos de autenticación incompletos";
                 response.Error = "No se pudo validar el negocio, establecimiento, punto de emisión o usuario";
+
                 return response;
             }
 
@@ -971,12 +530,13 @@ public class InvoiceRepository(StoreContext context, IHttpContextAccessor httpCo
                 .ThenInclude(d => d.Warehouse)
                 .Include(i => i.InvoiceDetails)
                 .ThenInclude(d => d.Tax)
-                .FirstOrDefaultAsync(i =>
+                .FirstOrDefaultAsync(
+                    i =>
                     i.Id == invoiceId &&
-                    i.BusinessId == businessId &&
-                    i.EstablishmentId == establishmentId &&
-                    i.EmissionPointId == emissionPointId &&
-                    i.UserId == userId);
+                    i.BusinessId == currentUser.BusinessId &&
+                    i.EstablishmentId == currentUser.EstablishmentId &&
+                    i.EmissionPointId == currentUser.EmissionPointId &&
+                    i.UserId == currentUser.UserId);
 
             if (existingInvoice == null)
             {
@@ -996,14 +556,7 @@ public class InvoiceRepository(StoreContext context, IHttpContextAccessor httpCo
                 return response;
             }
 
-            if (existingInvoice.Status != InvoiceStatus.DRAFT)
-            {
-                response.Success = false;
-                response.Message = "Estado inválido";
-                response.Error = "Solo las facturas en borrador pueden registrar pago";
-
-                return response;
-            }
+            validate.ValidateInvoiceIsDraft(existingInvoice);
 
             if (invoicePaymentUpdateReqDto.PaymentTermDays < 0)
             {
@@ -1032,95 +585,18 @@ public class InvoiceRepository(StoreContext context, IHttpContextAccessor httpCo
 
                 return response;
             }
-            else
-            {
-                existingInvoice.PaymentMethod = invoicePaymentUpdateReqDto.PaymentMethod;
-                existingInvoice.PaymentTermDays = invoicePaymentUpdateReqDto.PaymentTermDays;
 
-                existingInvoice.Status = InvoiceStatus.PENDING;
+            existingInvoice.PaymentMethod = invoicePaymentUpdateReqDto.PaymentMethod;
+            existingInvoice.PaymentTermDays = invoicePaymentUpdateReqDto.PaymentTermDays;
 
-                await context.SaveChangesAsync();
+            existingInvoice.Status = InvoiceStatus.PENDING;
 
+            await context.SaveChangesAsync();
 
-                var invoice = new InvoiceComplexResDto
-                {
-                    Id = existingInvoice.Id,
-                    Sequential = existingInvoice.Sequential,
-                    AccessKey = existingInvoice.AccessKey,
-                    AuthorizationNumber = existingInvoice.AuthorizationNumber,
-                    Environment = existingInvoice.Environment,
-                    ReceiptType = existingInvoice.ReceiptType,
-                    Status = existingInvoice.Status,
-                    IsElectronic = existingInvoice.IsElectronic,
-                    InvoiceDate = existingInvoice.InvoiceDate,
-                    DueDate = existingInvoice.DueDate,
-                    BusinessId = existingInvoice.Business!.Id,
-                    BusinessDocument = existingInvoice.Business.Document,
-                    BusinessName = existingInvoice.Business.Name,
-                    EstablishmentId = existingInvoice.Establishment!.Id,
-                    EstablishmentCode = existingInvoice.Establishment.Code,
-                    EstablishmentName = existingInvoice.Establishment.Name,
-                    EmissionPointId = existingInvoice.EmissionPoint!.Id,
-                    EmissionPointCode = existingInvoice.EmissionPoint.Code,
-                    EmissionPointDescription = existingInvoice.EmissionPoint.Description,
-                    UserId = existingInvoice.User!.Id,
-                    UserDocument = existingInvoice.User.Document,
-                    UserFullName = existingInvoice.User.FullName,
-                    Customer = new CustomerResDto
-                    {
-                        Id = existingInvoice.Customer!.Id,
-                        DocumentType = existingInvoice.Customer.DocumentType,
-                        Document = existingInvoice.Customer.Document,
-                        Email = existingInvoice.Customer.Email,
-                        Name = existingInvoice.Customer.Name,
-                        Cellphone = existingInvoice.Customer.Cellphone,
-                        Telephone = existingInvoice.Customer.Telephone,
-                        Address = existingInvoice.Customer.Address,
-                        IsActive = existingInvoice.Customer.IsActive,
-                        CreatedAt = existingInvoice.Customer.CreatedAt
-                    },
-                    SubtotalWithoutTaxes = existingInvoice.SubtotalWithoutTaxes,
-                    SubtotalWithTaxes = existingInvoice.SubtotalWithTaxes,
-                    DiscountTotal = existingInvoice.DiscountTotal,
-                    TaxTotal = existingInvoice.TaxTotal,
-                    TotalInvoice = existingInvoice.TotalInvoice,
-                    PaymentMethod = existingInvoice.PaymentMethod,
-                    PaymentTermDays = existingInvoice.PaymentTermDays,
-                    Description = existingInvoice.Description ?? "",
-                    AdditionalInformation = existingInvoice.AdditionalInformation,
-                    AuthorizationDate = existingInvoice.AuthorizationDate,
-                    SriMessage = existingInvoice.SriMessage,
-                    XmlSigned = existingInvoice.XmlSigned ?? "",
-                    Details = [.. existingInvoice.InvoiceDetails.Select(d => new InvoiceDetailResDto
-                {
-                    Id = d.Id,
-                    InvoiceId = d.InvoiceId,
-                    ProductId = d.Product!.Id,
-                    ProductCode = d.Product.Sku,
-                    ProductName = d.Product.Name,
-                    UnitMeasureId = d.Product.UnitMeasureId,
-                    UnitMeasureCode = d.Product.UnitMeasure!.Code,
-                    UnitMeasureName = d.Product.UnitMeasure!.Name,
-                    WarehouseId = d.Warehouse!.Id,
-                    WarehouseCode = d.Warehouse.Code,
-                    WarehouseName = d.Warehouse.Name,
-                    TaxId = d.Tax!.Id,
-                    TaxCode = d.Tax.Code,
-                    TaxName = d.Tax.Name,
-                    TaxRate = d.TaxRate,
-                    TaxValue = d.TaxValue,
-                    Quantity = d.Quantity,
-                    UnitPrice = d.UnitPrice,
-                    Discount = d.Discount,
-                    Subtotal = d.Subtotal,
-                    Total = d.Total
-                })]
-                };
+            response.Success = true;
+            response.Message = "Pago registrado en factura";
+            response.Data = invoiceDtoFactory.InvoiceComplexRes(existingInvoice);
 
-                response.Success = true;
-                response.Message = "Pago registrado en factura";
-                response.Data = invoice;
-            }
         }
         catch (Exception ex)
         {
@@ -1132,69 +608,5 @@ public class InvoiceRepository(StoreContext context, IHttpContextAccessor httpCo
         }
 
         return response;
-    }
-
-    private static (decimal SubtotalWithoutTaxes, decimal SubtotalWithTaxes, decimal DiscountTotal, decimal TaxTotal) RecalculateInvoiceTotals(Invoice invoice)
-    {
-        decimal subtotalBase = 0;
-        decimal subtotalWithTaxes = 0;
-        decimal discountTotal = 0;
-        decimal taxTotal = 0;
-
-        foreach (var detail in invoice.InvoiceDetails)
-        {
-            var taxableBase = (detail.Quantity * detail.UnitPrice) - detail.Discount;
-            var taxRate = detail.Tax?.Rate ?? detail.TaxRate;
-            var taxValue = taxableBase * (taxRate / 100);
-            var total = taxableBase + taxValue;
-
-            detail.Subtotal = taxableBase;
-            detail.TaxRate = taxRate;
-            detail.TaxValue = taxValue;
-            detail.Total = total;
-
-            subtotalBase += taxableBase;
-            discountTotal += detail.Discount;
-            taxTotal += taxValue;
-            subtotalWithTaxes += total;
-        }
-
-        return (subtotalBase, subtotalWithTaxes, discountTotal, taxTotal);
-    }
-
-    private int GetUserIdFromToken()
-    {
-        var userIdClaim = httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-        return int.TryParse(userIdClaim, out var id) ? id : 0;
-    }
-
-    private int GetBusinessIdFromToken()
-    {
-        var businessIdClaim = httpContextAccessor.HttpContext?.User.FindFirst("BusinessId")?.Value;
-        return int.TryParse(businessIdClaim, out var id) ? id : 0;
-    }
-
-    private int GetEstablishmentIdFromToken()
-    {
-        var establishmentIdClaim = httpContextAccessor.HttpContext?.User.FindFirst("EstablishmentId")?.Value;
-        return int.TryParse(establishmentIdClaim, out var id) ? id : 0;
-    }
-
-    private int GetEmissionPointIdFromToken()
-    {
-        var emissionPointIdClaim = httpContextAccessor.HttpContext?.User.FindFirst("EmissionPointId")?.Value;
-        return int.TryParse(emissionPointIdClaim, out var id) ? id : 0;
-    }
-
-    private async Task<(byte[] pfxBytes, string password)> GetCertificateAsync(int businessId)
-    {
-        var cert = await context.BusinessCertificates
-            .FirstOrDefaultAsync(c => c.BusinessId == businessId)
-            ?? throw new Exception("El negocio no tiene certificado cargado");
-
-        var bytes = Convert.FromBase64String(cert.CertificateBase64);
-        var pass = aes.Decrypt(cert.Password);
-
-        return (bytes, pass);
     }
 }

@@ -1,5 +1,5 @@
 using Core.DTOs;
-using Core.DTOs.Invoice;
+using Core.DTOs.InvoiceDto;
 
 namespace Core.Interfaces.Repository;
 

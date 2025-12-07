@@ -1,7 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Http;
 using Core.DTOs;
-using Core.DTOs.Establishment;
+using Core.DTOs.EstablishmentDto;
 using Core.Interfaces.Repository;
 using Core.Entities;
 

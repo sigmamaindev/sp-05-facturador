@@ -1,5 +1,5 @@
 using Core.DTOs;
-using Core.DTOs.Product;
+using Core.DTOs.ProductDto;
 
 namespace Core.Interfaces.Repository;
 

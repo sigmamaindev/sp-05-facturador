@@ -2,8 +2,8 @@ using Microsoft.EntityFrameworkCore;
 using Core.Entities;
 using Core.Interfaces.Repository;
 using Core.DTOs;
-using Core.DTOs.Certificate;
-using Core.Interfaces.Services;
+using Core.DTOs.CertificateDto;
+using Core.Interfaces.Services.IUtilService;
 
 namespace Infrastructure.Data;
 

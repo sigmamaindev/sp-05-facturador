@@ -1,0 +1,15 @@
+namespace Core.DTOs.InvoiceDto;
+
+public class InvoiceUpdateReqDto
+{
+    public string ReceiptType { get; set; } = string.Empty;
+    public bool IsElectronic { get; set; }
+    public string Environment { get; set; } = string.Empty;
+    public DateTime InvoiceDate { get; set; }
+    public DateTime DueDate { get; set; }
+    public string PaymentMethod { get; set; } = string.Empty;
+    public int PaymentTermDays { get; set; }
+    public string Description { get; set; } = string.Empty;
+    public string AdditionalInformation { get; set; } = string.Empty;
+    public List<InvoiceDetailUpdateReqDto> Details { get; set; } = [];
+}

@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.Http;
 using Core.Interfaces.Repository;
 using Core.Entities;
 using Core.DTOs;
-using Core.DTOs.Inventory;
+using Core.DTOs.InventoryDto;
 
 namespace Infrastructure.Data;
 

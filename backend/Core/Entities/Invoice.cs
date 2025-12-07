@@ -6,7 +6,7 @@ public class Invoice : BaseEntity
 {
     public required string Sequential { get; set; }
     public string AccessKey { get; set; } = string.Empty;
-    public string Environment { get; set; } =string.Empty;
+    public string Environment { get; set; } = string.Empty;
     public string ReceiptType { get; set; } = ReceiptCodeType.INVOICE;
     public string Status { get; set; } = InvoiceStatus.DRAFT;
     public bool IsElectronic { get; set; } = true;
@@ -27,7 +27,7 @@ public class Invoice : BaseEntity
     public decimal DiscountTotal { get; set; }
     public decimal TaxTotal { get; set; }
     public decimal TotalInvoice { get; set; }
-    public string PaymentMethod { get; set; } = PaymentMethods.CASH;
+    public required string PaymentMethod { get; set; }
     public int PaymentTermDays { get; set; } = 0;
     public DateTime? DueDate { get; set; }
     public string? Description { get; set; }

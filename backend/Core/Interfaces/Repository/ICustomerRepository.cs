@@ -1,5 +1,5 @@
 using Core.DTOs;
-using Core.DTOs.Customer;
+using Core.DTOs.CustomerDto;
 
 namespace Core.Interfaces.Repository;
 

@@ -1,5 +1,5 @@
 using Core.DTOs;
-using Core.DTOs.Tax;
+using Core.DTOs.TaxDto;
 
 namespace Core.Interfaces.Repository;
 

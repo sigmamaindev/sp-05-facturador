@@ -1,5 +1,5 @@
 using Core.DTOs;
-using Core.DTOs.Inventory;
+using Core.DTOs.InventoryDto;
 
 namespace Core.Interfaces.Repository;
 

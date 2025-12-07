@@ -1,7 +1,7 @@
 using Microsoft.AspNetCore.Http;
 using Core.Interfaces.Repository;
 using Core.DTOs;
-using Core.DTOs.Tax;
+using Core.DTOs.TaxDto;
 using Microsoft.EntityFrameworkCore;
 
 namespace Infrastructure.Data;

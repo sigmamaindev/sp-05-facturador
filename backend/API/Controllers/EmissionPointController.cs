@@ -1,5 +1,5 @@
 using Core.DTOs;
-using Core.DTOs.EmissionPoint;
+using Core.DTOs.EmissionPointDto;
 using Core.Interfaces.Repository;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;

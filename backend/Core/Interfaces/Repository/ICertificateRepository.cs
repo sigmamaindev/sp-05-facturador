@@ -1,5 +1,5 @@
 using Core.DTOs;
-using Core.DTOs.Certificate;
+using Core.DTOs.CertificateDto;
 
 namespace Core.Interfaces.Repository;
 

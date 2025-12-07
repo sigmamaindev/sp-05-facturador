@@ -1,5 +1,5 @@
 using Core.DTOs;
-using Core.DTOs.EmissionPoint;
+using Core.DTOs.EmissionPointDto;
 
 namespace Core.Interfaces.Repository;
 

@@ -1,5 +1,5 @@
 using Core.DTOs;
-using Core.DTOs.Role;
+using Core.DTOs.RoleDto;
 
 namespace Core.Interfaces.Repository;
 

@@ -1,5 +1,5 @@
 using Core.DTOs;
-using Core.DTOs.Establishment;
+using Core.DTOs.EstablishmentDto;
 
 namespace Core.Interfaces.Repository;
 

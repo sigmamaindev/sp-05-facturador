@@ -1,5 +1,5 @@
 using Core.DTOs;
-using Core.DTOs.UnitMeasure;
+using Core.DTOs.UnitMeasureDto;
 
 namespace Core.Interfaces.Repository;
 

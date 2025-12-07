@@ -1,6 +1,6 @@
 using Core.Interfaces.Repository;
 using Core.DTOs;
-using Core.DTOs.Business;
+using Core.DTOs.BusinessDto;
 using Microsoft.EntityFrameworkCore;
 
 namespace Infrastructure.Data;

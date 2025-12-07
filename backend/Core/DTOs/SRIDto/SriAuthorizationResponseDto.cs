@@ -1,0 +1,10 @@
+namespace Core.DTOs.SRIDto;
+
+public class SriAuthorizationResponseDto
+{
+    public bool Success { get; set; }
+    public string Status { get; set; } = string.Empty;
+    public string Message { get; set; } = string.Empty;
+    public string AuthorizationNumber { get; set; } = string.Empty;
+    public DateTime? AuthorizationDate { get; set; }
+}

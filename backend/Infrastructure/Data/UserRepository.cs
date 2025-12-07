@@ -8,11 +8,11 @@ using Microsoft.AspNetCore.Http;
 using Core.Entities;
 using Core.Interfaces.Repository;
 using Core.DTOs;
-using Core.DTOs.User;
-using Core.DTOs.Business;
-using Core.DTOs.Establishment;
-using Core.DTOs.EmissionPoint;
-using Core.DTOs.Role;
+using Core.DTOs.UserDto;
+using Core.DTOs.BusinessDto;
+using Core.DTOs.EstablishmentDto;
+using Core.DTOs.EmissionPointDto;
+using Core.DTOs.RoleDto;
 
 namespace Infrastructure.Data;
 

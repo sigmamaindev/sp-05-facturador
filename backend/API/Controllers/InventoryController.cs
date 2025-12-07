@@ -2,7 +2,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Core.Interfaces.Repository;
 using Core.DTOs;
-using Core.DTOs.Inventory;
+using Core.DTOs.InventoryDto;
 
 namespace API.Controllers
 {

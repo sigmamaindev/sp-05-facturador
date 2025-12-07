@@ -2,10 +2,10 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Core.Interfaces.Repository;
 using Core.DTOs;
-using Core.DTOs.Product;
-using Core.DTOs.Tax;
-using Core.DTOs.UnitMeasure;
-using Core.DTOs.Inventory;
+using Core.DTOs.ProductDto;
+using Core.DTOs.TaxDto;
+using Core.DTOs.UnitMeasureDto;
+using Core.DTOs.InventoryDto;
 using Core.Entities;
 
 namespace Infrastructure.Data;

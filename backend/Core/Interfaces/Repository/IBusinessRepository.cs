@@ -1,6 +1,6 @@
 using Core.Entities;
 using Core.DTOs;
-using Core.DTOs.Business;
+using Core.DTOs.BusinessDto;
 
 namespace Core.Interfaces.Repository;
 
