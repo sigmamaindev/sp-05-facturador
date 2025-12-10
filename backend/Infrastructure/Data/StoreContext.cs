@@ -22,6 +22,10 @@ public class StoreContext(DbContextOptions options) : DbContext(options)
     public DbSet<Customer> Customers { get; set; }
     public DbSet<Invoice> Invoices { get; set; }
     public DbSet<InvoiceDetail> InvoiceDetails { get; set; }
+    public DbSet<Supplier> Suppliers { get; set; }
+    public DbSet<Purchase> Purchases { get; set; }
+    public DbSet<PurchaseDetail> PurchaseDetails { get; set; }
+    public DbSet<Kardex> Kardexes { get; set; }
     public DbSet<BusinessCertificate> BusinessCertificates => Set<BusinessCertificate>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -275,7 +279,7 @@ public class StoreContext(DbContextOptions options) : DbContext(options)
             entity.Property(i => i.ReceiptType).HasColumnName("TipoRecibo");
             entity.Property(i => i.Status).HasColumnName("Estado");
             entity.Property(i => i.IsElectronic).HasColumnName("Electronico");
-            entity.Property(i => i.InvoiceDate).HasColumnName("FechaFactura").HasColumnType("timestamp without time zone");;
+            entity.Property(i => i.InvoiceDate).HasColumnName("FechaFactura").HasColumnType("timestamp without time zone");
             entity.Property(i => i.AuthorizationDate).HasColumnName("FechaAutorizacion").HasColumnType("timestamp without time zone");
             entity.Property(i => i.UserId).HasColumnName("UsuarioId");
             entity.Property(i => i.CustomerId).HasColumnName("ClienteId");
@@ -289,7 +293,7 @@ public class StoreContext(DbContextOptions options) : DbContext(options)
             entity.Property(i => i.TotalInvoice).HasColumnName("Total");
             entity.Property(i => i.PaymentMethod).HasColumnName("MetodoPago");
             entity.Property(i => i.PaymentTermDays).HasColumnName("DiasPago");
-            entity.Property(i => i.DueDate).HasColumnName("FechaVencimiento").HasColumnType("timestamp without time zone");;
+            entity.Property(i => i.DueDate).HasColumnName("FechaVencimiento").HasColumnType("timestamp without time zone");
             entity.Property(i => i.Description).HasColumnName("Descripcion");
             entity.Property(i => i.AdditionalInformation).HasColumnName("InformacionAdicional");
             entity.Property(i => i.XmlSigned).HasColumnName("XmlFirmado");
@@ -315,6 +319,10 @@ public class StoreContext(DbContextOptions options) : DbContext(options)
             entity.HasOne(i => i.EmissionPoint)
             .WithMany(i => i.Invoices)
             .HasForeignKey(i => i.EmissionPointId);
+
+            entity.HasMany(i => i.KardexEntries)
+            .WithOne(k => k.Invoice)
+            .HasForeignKey(k => k.InvoiceId);
         });
 
         modelBuilder.Entity<InvoiceDetail>(entity =>
@@ -347,6 +355,111 @@ public class StoreContext(DbContextOptions options) : DbContext(options)
             entity.HasOne(id => id.Tax)
             .WithMany(id => id.InvoiceDetails)
             .HasForeignKey(id => id.TaxId);
+        });
+
+        modelBuilder.Entity<Supplier>(entity =>
+        {
+            entity.ToTable("Proveedor");
+            entity.Property(s => s.BusinessName).HasColumnName("RazonSocial");
+            entity.Property(s => s.Document).HasColumnName("Documento");
+            entity.Property(s => s.Email).HasColumnName("Correo");
+            entity.Property(s => s.Phone).HasColumnName("Telefono");
+            entity.Property(s => s.BusinessId).HasColumnName("EmpresaId");
+
+            entity.HasOne(s => s.Business)
+            .WithMany(b => b.Suppliers)
+            .HasForeignKey(s => s.BusinessId);
+        });
+
+        modelBuilder.Entity<Purchase>(entity =>
+        {
+            entity.ToTable("Compra");
+            entity.Property(p => p.BusinessId).HasColumnName("EmpresaId");
+            entity.Property(p => p.EstablishmentId).HasColumnName("EstablecimientoId");
+            entity.Property(p => p.WarehouseId).HasColumnName("BodegaId");
+            entity.Property(p => p.SupplierId).HasColumnName("ProveedorId");
+            entity.Property(p => p.PurchaseDate).HasColumnName("FechaCompra").HasColumnType("timestamp without time zone");
+            entity.Property(p => p.DocumentNumber).HasColumnName("NumeroDocumento");
+            entity.Property(p => p.Reference).HasColumnName("Referencia");
+            entity.Property(p => p.Subtotal).HasColumnName("Subtotal");
+            entity.Property(p => p.TotalTax).HasColumnName("TotalImpuesto");
+            entity.Property(p => p.Total).HasColumnName("Total");
+            entity.Property(p => p.Status).HasColumnName("Estado");
+
+            entity.HasOne(p => p.Business)
+            .WithMany(b => b.Purchases)
+            .HasForeignKey(p => p.BusinessId);
+
+            entity.HasOne(p => p.Establishment)
+            .WithMany(e => e.Purchases)
+            .HasForeignKey(p => p.EstablishmentId);
+
+            entity.HasOne(p => p.Warehouse)
+            .WithMany(w => w.Purchases)
+            .HasForeignKey(p => p.WarehouseId);
+
+            entity.HasOne(p => p.Supplier)
+            .WithMany(s => s.Purchases)
+            .HasForeignKey(p => p.SupplierId);
+        });
+
+        modelBuilder.Entity<PurchaseDetail>(entity =>
+        {
+            entity.ToTable("CompraDetalle");
+            entity.Property(pd => pd.PurchaseId).HasColumnName("CompraId");
+            entity.Property(pd => pd.ProductId).HasColumnName("ProductoId");
+            entity.Property(pd => pd.WarehouseId).HasColumnName("BodegaId");
+            entity.Property(pd => pd.TaxId).HasColumnName("ImpuestoId");
+            entity.Property(pd => pd.Quantity).HasColumnName("Cantidad");
+            entity.Property(pd => pd.UnitCost).HasColumnName("CostoUnitario");
+            entity.Property(pd => pd.Subtotal).HasColumnName("Subtotal");
+            entity.Property(pd => pd.TaxRate).HasColumnName("TasaImpuesto");
+            entity.Property(pd => pd.TaxValue).HasColumnName("ValorImpuesto");
+            entity.Property(pd => pd.Total).HasColumnName("Total");
+
+            entity.HasOne(pd => pd.Purchase)
+            .WithMany(p => p.PurchaseDetails)
+            .HasForeignKey(pd => pd.PurchaseId);
+
+            entity.HasOne(pd => pd.Product)
+            .WithMany(p => p.PurchaseDetails)
+            .HasForeignKey(pd => pd.ProductId);
+
+            entity.HasOne(pd => pd.Warehouse)
+            .WithMany(w => w.PurchaseDetails)
+            .HasForeignKey(pd => pd.WarehouseId);
+
+            entity.HasOne(pd => pd.Tax)
+            .WithMany(t => t.PurchaseDetails)
+            .HasForeignKey(pd => pd.TaxId);
+        });
+
+        modelBuilder.Entity<Kardex>(entity =>
+        {
+            entity.ToTable("Kardex");
+            entity.Property(k => k.ProductId).HasColumnName("ProductoId");
+            entity.Property(k => k.WarehouseId).HasColumnName("BodegaId");
+            entity.Property(k => k.MovementDate).HasColumnName("FechaMovimiento").HasColumnType("timestamp without time zone");
+            entity.Property(k => k.QuantityIn).HasColumnName("CantidadEntrada");
+            entity.Property(k => k.QuantityOut).HasColumnName("CantidadSalida");
+            entity.Property(k => k.UnitCost).HasColumnName("CostoUnitario");
+            entity.Property(k => k.TotalCost).HasColumnName("CostoTotal");
+            entity.Property(k => k.MovementType).HasColumnName("TipoMovimiento");
+            entity.Property(k => k.PurchaseId).HasColumnName("CompraId");
+            entity.Property(k => k.InvoiceId).HasColumnName("FacturaId");
+            entity.Property(k => k.AdjustmentId).HasColumnName("AjusteId");
+
+            entity.HasOne(k => k.Product)
+            .WithMany(p => p.Kardexes)
+            .HasForeignKey(k => k.ProductId);
+
+            entity.HasOne(k => k.Warehouse)
+            .WithMany(w => w.Kardexes)
+            .HasForeignKey(k => k.WarehouseId);
+
+            entity.HasOne(k => k.Purchase)
+            .WithMany()
+            .HasForeignKey(k => k.PurchaseId);
         });
 
         modelBuilder.Entity<BusinessCertificate>(entity =>

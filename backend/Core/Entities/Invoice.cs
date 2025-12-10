@@ -36,4 +36,5 @@ public class Invoice : BaseEntity
     public string? AuthorizationNumber { get; set; }
     public string? SriMessage { get; set; }
     public ICollection<InvoiceDetail> InvoiceDetails { get; set; } = [];
+    public ICollection<Kardex> KardexEntries { get; set; } = [];
 }

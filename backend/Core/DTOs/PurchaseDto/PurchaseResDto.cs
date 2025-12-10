@@ -1,15 +1,15 @@
-namespace Core.Entities;
+using System;
+using System.Collections.Generic;
 
-public class Purchase : BaseEntity
+namespace Core.DTOs.PurchaseDto;
+
+public class PurchaseResDto
 {
+    public int Id { get; set; }
     public int BusinessId { get; set; }
-    public Business? Business { get; set; }
     public int EstablishmentId { get; set; }
-    public Establishment? Establishment { get; set; }
     public int WarehouseId { get; set; }
-    public Warehouse? Warehouse { get; set; }
     public int SupplierId { get; set; }
-    public Supplier? Supplier { get; set; }
     public DateTime PurchaseDate { get; set; }
     public string DocumentNumber { get; set; } = string.Empty;
     public string Reference { get; set; } = string.Empty;
@@ -17,5 +17,6 @@ public class Purchase : BaseEntity
     public decimal TotalTax { get; set; }
     public decimal Total { get; set; }
     public string Status { get; set; } = string.Empty;
-    public ICollection<PurchaseDetail> PurchaseDetails { get; set; } = [];
+    public List<PurchaseDetailResDto> Details { get; set; } = [];
 }
+

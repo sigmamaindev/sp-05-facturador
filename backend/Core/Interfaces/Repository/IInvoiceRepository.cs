@@ -10,4 +10,5 @@ public interface IInvoiceRepository
     Task<ApiResponse<InvoiceSimpleResDto>> CreateInvoiceAsync(InvoiceCreateReqDto invoiceCreateReqDto);
     Task<ApiResponse<InvoiceComplexResDto>> UpdateInvoiceAsync(int invoiceId, InvoiceUpdateReqDto invoiceUpdateReqDto);
     Task<ApiResponse<InvoiceComplexResDto>> UpdateInvoicePaymentAsync(int invoiceId, InvoicePaymentUpdateReqDto invoicePaymentUpdateReqDto);
+    Task<ApiResponse<InvoiceComplexResDto>> ConfirmInvoiceAsync(int invoiceId);
 }

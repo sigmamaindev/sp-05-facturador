@@ -19,4 +19,6 @@ public class Product : BaseEntity
     public string Type { get; set; } = ProductTypes.GOOD;
     public ICollection<ProductWarehouse> ProductWarehouses { get; set; } = [];
     public ICollection<InvoiceDetail> InvoiceDetails { get; set; } = [];
+    public ICollection<PurchaseDetail> PurchaseDetails { get; set; } = [];
+    public ICollection<Kardex> Kardexes { get; set; } = [];
 }

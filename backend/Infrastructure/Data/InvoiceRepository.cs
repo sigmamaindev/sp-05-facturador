@@ -6,6 +6,8 @@ using Core.DTOs.InvoiceDto;
 using Core.Interfaces.Repository;
 using Core.Interfaces.Services.IUtilService;
 using Core.Interfaces.Services.IInvoiceService;
+using Core.Interfaces.Specifications.InvoiceSpecification;
+using Infrastructure.Specification.InvoiceSpecification;
 
 namespace Infrastructure.Data;
 
@@ -18,6 +20,65 @@ public class InvoiceRepository(
     IInvoiceCalculationService calc,
     IInvoiceDtoFactory invoiceDtoFactory) : IInvoiceRepository
 {
+    public async Task<ApiResponse<InvoiceComplexResDto>> ConfirmInvoiceAsync(int id)
+    {
+        var response = new ApiResponse<InvoiceComplexResDto>();
+
+        using var transaction = await context.Database.BeginTransactionAsync();
+
+        try
+        {
+            var existingInvoice = await context.Invoices
+            .Include(i => i.Customer)
+            .Include(i => i.Business)
+            .Include(i => i.Establishment)
+            .Include(i => i.EmissionPoint)
+            .Include(i => i.User)
+            .Include(i => i.InvoiceDetails)
+            .ThenInclude(d => d.Product)
+            .ThenInclude(p => p!.UnitMeasure)
+            .Include(i => i.InvoiceDetails).ThenInclude(d => d.Warehouse)
+            .Include(i => i.InvoiceDetails).ThenInclude(d => d.Tax)
+            .FirstOrDefaultAsync(i => i.BusinessId == currentUser.BusinessId && i.Id == id);
+
+            if (existingInvoice == null)
+            {
+                response.Success = false;
+                response.Message = "Factura no encontrada";
+                response.Error = "No existe una factura con el identificador proporcionado";
+                return response;
+            }
+
+            if (existingInvoice.Status != InvoiceStatus.DRAFT)
+            {
+                response.Success = false;
+                response.Message = "La factura no está en estado borrador";
+                response.Error = "Solo se pueden confirmar facturas en estado borrador";
+                return response;
+            }
+
+            ValidateRequiredSriFields(existingInvoice);
+
+            existingInvoice.Status = InvoiceStatus.PENDING;
+
+            await context.SaveChangesAsync();
+
+            await transaction.CommitAsync();
+
+            response.Success = true;
+            response.Message = "Factura lista para confirmación";
+            response.Data = invoiceDtoFactory.InvoiceComplexRes(existingInvoice);
+        }
+        catch (Exception ex)
+        {
+            response.Success = false;
+            response.Message = "Error al preparar la factura para confirmación";
+            response.Error = ex.Message;
+        }
+
+        return response;
+    }
+
     public async Task<ApiResponse<InvoiceSimpleResDto>> CreateInvoiceAsync(InvoiceCreateReqDto invoiceCreateReqDto)
     {
         var response = new ApiResponse<InvoiceSimpleResDto>();
@@ -606,5 +667,38 @@ public class InvoiceRepository(
         }
 
         return response;
+    }
+
+    private static void ValidateRequiredSriFields(Core.Entities.Invoice invoice)
+    {
+        if (invoice.Business is null || string.IsNullOrWhiteSpace(invoice.Business.Document))
+        {
+            throw new Exception("El negocio no tiene RUC configurado");
+        }
+
+        if (invoice.Establishment is null || string.IsNullOrWhiteSpace(invoice.Establishment.Code))
+        {
+            throw new Exception("El establecimiento no tiene código configurado");
+        }
+
+        if (invoice.EmissionPoint is null || string.IsNullOrWhiteSpace(invoice.EmissionPoint.Code))
+        {
+            throw new Exception("El punto de emisión no tiene código configurado");
+        }
+
+        if (invoice.Customer is null || string.IsNullOrWhiteSpace(invoice.Customer.Document))
+        {
+            throw new Exception("El cliente no tiene documento configurado");
+        }
+
+        if (string.IsNullOrWhiteSpace(invoice.Sequential))
+        {
+            throw new Exception("La factura no tiene secuencial configurado");
+        }
+
+        if (invoice.InvoiceDetails.Count == 0)
+        {
+            throw new Exception("La factura no tiene detalles asociados");
+        }
     }
 }

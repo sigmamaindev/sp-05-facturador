@@ -3,13 +3,18 @@ using Yamgooo.SRI.Sign;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.EntityFrameworkCore;
+using Core.Interfaces.Kardex;
+using Core.Interfaces.Purchases;
 using Core.Interfaces.Repository;
 using Core.Interfaces.Services.IInvoiceService;
+using Core.Interfaces.UnitOfWork;
 using Infrastructure.Data;
 using Infrastructure.Services.InvoiceService;
+using Infrastructure.Services.Purchases;
 using Infrastructure.Services.UtilService;
 using Infrastructure.Services.SriService;
 using Core.Interfaces.Services.IUtilService;
+using Infrastructure.Services.KardexService;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -31,6 +36,8 @@ builder.Services.AddDbContext<StoreContext>(opt =>
 {
     opt.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection"));
 });
+
+builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 
 // Repository
 builder.Services.AddScoped<IBusinessRepository, BusinessRepository>();
@@ -59,6 +66,8 @@ builder.Services.AddScoped<IInvoiceSequentialService, InvoiceSequentialService>(
 builder.Services.AddScoped<IInvoiceDtoFactory, InvoiceDtoFactory>();
 builder.Services.AddScoped<ISriSignService, SriSignService>();
 builder.Services.AddHttpClient<ISriReceptionService, SriReceptionService>();
+builder.Services.AddScoped<IKardexService, KardexService>();
+builder.Services.AddScoped<IPurchaseService, PurchaseService>();
 builder.Services.AddHostedService<SriAuthorizationBackgroundService>();
 builder.Services.AddHostedService<SriReceptionBackgroundService>();
 

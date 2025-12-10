@@ -14,4 +14,5 @@ public class Tax : BaseEntity
     public Business? Business { get; set; }
     public ICollection<Product> Products { get; set; } = [];
     public ICollection<InvoiceDetail> InvoiceDetails { get; set; } = [];
+    public ICollection<PurchaseDetail> PurchaseDetails { get; set; } = [];
 }

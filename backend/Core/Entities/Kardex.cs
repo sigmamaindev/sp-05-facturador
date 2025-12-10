@@ -13,6 +13,8 @@ public class Kardex : BaseEntity
     public decimal TotalCost { get; set; }
     public string MovementType { get; set; } = string.Empty;
     public int? PurchaseId { get; set; }
+    public Purchase? Purchase { get; set; }
     public int? InvoiceId { get; set; }
+    public Invoice? Invoice { get; set; }
     public int? AdjustmentId { get; set; }
 }

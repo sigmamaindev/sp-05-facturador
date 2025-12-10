@@ -109,5 +109,19 @@ namespace API.Controllers
 
             return Ok(response);
         }
+
+        [HttpPut("{id:int}/confirm")]
+        [Authorize]
+        public async Task<ActionResult<ApiResponse<InvoiceComplexResDto>>> ConfirmInvoice(int id)
+        {
+            var response = await invoiceRepository.ConfirmInvoiceAsync(id);
+
+            if (!response.Success)
+            {
+                return BadRequest(response);
+            }
+
+            return Ok(response);
+        }
     }
 }

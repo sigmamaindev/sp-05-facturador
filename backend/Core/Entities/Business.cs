@@ -18,5 +18,7 @@ public class Business : BaseEntity
     public ICollection<Tax> Taxes { get; set; } = [];
     public ICollection<Customer> Customers { get; set; } = [];
     public ICollection<Invoice> Invoices { get; set; } = [];
+    public ICollection<Supplier> Suppliers { get; set; } = [];
+    public ICollection<Purchase> Purchases { get; set; } = [];
     public BusinessCertificate? BusinessCertificate { get; set; }
 }
