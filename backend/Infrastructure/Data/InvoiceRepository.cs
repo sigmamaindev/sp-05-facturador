@@ -589,8 +589,6 @@ public class InvoiceRepository(
             existingInvoice.PaymentMethod = invoicePaymentUpdateReqDto.PaymentMethod;
             existingInvoice.PaymentTermDays = invoicePaymentUpdateReqDto.PaymentTermDays;
 
-            existingInvoice.Status = InvoiceStatus.PENDING;
-
             await context.SaveChangesAsync();
 
             response.Success = true;
