@@ -1,6 +1,3 @@
-using System;
-using System.Collections.Generic;
-
 namespace Core.DTOs.PurchaseDto;
 
 public class PurchaseCreateReqDto
