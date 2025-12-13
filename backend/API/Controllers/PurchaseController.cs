@@ -1,6 +1,6 @@
 using Core.DTOs;
 using Core.DTOs.PurchaseDto;
-using Core.Interfaces.Purchases;
+using Core.Interfaces.Repository;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -8,34 +8,34 @@ namespace API.Controllers;
 
 [Route("api/purchases")]
 [ApiController]
-public class PurchaseController(IPurchaseService purchaseService) : ControllerBase
+public class PurchaseController(IPurchaseRepository purchaseRepository) : ControllerBase
 {
-    [HttpPost]
-    [Authorize(Roles = "SuperAdmin, Admin")]
-    public async Task<ActionResult<ApiResponse<PurchaseResDto>>> CreatePurchase([FromBody] PurchaseCreateReqDto purchaseCreateReqDto)
-    {
-        var response = await purchaseService.CreatePurchaseAsync(purchaseCreateReqDto);
+    // [HttpPost]
+    // [Authorize(Roles = "SuperAdmin, Admin")]
+    // public async Task<ActionResult<ApiResponse<PurchaseResDto>>> CreatePurchase([FromBody] PurchaseCreateReqDto purchaseCreateReqDto)
+    // {
+    //     var response = await purchaseService.CreatePurchaseAsync(purchaseCreateReqDto);
 
-        if (!response.Success)
-        {
-            return BadRequest(response);
-        }
+    //     if (!response.Success)
+    //     {
+    //         return BadRequest(response);
+    //     }
 
-        return Ok(response);
-    }
+    //     return Ok(response);
+    // }
 
-    [HttpGet("{id:int}")]
-    [Authorize]
-    public async Task<ActionResult<ApiResponse<PurchaseResDto>>> GetPurchaseById(int id)
-    {
-        var response = await purchaseService.GetPurchaseByIdAsync(id);
+    // [HttpGet("{id:int}")]
+    // [Authorize]
+    // public async Task<ActionResult<ApiResponse<PurchaseResDto>>> GetPurchaseById(int id)
+    // {
+    //     var response = await purchaseService.GetPurchaseByIdAsync(id);
 
-        if (!response.Success)
-        {
-            return BadRequest(response);
-        }
+    //     if (!response.Success)
+    //     {
+    //         return BadRequest(response);
+    //     }
 
-        return Ok(response);
-    }
+    //     return Ok(response);
+    // }
 }
 

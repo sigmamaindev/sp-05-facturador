@@ -9,6 +9,7 @@ import {
   Power,
   User,
   DollarSign,
+  ShoppingCart,
   Building2,
   MapPin,
   Warehouse,
@@ -46,6 +47,7 @@ const data = {
   user: { to: "/usuarios", label: "Usuarios", icon: User },
   customer: { to: "/clientes", label: "Clientes", icon: HandHelping },
   product: { to: "/productos", label: "Productos", icon: List },
+  purchase: { to: "/compras", label: "Compras", icon: ShoppingCart },
   invoice: { to: "/facturas", label: "Facturas", icon: DollarSign },
 };
 
@@ -121,6 +123,16 @@ export default function AppSidebar() {
                   <Link to={data.invoice.to}>
                     <data.invoice.icon />
                     <span>{data.invoice.label}</span>
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            </SidebarMenu>
+            <SidebarMenu>
+              <SidebarMenuItem key={data.purchase.to}>
+                <SidebarMenuButton asChild>
+                  <Link to={data.purchase.to}>
+                    <data.purchase.icon />
+                    <span>{data.purchase.label}</span>
                   </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>

@@ -3,18 +3,15 @@ using Yamgooo.SRI.Sign;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.EntityFrameworkCore;
-using Core.Interfaces.Kardex;
-using Core.Interfaces.Purchases;
-using Core.Interfaces.Repository;
-using Core.Interfaces.Services.IInvoiceService;
-using Core.Interfaces.UnitOfWork;
 using Infrastructure.Data;
 using Infrastructure.Services.InvoiceService;
-using Infrastructure.Services.Purchases;
 using Infrastructure.Services.UtilService;
 using Infrastructure.Services.SriService;
-using Core.Interfaces.Services.IUtilService;
 using Infrastructure.Services.KardexService;
+using Core.Interfaces.Repository;
+using Core.Interfaces.Services.IInvoiceService;
+using Core.Interfaces.Services.IUtilService;
+using Core.Interfaces.Services.IKardexService;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -37,9 +34,7 @@ builder.Services.AddDbContext<StoreContext>(opt =>
     opt.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection"));
 });
 
-builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
-
-// Repository
+// Repositories
 builder.Services.AddScoped<IBusinessRepository, BusinessRepository>();
 builder.Services.AddScoped<IRoleRepository, RoleRepository>();
 builder.Services.AddScoped<IEstablishmentRepository, EstablishmentRepository>();
@@ -52,8 +47,9 @@ builder.Services.AddScoped<ITaxRepository, TaxRepository>();
 builder.Services.AddScoped<IInventoryRepository, InventoryRepository>();
 builder.Services.AddScoped<ICustomerRepository, CustomerRepository>();
 builder.Services.AddScoped<IInvoiceRepository, InvoiceRepository>();
+builder.Services.AddScoped<ISupplierRepository, SupplierRepository>();
 builder.Services.AddScoped<ICertificateRepository, CertificateRepository>();
-// Services
+// Invoice Services
 builder.Services.AddScoped<IInvoiceXmlBuilderService, InvoiceXmlBuilderService>();
 builder.Services.AddScoped<IElectronicSignatureService, ElectronicSignatureService>();
 builder.Services.AddScoped<IAesEncryptionService, AesEncryptionService>();
@@ -63,11 +59,13 @@ builder.Services.AddScoped<IInvoiceValidationService, InvoiceValidationService>(
 builder.Services.AddScoped<IInvoiceStockService, InvoiceStockService>();
 builder.Services.AddScoped<IInvoiceCalculationService, InvoiceCalculationService>();
 builder.Services.AddScoped<IInvoiceSequentialService, InvoiceSequentialService>();
+builder.Services.AddScoped<IInvoiceEditionService, InvoiceEditionService>();
 builder.Services.AddScoped<IInvoiceDtoFactory, InvoiceDtoFactory>();
 builder.Services.AddScoped<ISriSignService, SriSignService>();
 builder.Services.AddHttpClient<ISriReceptionService, SriReceptionService>();
+// Kardex Services
 builder.Services.AddScoped<IKardexService, KardexService>();
-builder.Services.AddScoped<IPurchaseService, PurchaseService>();
+// Backgroud Services
 builder.Services.AddHostedService<SriAuthorizationBackgroundService>();
 builder.Services.AddHostedService<SriReceptionBackgroundService>();
 

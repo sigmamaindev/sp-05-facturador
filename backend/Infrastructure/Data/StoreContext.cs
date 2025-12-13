@@ -319,10 +319,6 @@ public class StoreContext(DbContextOptions options) : DbContext(options)
             entity.HasOne(i => i.EmissionPoint)
             .WithMany(i => i.Invoices)
             .HasForeignKey(i => i.EmissionPointId);
-
-            entity.HasMany(i => i.KardexEntries)
-            .WithOne(k => k.Invoice)
-            .HasForeignKey(k => k.InvoiceId);
         });
 
         modelBuilder.Entity<InvoiceDetail>(entity =>
@@ -363,7 +359,11 @@ public class StoreContext(DbContextOptions options) : DbContext(options)
             entity.Property(s => s.BusinessName).HasColumnName("RazonSocial");
             entity.Property(s => s.Document).HasColumnName("Documento");
             entity.Property(s => s.Email).HasColumnName("Correo");
-            entity.Property(s => s.Phone).HasColumnName("Telefono");
+            entity.Property(s => s.CellPhone).HasColumnName("Celular");
+            entity.Property(s => s.Telephone).HasColumnName("Telefono");
+            entity.Property(s => s.IsActive).HasColumnName("Activo");
+            entity.Property(s => s.CreatedAt).HasColumnName("FechaCreado");
+            entity.Property(s => s.UpdatedAt).HasColumnName("FechaActualizado");
             entity.Property(s => s.BusinessId).HasColumnName("EmpresaId");
 
             entity.HasOne(s => s.Business)
@@ -445,9 +445,7 @@ public class StoreContext(DbContextOptions options) : DbContext(options)
             entity.Property(k => k.UnitCost).HasColumnName("CostoUnitario");
             entity.Property(k => k.TotalCost).HasColumnName("CostoTotal");
             entity.Property(k => k.MovementType).HasColumnName("TipoMovimiento");
-            entity.Property(k => k.PurchaseId).HasColumnName("CompraId");
-            entity.Property(k => k.InvoiceId).HasColumnName("FacturaId");
-            entity.Property(k => k.AdjustmentId).HasColumnName("AjusteId");
+            entity.Property(k => k.Reference).HasColumnName("Referencia");
 
             entity.HasOne(k => k.Product)
             .WithMany(p => p.Kardexes)
@@ -456,10 +454,6 @@ public class StoreContext(DbContextOptions options) : DbContext(options)
             entity.HasOne(k => k.Warehouse)
             .WithMany(w => w.Kardexes)
             .HasForeignKey(k => k.WarehouseId);
-
-            entity.HasOne(k => k.Purchase)
-            .WithMany()
-            .HasForeignKey(k => k.PurchaseId);
         });
 
         modelBuilder.Entity<BusinessCertificate>(entity =>

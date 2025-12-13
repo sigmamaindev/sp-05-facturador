@@ -9,6 +9,5 @@ public interface IInvoiceValidationService
     Task<Establishment> ValidateEstablishmentAsync(int id);
     Task<EmissionPoint> ValidateEmissionPointAsync(int id);
     Task<User> ValidateUserAsync(int id);
-
     void ValidateInvoiceIsDraft(Invoice invoice);
 }

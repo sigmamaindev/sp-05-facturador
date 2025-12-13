@@ -2,6 +2,8 @@ namespace Core.Entities;
 
 public class Kardex : BaseEntity
 {
+    public int BusinessId { get; set; }
+    public Business? Business { get; set; }
     public int ProductId { get; set; }
     public Product? Product { get; set; }
     public int WarehouseId { get; set; }
@@ -12,9 +14,5 @@ public class Kardex : BaseEntity
     public decimal UnitCost { get; set; }
     public decimal TotalCost { get; set; }
     public string MovementType { get; set; } = string.Empty;
-    public int? PurchaseId { get; set; }
-    public Purchase? Purchase { get; set; }
-    public int? InvoiceId { get; set; }
-    public Invoice? Invoice { get; set; }
-    public int? AdjustmentId { get; set; }
+    public string Reference { get; set; } = string.Empty;
 }
