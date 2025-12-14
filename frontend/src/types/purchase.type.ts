@@ -9,11 +9,13 @@ export type Purchase = {
   warehouseId: number;
   supplierId: number;
   purchaseDate: Date;
-  documentNumber: string;
-  reference: string;
-  subtotal: number;
-  totalTax: number;
-  total: number;
+   documentNumber: string;
+   reference: string;
+  subtotalWithoutTaxes: number;
+  subtotalWithTaxes: number;
+  discountTotal: number;
+  taxTotal: number;
+  totalPurchase: number;
   status: string;
   details: PurchaseDetail[];
 };
@@ -65,9 +67,6 @@ export const purchaseDetailSchema = z.object({
 });
 
 export const createPurchaseSchema = z.object({
-  businessId: z.number().int().positive("Seleccione una empresa válida"),
-  establishmentId: z.number().int().positive("Seleccione un establecimiento"),
-  warehouseId: z.number().int().positive("Seleccione una bodega"),
   supplierId: z.number().int().positive("Seleccione un proveedor"),
   purchaseDate: z.date(),
   documentNumber: z
@@ -79,9 +78,6 @@ export const createPurchaseSchema = z.object({
     .max(100, "La referencia es demasiado larga")
     .optional()
     .default(""),
-  subtotal: z.number().min(0, "El subtotal no puede ser negativo"),
-  totalTax: z.number().min(0, "El impuesto no puede ser negativo"),
-  total: z.number().min(0, "El total no puede ser negativo"),
   details: z
     .array(purchaseDetailSchema)
     .min(1, "Debe agregar al menos un detalle en la compra"),

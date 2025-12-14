@@ -15,7 +15,7 @@ export async function getPurchases(
     const search = `keyword=${keyword}`;
     const pagination = `page=${page}&limit=${limit}`;
 
-    const url = `/purchases?${search}&${pagination}`;
+    const url = `/purchase?${search}&${pagination}`;
 
     const { data } = await api.get<ApiResponseList<Purchase>>(url, {
       headers: {
@@ -42,7 +42,7 @@ export async function getPurchaseById(
   token: string
 ): Promise<ApiResponseSingle<Purchase>> {
   try {
-    const url = `/purchases/${id}`;
+    const url = `/purchase/${id}`;
 
     const { data } = await api.get<ApiResponseSingle<Purchase>>(url, {
       headers: {
@@ -64,7 +64,7 @@ export async function createPurchase(
   token: string
 ): Promise<ApiResponseSingle<Purchase>> {
   try {
-    const url = `/purchases`;
+    const url = `/purchase`;
 
     const { data } = await api.post<ApiResponseSingle<Purchase>>(url, body, {
       headers: {
@@ -88,7 +88,7 @@ export async function updatePurchase(
   token: string
 ): Promise<ApiResponseSingle<Purchase>> {
   try {
-    const url = `/purchases/${id}`;
+    const url = `/purchase/${id}`;
 
     const { data } = await api.put<ApiResponseSingle<Purchase>>(url, body, {
       headers: {

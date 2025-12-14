@@ -12,6 +12,8 @@ using Core.Interfaces.Repository;
 using Core.Interfaces.Services.IInvoiceService;
 using Core.Interfaces.Services.IUtilService;
 using Core.Interfaces.Services.IKardexService;
+using Core.Interfaces.Services.IPurchaseService;
+using Infrastructure.Services.PurchaseService;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -49,6 +51,7 @@ builder.Services.AddScoped<ICustomerRepository, CustomerRepository>();
 builder.Services.AddScoped<IInvoiceRepository, InvoiceRepository>();
 builder.Services.AddScoped<ISupplierRepository, SupplierRepository>();
 builder.Services.AddScoped<ICertificateRepository, CertificateRepository>();
+builder.Services.AddScoped<IPurchaseRepository, PurchaseRepository>();
 // Invoice Services
 builder.Services.AddScoped<IInvoiceXmlBuilderService, InvoiceXmlBuilderService>();
 builder.Services.AddScoped<IElectronicSignatureService, ElectronicSignatureService>();
@@ -65,6 +68,10 @@ builder.Services.AddScoped<ISriSignService, SriSignService>();
 builder.Services.AddHttpClient<ISriReceptionService, SriReceptionService>();
 // Kardex Services
 builder.Services.AddScoped<IKardexService, KardexService>();
+// Purchase Services
+builder.Services.AddScoped<IPurchaseValidationService, PurchaseValidationService>();
+builder.Services.AddScoped<IPurchaseCalculationService, PurchaseCalculationService>();
+builder.Services.AddScoped<IPurchaseEditionService, PurchaseEditionService>();
 // Backgroud Services
 builder.Services.AddHostedService<SriAuthorizationBackgroundService>();
 builder.Services.AddHostedService<SriReceptionBackgroundService>();

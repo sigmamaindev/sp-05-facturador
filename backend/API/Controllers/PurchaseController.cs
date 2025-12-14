@@ -6,36 +6,52 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace API.Controllers;
 
-[Route("api/purchases")]
+[Route("api/[controller]")]
 [ApiController]
 public class PurchaseController(IPurchaseRepository purchaseRepository) : ControllerBase
 {
-    // [HttpPost]
-    // [Authorize(Roles = "SuperAdmin, Admin")]
-    // public async Task<ActionResult<ApiResponse<PurchaseResDto>>> CreatePurchase([FromBody] PurchaseCreateReqDto purchaseCreateReqDto)
-    // {
-    //     var response = await purchaseService.CreatePurchaseAsync(purchaseCreateReqDto);
+    [HttpGet]
+    [Authorize]
+    public async Task<ActionResult<ApiResponse<List<PurchaseSimpleResDto>>>> GetPurchases(
+        [FromQuery] string? keyword = "",
+        [FromQuery] int page = 1,
+        [FromQuery] int limit = 10)
+    {
+        var response = await purchaseRepository.GetPurchasesAsync(keyword, page, limit);
 
-    //     if (!response.Success)
-    //     {
-    //         return BadRequest(response);
-    //     }
+        if (!response.Success)
+        {
+            return BadRequest(response);
+        }
 
-    //     return Ok(response);
-    // }
+        return Ok(response);
+    }
 
-    // [HttpGet("{id:int}")]
-    // [Authorize]
-    // public async Task<ActionResult<ApiResponse<PurchaseResDto>>> GetPurchaseById(int id)
-    // {
-    //     var response = await purchaseService.GetPurchaseByIdAsync(id);
+    [HttpGet("{id:int}")]
+    [Authorize]
+    public async Task<ActionResult<ApiResponse<PurchaseSimpleResDto>>> GetPurchaseById(int id)
+    {
+        var response = await purchaseRepository.GetPurchaseByIdAsync(id);
 
-    //     if (!response.Success)
-    //     {
-    //         return BadRequest(response);
-    //     }
+        if (!response.Success)
+        {
+            return BadRequest(response);
+        }
 
-    //     return Ok(response);
-    // }
+        return Ok(response);
+    }
+
+    [HttpPost]
+    [Authorize(Roles = "SuperAdmin, Admin")]
+    public async Task<ActionResult<ApiResponse<PurchaseSimpleResDto>>> CreatePurchase([FromBody] PurchaseCreateReqDto purchaseCreateReqDto)
+    {
+        var response = await purchaseRepository.CreatePurchaseAsync(purchaseCreateReqDto);
+
+        if (!response.Success)
+        {
+            return BadRequest(response);
+        }
+
+        return Ok(response);
+    }
 }
-

@@ -3,6 +3,7 @@ using System;
 using Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Infrastructure.Migrations
 {
     [DbContext(typeof(StoreContext))]
-    partial class StoreContextModelSnapshot : ModelSnapshot
+    [Migration("20251214135944_PurchaseRepository")]
+    partial class PurchaseRepository
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -631,8 +634,7 @@ namespace Infrastructure.Migrations
                         .HasColumnName("NumeroDocumento");
 
                     b.Property<int>("EmissionPointId")
-                        .HasColumnType("integer")
-                        .HasColumnName("PuntoEmisionId");
+                        .HasColumnType("integer");
 
                     b.Property<int>("EstablishmentId")
                         .HasColumnType("integer")
@@ -778,8 +780,7 @@ namespace Infrastructure.Migrations
 
                     b.Property<string>("Address")
                         .IsRequired()
-                        .HasColumnType("text")
-                        .HasColumnName("Direccion");
+                        .HasColumnType("text");
 
                     b.Property<int>("BusinessId")
                         .HasColumnType("integer")

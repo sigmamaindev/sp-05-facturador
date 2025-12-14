@@ -33,21 +33,17 @@ export const columns: ColumnDef<Purchase>[] = [
     },
   },
   {
-    accessorKey: "documentNumber",
-    header: "Documento",
-  },
-  {
     accessorKey: "status",
     header: "Estado",
     cell: ({ row }) => {
       const status = row.original.status ?? "Sin estado";
       const normalized = status.toUpperCase();
 
-      const variant = normalized.includes("APROBAD")
+      const variant = normalized.includes("APROBADO")
         ? "default"
         : normalized.includes("BORRADOR")
           ? "secondary"
-          : normalized.includes("RECHAZ")
+          : normalized.includes("RECHAZADO")
             ? "destructive"
             : "outline";
 
@@ -58,7 +54,7 @@ export const columns: ColumnDef<Purchase>[] = [
     accessorKey: "total",
     header: () => <div className="text-right">Total</div>,
     cell: ({ row }) => {
-      const total = row.original.total?.toFixed(2) ?? "0.00";
+      const total = row.original.totalPurchase?.toFixed(2) ?? "0.00";
 
       return <p className="text-right">{total}</p>;
     },

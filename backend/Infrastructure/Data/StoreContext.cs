@@ -359,7 +359,8 @@ public class StoreContext(DbContextOptions options) : DbContext(options)
             entity.Property(s => s.BusinessName).HasColumnName("RazonSocial");
             entity.Property(s => s.Document).HasColumnName("Documento");
             entity.Property(s => s.Email).HasColumnName("Correo");
-            entity.Property(s => s.CellPhone).HasColumnName("Celular");
+            entity.Property(s => s.Address).HasColumnName("Direccion");
+            entity.Property(s => s.Cellphone).HasColumnName("Celular");
             entity.Property(s => s.Telephone).HasColumnName("Telefono");
             entity.Property(s => s.IsActive).HasColumnName("Activo");
             entity.Property(s => s.CreatedAt).HasColumnName("FechaCreado");
@@ -376,14 +377,16 @@ public class StoreContext(DbContextOptions options) : DbContext(options)
             entity.ToTable("Compra");
             entity.Property(p => p.BusinessId).HasColumnName("EmpresaId");
             entity.Property(p => p.EstablishmentId).HasColumnName("EstablecimientoId");
-            entity.Property(p => p.WarehouseId).HasColumnName("BodegaId");
+            entity.Property(p => p.EmissionPointId).HasColumnName("PuntoEmisionId");
             entity.Property(p => p.SupplierId).HasColumnName("ProveedorId");
             entity.Property(p => p.PurchaseDate).HasColumnName("FechaCompra").HasColumnType("timestamp without time zone");
             entity.Property(p => p.DocumentNumber).HasColumnName("NumeroDocumento");
             entity.Property(p => p.Reference).HasColumnName("Referencia");
-            entity.Property(p => p.Subtotal).HasColumnName("Subtotal");
-            entity.Property(p => p.TotalTax).HasColumnName("TotalImpuesto");
-            entity.Property(p => p.Total).HasColumnName("Total");
+            entity.Property(p => p.SubtotalWithoutTaxes).HasColumnName("SubtotalBase");
+            entity.Property(p => p.SubtotalWithTaxes).HasColumnName("Subtotal");
+            entity.Property(p => p.DiscountTotal).HasColumnName("TotalDescuento");
+            entity.Property(p => p.TaxTotal).HasColumnName("TotalImpuesto");
+            entity.Property(p => p.TotalPurchase).HasColumnName("Total");
             entity.Property(p => p.Status).HasColumnName("Estado");
 
             entity.HasOne(p => p.Business)
@@ -393,10 +396,6 @@ public class StoreContext(DbContextOptions options) : DbContext(options)
             entity.HasOne(p => p.Establishment)
             .WithMany(e => e.Purchases)
             .HasForeignKey(p => p.EstablishmentId);
-
-            entity.HasOne(p => p.Warehouse)
-            .WithMany(w => w.Purchases)
-            .HasForeignKey(p => p.WarehouseId);
 
             entity.HasOne(p => p.Supplier)
             .WithMany(s => s.Purchases)
@@ -410,11 +409,12 @@ public class StoreContext(DbContextOptions options) : DbContext(options)
             entity.Property(pd => pd.ProductId).HasColumnName("ProductoId");
             entity.Property(pd => pd.WarehouseId).HasColumnName("BodegaId");
             entity.Property(pd => pd.TaxId).HasColumnName("ImpuestoId");
+            entity.Property(pd => pd.TaxRate).HasColumnName("TasaImpuesto");
+            entity.Property(pd => pd.TaxValue).HasColumnName("ValorImpuesto");
+            entity.Property(pd => pd.Discount).HasColumnName("Descuento");
             entity.Property(pd => pd.Quantity).HasColumnName("Cantidad");
             entity.Property(pd => pd.UnitCost).HasColumnName("CostoUnitario");
             entity.Property(pd => pd.Subtotal).HasColumnName("Subtotal");
-            entity.Property(pd => pd.TaxRate).HasColumnName("TasaImpuesto");
-            entity.Property(pd => pd.TaxValue).HasColumnName("ValorImpuesto");
             entity.Property(pd => pd.Total).HasColumnName("Total");
 
             entity.HasOne(pd => pd.Purchase)
@@ -437,6 +437,7 @@ public class StoreContext(DbContextOptions options) : DbContext(options)
         modelBuilder.Entity<Kardex>(entity =>
         {
             entity.ToTable("Kardex");
+            entity.Property(k => k.BusinessId).HasColumnName("EmpresaId");
             entity.Property(k => k.ProductId).HasColumnName("ProductoId");
             entity.Property(k => k.WarehouseId).HasColumnName("BodegaId");
             entity.Property(k => k.MovementDate).HasColumnName("FechaMovimiento").HasColumnType("timestamp without time zone");
@@ -446,6 +447,10 @@ public class StoreContext(DbContextOptions options) : DbContext(options)
             entity.Property(k => k.TotalCost).HasColumnName("CostoTotal");
             entity.Property(k => k.MovementType).HasColumnName("TipoMovimiento");
             entity.Property(k => k.Reference).HasColumnName("Referencia");
+
+            entity.HasOne(k => k.Business)
+            .WithMany(b => b.Kardexes)
+            .HasForeignKey(k => k.BusinessId);
 
             entity.HasOne(k => k.Product)
             .WithMany(p => p.Kardexes)

@@ -3,6 +3,7 @@ using System;
 using Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Infrastructure.Migrations
 {
     [DbContext(typeof(StoreContext))]
-    partial class StoreContextModelSnapshot : ModelSnapshot
+    [Migration("20251213174719_PurchaseModule")]
+    partial class PurchaseModule
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -457,8 +460,10 @@ namespace Infrastructure.Migrations
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<int>("BusinessId")
-                        .HasColumnType("integer")
-                        .HasColumnName("EmpresaId");
+                        .HasColumnType("integer");
+
+                    b.Property<int?>("InvoiceId")
+                        .HasColumnType("integer");
 
                     b.Property<DateTime>("MovementDate")
                         .HasColumnType("timestamp without time zone")
@@ -501,6 +506,8 @@ namespace Infrastructure.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("BusinessId");
+
+                    b.HasIndex("InvoiceId");
 
                     b.HasIndex("ProductId");
 
@@ -621,18 +628,10 @@ namespace Infrastructure.Migrations
                         .HasColumnType("integer")
                         .HasColumnName("EmpresaId");
 
-                    b.Property<decimal>("DiscountTotal")
-                        .HasColumnType("numeric")
-                        .HasColumnName("TotalDescuento");
-
                     b.Property<string>("DocumentNumber")
                         .IsRequired()
                         .HasColumnType("text")
                         .HasColumnName("NumeroDocumento");
-
-                    b.Property<int>("EmissionPointId")
-                        .HasColumnType("integer")
-                        .HasColumnName("PuntoEmisionId");
 
                     b.Property<int>("EstablishmentId")
                         .HasColumnType("integer")
@@ -652,35 +651,35 @@ namespace Infrastructure.Migrations
                         .HasColumnType("text")
                         .HasColumnName("Estado");
 
-                    b.Property<decimal>("SubtotalWithTaxes")
+                    b.Property<decimal>("Subtotal")
                         .HasColumnType("numeric")
                         .HasColumnName("Subtotal");
-
-                    b.Property<decimal>("SubtotalWithoutTaxes")
-                        .HasColumnType("numeric")
-                        .HasColumnName("SubtotalBase");
 
                     b.Property<int>("SupplierId")
                         .HasColumnType("integer")
                         .HasColumnName("ProveedorId");
 
-                    b.Property<decimal>("TaxTotal")
+                    b.Property<decimal>("Total")
+                        .HasColumnType("numeric")
+                        .HasColumnName("Total");
+
+                    b.Property<decimal>("TotalTax")
                         .HasColumnType("numeric")
                         .HasColumnName("TotalImpuesto");
 
-                    b.Property<decimal>("TotalPurchase")
-                        .HasColumnType("numeric")
-                        .HasColumnName("Total");
+                    b.Property<int>("WarehouseId")
+                        .HasColumnType("integer")
+                        .HasColumnName("BodegaId");
 
                     b.HasKey("Id");
 
                     b.HasIndex("BusinessId");
 
-                    b.HasIndex("EmissionPointId");
-
                     b.HasIndex("EstablishmentId");
 
                     b.HasIndex("SupplierId");
+
+                    b.HasIndex("WarehouseId");
 
                     b.ToTable("Compra", (string)null);
                 });
@@ -692,10 +691,6 @@ namespace Infrastructure.Migrations
                         .HasColumnType("integer");
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
-
-                    b.Property<decimal>("Discount")
-                        .HasColumnType("numeric")
-                        .HasColumnName("Descuento");
 
                     b.Property<int>("ProductId")
                         .HasColumnType("integer")
@@ -713,7 +708,7 @@ namespace Infrastructure.Migrations
                         .HasColumnType("numeric")
                         .HasColumnName("Subtotal");
 
-                    b.Property<int>("TaxId")
+                    b.Property<int?>("TaxId")
                         .HasColumnType("integer")
                         .HasColumnName("ImpuestoId");
 
@@ -778,8 +773,7 @@ namespace Infrastructure.Migrations
 
                     b.Property<string>("Address")
                         .IsRequired()
-                        .HasColumnType("text")
-                        .HasColumnName("Direccion");
+                        .HasColumnType("text");
 
                     b.Property<int>("BusinessId")
                         .HasColumnType("integer")
@@ -1251,10 +1245,14 @@ namespace Infrastructure.Migrations
             modelBuilder.Entity("Core.Entities.Kardex", b =>
                 {
                     b.HasOne("Core.Entities.Business", "Business")
-                        .WithMany("Kardexes")
+                        .WithMany()
                         .HasForeignKey("BusinessId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.HasOne("Core.Entities.Invoice", null)
+                        .WithMany("KardexEntries")
+                        .HasForeignKey("InvoiceId");
 
                     b.HasOne("Core.Entities.Product", "Product")
                         .WithMany("Kardexes")
@@ -1329,12 +1327,6 @@ namespace Infrastructure.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("Core.Entities.EmissionPoint", "EmissionPoint")
-                        .WithMany()
-                        .HasForeignKey("EmissionPointId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
                     b.HasOne("Core.Entities.Establishment", "Establishment")
                         .WithMany("Purchases")
                         .HasForeignKey("EstablishmentId")
@@ -1347,13 +1339,19 @@ namespace Infrastructure.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("Business");
+                    b.HasOne("Core.Entities.Warehouse", "Warehouse")
+                        .WithMany("Purchases")
+                        .HasForeignKey("WarehouseId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
-                    b.Navigation("EmissionPoint");
+                    b.Navigation("Business");
 
                     b.Navigation("Establishment");
 
                     b.Navigation("Supplier");
+
+                    b.Navigation("Warehouse");
                 });
 
             modelBuilder.Entity("Core.Entities.PurchaseDetail", b =>
@@ -1372,9 +1370,7 @@ namespace Infrastructure.Migrations
 
                     b.HasOne("Core.Entities.Tax", "Tax")
                         .WithMany("PurchaseDetails")
-                        .HasForeignKey("TaxId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .HasForeignKey("TaxId");
 
                     b.HasOne("Core.Entities.Warehouse", "Warehouse")
                         .WithMany("PurchaseDetails")
@@ -1521,8 +1517,6 @@ namespace Infrastructure.Migrations
 
                     b.Navigation("Invoices");
 
-                    b.Navigation("Kardexes");
-
                     b.Navigation("Products");
 
                     b.Navigation("Purchases");
@@ -1564,6 +1558,8 @@ namespace Infrastructure.Migrations
             modelBuilder.Entity("Core.Entities.Invoice", b =>
                 {
                     b.Navigation("InvoiceDetails");
+
+                    b.Navigation("KardexEntries");
                 });
 
             modelBuilder.Entity("Core.Entities.Product", b =>
@@ -1628,6 +1624,8 @@ namespace Infrastructure.Migrations
                     b.Navigation("ProductWarehouses");
 
                     b.Navigation("PurchaseDetails");
+
+                    b.Navigation("Purchases");
                 });
 #pragma warning restore 612, 618
         }

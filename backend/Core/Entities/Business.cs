@@ -20,5 +20,6 @@ public class Business : BaseEntity
     public ICollection<Invoice> Invoices { get; set; } = [];
     public ICollection<Supplier> Suppliers { get; set; } = [];
     public ICollection<Purchase> Purchases { get; set; } = [];
+    public ICollection<Kardex> Kardexes { get; set; } = [];
     public BusinessCertificate? BusinessCertificate { get; set; }
 }

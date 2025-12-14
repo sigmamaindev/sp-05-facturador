@@ -36,15 +36,15 @@ export default function PurchaseDetailInfo({ purchase }: PurchaseDetailInfoProps
           </div>
           <div className="flex justify-between">
             <span>Subtotal</span>
-            <span>${purchase.subtotal.toFixed(2)}</span>
+            <span>${purchase.subtotalWithoutTaxes.toFixed(2)}</span>
           </div>
           <div className="flex justify-between">
             <span>IVA</span>
-            <span>${purchase.totalTax.toFixed(2)}</span>
+            <span>${purchase.taxTotal.toFixed(2)}</span>
           </div>
           <div className="flex justify-between font-semibold">
             <span>Total</span>
-            <span>${purchase.total.toFixed(2)}</span>
+            <span>${purchase.totalPurchase.toFixed(2)}</span>
           </div>
         </CardContent>
       </Card>

@@ -42,13 +42,10 @@ public class InvoiceEditionService(StoreContext context, IInvoiceStockService st
                 UnitPrice = product.Price,
                 Discount = detail.Discount,
                 Subtotal = taxableBase,
-                TaxId = detail.TaxId,
+                TaxId = product.TaxId,
                 TaxRate = taxRate,
                 TaxValue = taxValue,
-                Total = total,
-                Product = product,
-                Warehouse = warehouse,
-                Tax = product.Tax
+                Total = total
             });
         }
     }

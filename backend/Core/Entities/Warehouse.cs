@@ -11,7 +11,6 @@ public class Warehouse : BaseEntity
     public Business? Business { get; set; }
     public ICollection<ProductWarehouse> ProductWarehouses { get; set; } = [];
     public ICollection<InvoiceDetail> InvoiceDetails { get; set; } = [];
-    public ICollection<Purchase> Purchases { get; set; } = [];
     public ICollection<PurchaseDetail> PurchaseDetails { get; set; } = [];
     public ICollection<Kardex> Kardexes { get; set; } = [];
 }

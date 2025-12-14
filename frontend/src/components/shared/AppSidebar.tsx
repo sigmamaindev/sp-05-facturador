@@ -46,6 +46,7 @@ const data = {
   },
   user: { to: "/usuarios", label: "Usuarios", icon: User },
   customer: { to: "/clientes", label: "Clientes", icon: HandHelping },
+  supplier: { to: "/proveedores", label: "Proveedores", icon: HandHelping },
   product: { to: "/productos", label: "Productos", icon: List },
   purchase: { to: "/compras", label: "Compras", icon: ShoppingCart },
   invoice: { to: "/facturas", label: "Facturas", icon: DollarSign },
@@ -103,6 +104,16 @@ export default function AppSidebar() {
                   <Link to={data.customer.to}>
                     <data.customer.icon />
                     <span>{data.customer.label}</span>
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            </SidebarMenu>
+            <SidebarMenu>
+              <SidebarMenuItem key={data.supplier.to}>
+                <SidebarMenuButton asChild>
+                  <Link to={data.supplier.to}>
+                    <data.supplier.icon />
+                    <span>{data.supplier.label}</span>
                   </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>

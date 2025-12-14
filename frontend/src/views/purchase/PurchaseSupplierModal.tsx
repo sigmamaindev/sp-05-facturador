@@ -1,4 +1,8 @@
-import { useMemo, useState } from "react";
+import { useEffect, useState } from "react";
+
+import { useAuth } from "@/contexts/AuthContext";
+
+import { getSuppliers } from "@/api/supplier";
 
 import { Card, CardContent } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -11,21 +15,6 @@ import type { PurchaseSupplier } from "@/types/purchase.type";
 import PurchaseSupplierModalHeader from "./PurchaseSupplierModalHeader";
 import { columns } from "./PurchaseSupplierModalColumns";
 
-const MOCK_SUPPLIERS: PurchaseSupplier[] = [
-  {
-    id: 1,
-    name: "Proveedor demo 1",
-    document: "0999999999",
-    email: "proveedor1@example.com",
-  },
-  {
-    id: 2,
-    name: "Proveedor demo 2",
-    document: "0123456789",
-    email: "compras@example.com",
-  },
-];
-
 interface PurchaseSupplierModalProps {
   open: boolean;
   onClose: () => void;
@@ -37,17 +26,52 @@ export default function PurchaseSupplierModal({
   onClose,
   onSelect,
 }: PurchaseSupplierModalProps) {
-  const [keyword, setKeyword] = useState("");
+  const { token } = useAuth();
 
-  const filtered = useMemo(() => {
-    const lower = keyword.toLowerCase();
-    return MOCK_SUPPLIERS.filter(
-      (s) =>
-        s.name.toLowerCase().includes(lower) ||
-        s.document.toLowerCase().includes(lower) ||
-        s.email.toLowerCase().includes(lower)
-    );
-  }, [keyword]);
+  const [keyword, setKeyword] = useState("");
+  const [data, setData] = useState<PurchaseSupplier[]>([]);
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
+  const [totalPages, setTotalPages] = useState(1);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!token || !open) return;
+
+    const fetchData = async () => {
+      setLoading(true);
+      setError(null);
+
+      try {
+        const suppliers = await getSuppliers(keyword, page, pageSize, token);
+
+        if (!suppliers) return;
+
+        const mappedSuppliers: PurchaseSupplier[] = suppliers.data.map(
+          (supplier) => ({
+            id: supplier.id,
+            name: supplier.businessName,
+            document: supplier.document,
+            email: supplier.email,
+          })
+        );
+
+        setData(mappedSuppliers);
+        setPage(suppliers.pagination.page);
+        setPageSize(suppliers.pagination.limit);
+        setTotalPages(suppliers.pagination.totalPages);
+      } catch (err: any) {
+        setError(
+          err.message ?? "No se pudieron cargar los proveedores desde la API"
+        );
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, [keyword, page, pageSize, token, open]);
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
@@ -61,22 +85,19 @@ export default function PurchaseSupplierModal({
               keyword={keyword}
               setKeyword={setKeyword}
             />
-            {filtered.length === 0 ? (
-              <AlertMessage
-                message="Aún no hay proveedores cargados desde la API. Se muestran datos de ejemplo."
-                variant="secondary"
-              />
-            ) : null}
             <DataTable
               columns={columns({ onSelect })}
-              data={filtered}
-              page={1}
-              pageSize={filtered.length || 5}
-              totalPages={1}
-              onPageChange={() => null}
-              onPageSizeChange={() => null}
-              loading={false}
+              data={data}
+              page={page}
+              pageSize={pageSize}
+              totalPages={totalPages}
+              onPageChange={setPage}
+              onPageSizeChange={setPageSize}
+              loading={loading}
             />
+            {error ? (
+              <AlertMessage message={error} variant="destructive" />
+            ) : null}
           </CardContent>
         </Card>
       </DialogContent>

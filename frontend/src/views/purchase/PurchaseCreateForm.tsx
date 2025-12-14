@@ -57,8 +57,6 @@ export default function PurchaseCreateForm({
     return date.toLocaleString("es-EC");
   };
 
-  const canProceed = supplier !== null && products.length > 0;
-
   return (
     <div className="flex flex-col md:flex-row gap-4">
       <div className="md:w-3/4">
@@ -209,9 +207,6 @@ export default function PurchaseCreateForm({
                 <span>${totals.total.toFixed(2)}</span>
               </div>
             </div>
-            <Button className="w-full" disabled={!canProceed}>
-              Puede continuar cuando elija proveedor y productos
-            </Button>
           </CardContent>
         </Card>
       </div>

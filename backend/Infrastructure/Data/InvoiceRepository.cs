@@ -1,5 +1,4 @@
 using Microsoft.EntityFrameworkCore;
-using Core.Entities;
 using Core.Constants;
 using Core.DTOs;
 using Core.DTOs.InvoiceDto;

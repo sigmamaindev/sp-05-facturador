@@ -22,6 +22,9 @@ import UserListView from "@/views/user/UserListView";
 import UserCreateView from "@/views/user/UserCreateView";
 import UserUpdateView from "@/views/user/UserUpdateView";
 import CustomerListView from "@/views/customer/CustomerListView";
+import CustomerCreateView from "@/views/customer/CustomerCreateView";
+import SupplierListView from "@/views/supplier/SupplierListView";
+import SupplierCreateView from "@/views/supplier/SupplierCreateView";
 import ProductListView from "@/views/product/ProductListView";
 import ProductCreateView from "@/views/product/ProductCreateView";
 import PurchaseListView from "@/views/purchase/PurchaseListView";
@@ -32,7 +35,6 @@ import InvoiceListView from "@/views/invoice/InvoiceListView";
 import InvoiceCreateView from "@/views/invoice/InvoiceCreateView";
 import InvoiceUpdateView from "@/views/invoice/InvoiceUpdateView";
 import WarehouseListView from "@/views/warehouse/WarehouseListView";
-import CustomerCreateView from "@/views/customer/CustomerCreateView";
 import InvoiceDetailView from "@/views/invoice/InvoiceDetailView";
 
 export default function Router() {
@@ -86,6 +88,8 @@ export default function Router() {
               />
               <Route path="/clientes" element={<CustomerListView />} />
               <Route path="/clientes/crear" element={<CustomerCreateView />} />
+              <Route path="/proveedores" element={<SupplierListView />} />
+              <Route path="/proveedores/crear" element={<SupplierCreateView />} />
               <Route path="/productos" element={<ProductListView />} />
               <Route path="/productos/crear" element={<ProductCreateView />} />
               <Route path="/compras" element={<PurchaseListView />} />

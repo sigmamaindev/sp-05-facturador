@@ -5,5 +5,7 @@ namespace Core.Interfaces.Repository;
 
 public interface IPurchaseRepository
 {
-    
+    Task<ApiResponse<List<PurchaseSimpleResDto>>> GetPurchasesAsync(string? keyword, int page, int limit);
+    Task<ApiResponse<PurchaseSimpleResDto>> GetPurchaseByIdAsync(int id);
+    Task<ApiResponse<PurchaseSimpleResDto>> CreatePurchaseAsync(PurchaseCreateReqDto purchaseCreateReqDto);
 }
