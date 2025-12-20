@@ -1,0 +1,13 @@
+export const PaymentMethodCode = {
+  NFS: "01", // SIN UTILIZACION DEL SISTEMA FINANCIERO
+  DEBIT_COMPESATION: "15", // COMPENSACIÓN DE DEUDAS
+  DEBIT_CARD: "16", // TARJETA DE DÉBITO
+  ELECTRONIC_MONEY: "17", // DINERO ELECTRÓNICO
+  PREPAID_CARD: "18", // TARJETA PREPAGO
+  CREDIT_CARD: "19", // TARJETA DE CRÉDITO
+  FS: "20", // OTROS CON UTILIZACIÓN DEL SISTEMA FINANCIERO
+  ENDORSEMENT_TITLES: "21", // ENDOSO DE TÍTULOS
+} as const;
+
+export type PaymentMethodCode =
+  (typeof PaymentMethodCode)[keyof typeof PaymentMethodCode];

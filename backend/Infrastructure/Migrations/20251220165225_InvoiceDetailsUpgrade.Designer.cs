@@ -3,6 +3,7 @@ using System;
 using Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Infrastructure.Migrations
 {
     [DbContext(typeof(StoreContext))]
-    partial class StoreContextModelSnapshot : ModelSnapshot
+    [Migration("20251220165225_InvoiceDetailsUpgrade")]
+    partial class InvoiceDetailsUpgrade
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -400,17 +403,9 @@ namespace Infrastructure.Migrations
                         .HasColumnType("numeric")
                         .HasColumnName("Descuento");
 
-                    b.Property<decimal>("GrossWeight")
-                        .HasColumnType("numeric")
-                        .HasColumnName("PesoBruto");
-
                     b.Property<int>("InvoiceId")
                         .HasColumnType("integer")
                         .HasColumnName("FacturaId");
-
-                    b.Property<decimal>("NetWeight")
-                        .HasColumnType("numeric")
-                        .HasColumnName("PesoNeto");
 
                     b.Property<int>("ProductId")
                         .HasColumnType("integer")
@@ -545,10 +540,6 @@ namespace Infrastructure.Migrations
                         .HasColumnType("text")
                         .HasColumnName("Descripcion");
 
-                    b.Property<decimal>("GrossWeight")
-                        .HasColumnType("numeric")
-                        .HasColumnName("PesoBruto");
-
                     b.Property<bool>("IsActive")
                         .HasColumnType("boolean")
                         .HasColumnName("Activo");
@@ -561,10 +552,6 @@ namespace Infrastructure.Migrations
                         .IsRequired()
                         .HasColumnType("text")
                         .HasColumnName("Nombre");
-
-                    b.Property<decimal>("NetWeight")
-                        .HasColumnType("numeric")
-                        .HasColumnName("PesoNeto");
 
                     b.Property<decimal>("Price")
                         .HasColumnType("numeric")

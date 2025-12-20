@@ -2,7 +2,6 @@ using System.Globalization;
 using System.Xml.Linq;
 using Core.Constants;
 using Core.Entities;
-using Core.Interfaces.Services;
 using Core.Interfaces.Services.IInvoiceService;
 
 namespace Infrastructure.Services.InvoiceService;
@@ -114,7 +113,7 @@ public class InvoiceXmlBuilderService : IInvoiceXmlBuilderService
     private static XElement BuildPayments(Invoice invoice)
     {
         var pago = new XElement("pago",
-            new XElement("formaPago", string.IsNullOrWhiteSpace(invoice.PaymentMethod) ? PaymentMethod.CASH : invoice.PaymentMethod),
+            new XElement("formaPago", string.IsNullOrWhiteSpace(invoice.PaymentMethod) ? PaymentMethod.NFS : invoice.PaymentMethod),
             new XElement("total", FormatDecimal(invoice.TotalInvoice))
         );
 

@@ -37,6 +37,7 @@ public class BusinessRepository(StoreContext context) : IBusinessRepository
                 Address = b.Address,
                 City = b.City ?? string.Empty,
                 Province = b.Province ?? string.Empty,
+                SriEnvironment = b.SriEnvironment,
                 CreatedAt = b.CreatedAt,
                 IsActive = b.IsActive
             }).ToListAsync();
@@ -86,8 +87,9 @@ public class BusinessRepository(StoreContext context) : IBusinessRepository
                 Document = existingBusiness.Document,
                 Name = existingBusiness.Name,
                 Address = existingBusiness.Address,
-                City = existingBusiness.City!,
-                Province = existingBusiness.Province!,
+                City = existingBusiness.City,
+                Province = existingBusiness.Province,
+                SriEnvironment = existingBusiness.SriEnvironment,
                 IsActive = existingBusiness.IsActive,
                 CreatedAt = existingBusiness.CreatedAt
             };
@@ -100,6 +102,62 @@ public class BusinessRepository(StoreContext context) : IBusinessRepository
         {
             response.Success = false;
             response.Message = "Error al obtener la empresa";
+            response.Error = ex.Message;
+        }
+
+        return response;
+    }
+
+    public async Task<ApiResponse<BusinessResDto>> UpdateBusinessAsync(int businessId, BusinessUpdateReqDto businessUpdateReqDto)
+    {
+        var response = new ApiResponse<BusinessResDto>();
+
+        try
+        {
+            var existingBusiness = await context.Businesses
+            .FirstOrDefaultAsync(
+                b =>
+                b.Id == businessId);
+
+            if (existingBusiness == null)
+            {
+                response.Success = false;
+                response.Message = "Empresa no encontrada";
+                response.Error = "No existe una empresa con el ID especificado";
+
+                return response;
+            }
+
+            existingBusiness.Document = businessUpdateReqDto.Document;
+            existingBusiness.Name = businessUpdateReqDto.Name;
+            existingBusiness.Province = businessUpdateReqDto.Province;
+            existingBusiness.City = businessUpdateReqDto.City;
+            existingBusiness.Address = businessUpdateReqDto.Address;
+            existingBusiness.SriEnvironment = businessUpdateReqDto.SriEnvironment;
+
+            await context.SaveChangesAsync();
+
+            var business = new BusinessResDto
+            {
+                Id = existingBusiness.Id,
+                Document = existingBusiness.Document,
+                Name = existingBusiness.Name,
+                Address = existingBusiness.Address,
+                City = existingBusiness.City,
+                Province = existingBusiness.Province,
+                SriEnvironment = existingBusiness.SriEnvironment,
+                IsActive = existingBusiness.IsActive,
+                CreatedAt = existingBusiness.CreatedAt
+            };
+
+            response.Success = true;
+            response.Message = "Empresa actualizada correctamente";
+            response.Data = business;
+        }
+        catch (Exception ex)
+        {
+            response.Success = false;
+            response.Message = "Error al actualizar la empresa";
             response.Error = ex.Message;
         }
 

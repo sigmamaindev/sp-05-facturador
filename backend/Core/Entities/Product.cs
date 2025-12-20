@@ -17,6 +17,8 @@ public class Product : BaseEntity
     public int TaxId { get; set; }
     public Tax? Tax { get; set; }
     public string Type { get; set; } = ProductTypes.GOOD;
+    public decimal NetWeight { get; set; }
+    public decimal GrossWeight { get; set; }
     public ICollection<ProductWarehouse> ProductWarehouses { get; set; } = [];
     public ICollection<InvoiceDetail> InvoiceDetails { get; set; } = [];
     public ICollection<PurchaseDetail> PurchaseDetails { get; set; } = [];

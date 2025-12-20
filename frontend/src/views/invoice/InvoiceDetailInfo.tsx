@@ -28,7 +28,7 @@ export default function InvoiceDetailInfo({ invoice }: InvoiceDetailInfoProps) {
                         Nombre
                       </th>
                       <th className="text-left py-2 px-2 font-semibold">
-                        Cant.
+                        Cant. / U.M.
                       </th>
                       <th className="text-right py-2 px-2 font-semibold">
                         P. Unitario
@@ -59,8 +59,13 @@ export default function InvoiceDetailInfo({ invoice }: InvoiceDetailInfoProps) {
                         <tr key={d.id}>
                           <td className="py-2 px-2">{d.productCode}</td>
                           <td className="py-2 px-2">{d.productName}</td>
-                          <td className="py-2 px-2 text-right">
-                            {d.quantity.toFixed(2)}
+                          <td className="py-2 px-2">
+                            <div className="flex flex-col items-end">
+                              <span>{d.quantity.toFixed(2)}</span>
+                              <span className="text-xs text-muted-foreground">
+                                {d.unitMeasureCode} {d.unitMeasureName}
+                              </span>
+                            </div>
                           </td>
                           <td className="py-2 px-2 text-right">
                             {d.unitPrice.toFixed(2)}

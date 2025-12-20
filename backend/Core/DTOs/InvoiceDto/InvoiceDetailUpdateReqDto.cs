@@ -3,6 +3,7 @@ namespace Core.DTOs.InvoiceDto;
 public class InvoiceDetailUpdateReqDto
 {
     public int ProductId { get; set; }
+    public int UnitMeasureId { get; set; }
     public int WarehouseId { get; set; }
     public int TaxId { get; set; }
     public decimal Quantity { get; set; }

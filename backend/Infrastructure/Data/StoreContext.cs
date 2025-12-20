@@ -65,6 +65,7 @@ public class StoreContext(DbContextOptions options) : DbContext(options)
             entity.Property(b => b.City).HasColumnName("Ciudad");
             entity.Property(b => b.Province).HasColumnName("Provincia");
             entity.Property(b => b.IsActive).HasColumnName("Activo");
+            entity.Property(b => b.SriEnvironment).HasColumnName("AmbienteSri");
             entity.Property(b => b.CreatedAt).HasColumnName("FechaCreado");
             entity.Property(b => b.UpdatedAt).HasColumnName("FechaActualizado");
         });
@@ -172,6 +173,8 @@ public class StoreContext(DbContextOptions options) : DbContext(options)
             entity.Property(p => p.UnitMeasureId).HasColumnName("UnidadMedidaId");
             entity.Property(p => p.Type).HasColumnName("Tipo");
             entity.Property(p => p.TaxId).HasColumnName("ImpuestoId");
+            entity.Property(p => p.NetWeight).HasColumnName("PesoNeto");
+            entity.Property(p => p.GrossWeight).HasColumnName("PesoBruto");
 
             entity.HasOne(p => p.Business)
             .WithMany(p => p.Products)
@@ -326,11 +329,14 @@ public class StoreContext(DbContextOptions options) : DbContext(options)
             entity.ToTable("FacturaDetalle");
             entity.Property(id => id.InvoiceId).HasColumnName("FacturaId");
             entity.Property(id => id.ProductId).HasColumnName("ProductoId");
+            entity.Property(id => id.UnitMeasureId).HasColumnName("UnidadMedidaId");
             entity.Property(id => id.WarehouseId).HasColumnName("BodegaId");
             entity.Property(id => id.TaxId).HasColumnName("ImpuestoId");
             entity.Property(id => id.TaxRate).HasColumnName("TasaImpuesto");
             entity.Property(id => id.TaxValue).HasColumnName("ValorImpuesto");
             entity.Property(id => id.Quantity).HasColumnName("Cantidad");
+            entity.Property(id => id.NetWeight).HasColumnName("PesoNeto");
+            entity.Property(id => id.GrossWeight).HasColumnName("PesoBruto");
             entity.Property(id => id.UnitPrice).HasColumnName("PrecioUnitario");
             entity.Property(id => id.Discount).HasColumnName("Descuento");
             entity.Property(id => id.Subtotal).HasColumnName("Subtotal");
@@ -343,6 +349,10 @@ public class StoreContext(DbContextOptions options) : DbContext(options)
             entity.HasOne(id => id.Product)
             .WithMany(id => id.InvoiceDetails)
             .HasForeignKey(id => id.ProductId);
+
+            entity.HasOne(id => id.UnitMeasure)
+            .WithMany(id => id.InvoiceDetails)
+            .HasForeignKey(id => id.UnitMeasureId);
 
             entity.HasOne(id => id.Warehouse)
             .WithMany(id => id.InvoiceDetails)

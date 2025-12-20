@@ -37,5 +37,19 @@ namespace API.Controllers
 
             return Ok(response);
         }
+
+        [HttpPut("{id:int}")]
+        [Authorize(Roles = "SuperAdmin, Admin")]
+        public async Task<ActionResult<ApiResponse<BusinessResDto>>> UpdateCustomer(int id, [FromBody] BusinessUpdateReqDto businessUpdateReqDto)
+        {
+            var response = await businessRepository.UpdateBusinessAsync(id, businessUpdateReqDto);
+
+            if (!response.Success)
+            {
+                return BadRequest(response);
+            }
+
+            return Ok(response);
+        }
     }
 }

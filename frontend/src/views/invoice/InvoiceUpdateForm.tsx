@@ -13,10 +13,12 @@ import { Button } from "@/components/ui/button";
 
 import InvoiceCustomerModal from "./InvoiceCustomerModal";
 import InvoiceProductModal from "./InvoiceProductModal";
+import InvoiceUnitMeasureModal from "./InvoiceUnitMeasureModal";
 
 import type { InvoiceProduct, InvoiceTotals } from "@/types/invoice.type";
 import type { Customer } from "@/types/customer.types";
 import type { Product } from "@/types/product.types";
+import type { UnitMeasure } from "@/types/unitMeasure.types";
 import { Input } from "@/components/ui/input";
 
 interface InvoiceUpdateFormProps {
@@ -31,6 +33,10 @@ interface InvoiceUpdateFormProps {
   setOpenProductModal: React.Dispatch<React.SetStateAction<boolean>>;
   handleSelectCustomer: (customer: Customer) => void;
   handleSelectProduct: (product: Product) => void;
+  openUnitMeasureModal: boolean;
+  onOpenUnitMeasureModal: (productId: number) => void;
+  onCloseUnitMeasureModal: () => void;
+  handleSelectUnitMeasure: (unitMeasure: UnitMeasure) => void;
   handleQuantityChange: (productId: number, qty: number) => void;
   handleRemoveProduct: (productId: number) => void;
   onSaveDraft: () => void;
@@ -43,14 +49,16 @@ export default function InvoiceUpdateForm({
   customer,
   products,
   totals,
-  invoiceDate,
-  dueDate,
   openCustomerModal,
   setOpenCustomerModal,
   openProductModal,
   setOpenProductModal,
   handleSelectCustomer,
   handleSelectProduct,
+  openUnitMeasureModal,
+  onOpenUnitMeasureModal,
+  onCloseUnitMeasureModal,
+  handleSelectUnitMeasure,
   handleQuantityChange,
   handleRemoveProduct,
   onSaveDraft,
@@ -58,12 +66,6 @@ export default function InvoiceUpdateForm({
   savingDraft,
   savingAndContinuing,
 }: InvoiceUpdateFormProps) {
-  const formatDateTimeLocal = (date?: Date) => {
-    if (!date) return "No disponible";
-
-    return date.toLocaleString("es-EC");
-  };
-
   const canProceed = customer !== null && products.length > 0;
 
   return (
@@ -89,7 +91,9 @@ export default function InvoiceUpdateForm({
                     <th className="text-left py-2 px-2 font-semibold">
                       Nombre
                     </th>
-                    <th className="text-left py-2 px-2 font-semibold">Cant.</th>
+                    <th className="text-left py-2 px-2 font-semibold">
+                      Cant. / U.M.
+                    </th>
                     <th className="text-right py-2 px-2 font-semibold">
                       P. Unitario
                     </th>
@@ -121,16 +125,34 @@ export default function InvoiceUpdateForm({
                         <td className="py-2 px-2">{p.sku}</td>
                         <td className="py-2 px-2">{p.name}</td>
                         <td className="py-2 px-2">
-                          <Input
-                            type="number"
-                            step="0.01"
-                            min={1}
-                            value={p.quantity}
-                            onChange={(e) =>
-                              handleQuantityChange(p.id, Number(e.target.value))
-                            }
-                            className="w-16 text-center"
-                          />
+                          <div className="flex items-center gap-2">
+                            <Input
+                              type="number"
+                              step="0.01"
+                              min={1}
+                              value={p.quantity}
+                              onChange={(e) =>
+                                handleQuantityChange(
+                                  p.id,
+                                  Number(e.target.value)
+                                )
+                              }
+                              className="w-20 text-center"
+                            />
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              onClick={() => onOpenUnitMeasureModal(p.id)}
+                            >
+                              {p.unitMeasure?.code ?? "UND"}
+                            </Button>
+                          </div>
+                          {p.unitMeasure?.name && (
+                            <p className="text-xs text-muted-foreground mt-1">
+                              {p.unitMeasure.name}
+                            </p>
+                          )}
                         </td>
                         <td className="py-2 px-2 text-right">
                           ${p.price.toFixed(2)}
@@ -203,22 +225,6 @@ export default function InvoiceUpdateForm({
             <CardTitle>RESUMEN</CardTitle>
           </CardHeader>
           <CardContent className="space-y-2">
-            <div className="grid grid-cols-1 gap-2">
-              <div className="space-y-1">
-                <label className="text-sm font-medium">Fecha de emisión</label>
-                <p className="text-sm text-muted-foreground">
-                  {formatDateTimeLocal(invoiceDate)}
-                </p>
-              </div>
-              <div className="space-y-1">
-                <label className="text-sm font-medium">
-                  Fecha de vencimiento
-                </label>
-                <p className="text-sm text-muted-foreground">
-                  {formatDateTimeLocal(dueDate)}
-                </p>
-              </div>
-            </div>
             <div className="flex justify-between text-sm">
               <span>Subtotal:</span>
               <span>${totals.subtotal.toFixed(2)}</span>
@@ -243,16 +249,16 @@ export default function InvoiceUpdateForm({
                 onClick={onSaveDraft}
                 disabled={savingDraft || !canProceed}
               >
-                {savingDraft ? "Actualizando borrador..." : "Actualizar borrador"}
+                {savingDraft
+                  ? "Actualizando borrador..."
+                  : "Actualizar borrador"}
               </Button>
               <Button
                 type="button"
                 onClick={onContinue}
                 disabled={savingAndContinuing || !canProceed}
               >
-                {savingAndContinuing
-                  ? "Preparando pago..."
-                  : "Continuar al paso 2"}
+                {savingAndContinuing ? "Cargando pago..." : "Método de pago"}
               </Button>
             </div>
           </CardContent>
@@ -266,6 +272,11 @@ export default function InvoiceUpdateForm({
           open={openProductModal}
           onClose={() => setOpenProductModal(false)}
           onSelect={handleSelectProduct}
+        />
+        <InvoiceUnitMeasureModal
+          open={openUnitMeasureModal}
+          onClose={onCloseUnitMeasureModal}
+          onSelect={handleSelectUnitMeasure}
         />
       </div>
     </div>

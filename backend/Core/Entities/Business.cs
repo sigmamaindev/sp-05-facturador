@@ -1,3 +1,5 @@
+using Core.Constants;
+
 namespace Core.Entities;
 
 public class Business : BaseEntity
@@ -8,6 +10,7 @@ public class Business : BaseEntity
     public string? City { get; set; }
     public string? Province { get; set; }
     public bool IsActive { get; set; } = true;
+    public string SriEnvironment { get; set; } = EnvironmentStatus.DEV;
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
     public ICollection<UserBusiness> UserBusiness { get; set; } = [];

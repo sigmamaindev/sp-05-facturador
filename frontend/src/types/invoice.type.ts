@@ -91,19 +91,19 @@ export const invoiceDetailSchema = z.object({
     .number()
     .int("El ID del producto debe ser un entero")
     .positive("El ID del producto debe ser positivo"),
-
+  unitMeasureId: z
+    .number()
+    .int("El ID de la unidad de medida debe ser un entero")
+    .positive("El ID de la unidad de medida debe ser positivo"),
   quantity: z
     .number()
     .positive("La cantidad debe ser mayor a 0")
     .max(1000000, "La cantidad no puede ser mayor a 1,000,000"),
-
   unitPrice: z.number().positive("El precio unitario debe ser mayor a 0"),
-
   discount: z
     .number()
     .min(0, "El descuento no puede ser negativo")
     .max(9999999, "Descuento demasiado grande"),
-
   taxId: z
     .number()
     .min(0, "El impuesto no puede ser negativo")

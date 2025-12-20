@@ -482,16 +482,20 @@ public class UserRepository(StoreContext context, IConfiguration config, IHttpCo
                     Document = ub.Business.Document,
                     Name = ub.Business.Name,
                     Address = ub.Business.Address,
-                    IsActive = ub.Business.IsActive
+                    City = ub.Business.City ?? string.Empty,
+                    Province = ub.Business.Province ?? string.Empty,
+                    IsActive = ub.Business.IsActive,
+                    SriEnvironment = ub.Business.SriEnvironment,
+                    CreatedAt = ub.Business.CreatedAt
                 }).FirstOrDefault(),
-                Establishment = [..user.UserEstablishment.Select(ue => new EstablishmentResDto
+                Establishment = [.. user.UserEstablishment.Select(ue => new EstablishmentResDto
                 {
                     Id = ue.Establishment!.Id,
                     Code = ue.Establishment.Code,
                     Name = ue.Establishment.Name,
                     IsActive = ue.Establishment.IsActive
                 })],
-                EmissionPoint = [..user.UserEmissionPoint.Select(ep=>new EmissionPointResDto
+                EmissionPoint = [.. user.UserEmissionPoint.Select(ep => new EmissionPointResDto
                 {
                     Id = ep.EmissionPoint!.Id,
                     Code = ep.EmissionPoint.Code,

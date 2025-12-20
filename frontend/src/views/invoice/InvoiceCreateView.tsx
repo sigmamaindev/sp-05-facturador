@@ -6,6 +6,8 @@ import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
 
 import type { Customer } from "@/types/customer.types";
+import type { Product } from "@/types/product.types";
+import type { UnitMeasure } from "@/types/unitMeasure.types";
 
 import { createInvoice, updateInvoicePayment } from "@/api/invoice";
 
@@ -21,13 +23,12 @@ import type {
 
 import InvoiceCreateHeader from "./InvoiceCreateHeader";
 import InvoiceCreateForm from "./InvoiceCreateForm";
-import InvoicePaymentStep from "./InvoicePaymentStep";
-import type { Product } from "@/types/product.types";
+import InvoiceCreatePayment from "./InvoiceCreatePayment";
 
 export default function InvoiceCreateView() {
   const navigate = useNavigate();
 
-  const { token } = useAuth();
+  const { token, user } = useAuth();
 
   const [savingDraft, setSavingDraft] = useState(false);
   const [savingAndContinue, setSavingAndContinue] = useState(false);
@@ -36,12 +37,16 @@ export default function InvoiceCreateView() {
   const [customer, setCustomer] = useState<Customer | null>(null);
   const [openProductModal, setOpenProductModal] = useState(false);
   const [products, setProducts] = useState<InvoiceProduct[]>([]);
+  const [openUnitMeasureModal, setOpenUnitMeasureModal] = useState(false);
+  const [productIdForUnitMeasure, setProductIdForUnitMeasure] = useState<
+    number | null
+  >(null);
   const [currentStep, setCurrentStep] = useState<1 | 2>(1);
   const [draftInvoice, setDraftInvoice] = useState<Invoice | null>(null);
   const [paymentMethod, setPaymentMethod] = useState("01");
   const [paymentTermDays, setPaymentTermDays] = useState(0);
 
-  const { setValue, handleSubmit, watch } = useForm<CreateInvoiceForm>({
+  const { setValue, handleSubmit } = useForm<CreateInvoiceForm>({
     defaultValues: {
       receiptType: "01",
       isElectronic: true,
@@ -54,7 +59,7 @@ export default function InvoiceCreateView() {
       discountTotal: 0,
       taxTotal: 0,
       totalInvoice: 0,
-      paymentMethod: "01",
+      paymentMethod: "",
       paymentTermDays: 0,
       description: "",
       additionalInformation: "",
@@ -66,7 +71,11 @@ export default function InvoiceCreateView() {
     const now = new Date();
     setValue("invoiceDate", now);
     setValue("dueDate", now);
-  }, [setValue]);
+
+    if (user?.business?.sriEnvironment) {
+      setValue("environment", user.business.sriEnvironment);
+    }
+  }, [setValue, user]);
 
   const handleSelectCustomer = (selectedCustomer: Customer) => {
     setCustomer(selectedCustomer);
@@ -98,6 +107,28 @@ export default function InvoiceCreateView() {
 
       return [...prev, newProduct];
     });
+  };
+
+  const handleOpenUnitMeasureModal = (productId: number) => {
+    setProductIdForUnitMeasure(productId);
+    setOpenUnitMeasureModal(true);
+  };
+
+  const handleCloseUnitMeasureModal = () => {
+    setOpenUnitMeasureModal(false);
+    setProductIdForUnitMeasure(null);
+  };
+
+  const handleSelectUnitMeasure = (unitMeasure: UnitMeasure) => {
+    if (productIdForUnitMeasure == null) return;
+
+    setProducts((prev) =>
+      prev.map((p) =>
+        p.id === productIdForUnitMeasure ? { ...p, unitMeasure } : p
+      )
+    );
+
+    handleCloseUnitMeasureModal();
   };
 
   const handleQuantityChange = (productId: number, newQty: number) => {
@@ -140,9 +171,6 @@ export default function InvoiceCreateView() {
     setValue("totalInvoice", totals.total);
   }, [totals, setValue]);
 
-  const invoiceDate = watch("invoiceDate");
-  const dueDate = watch("dueDate");
-
   const buildInvoicePayload = (data: CreateInvoiceForm) => {
     const details = products.map((p) => ({
       productId: p.id,
@@ -151,15 +179,11 @@ export default function InvoiceCreateView() {
       discount: p.discount,
       warehouseId: p.inventory[0]?.warehouseId ?? 0,
       taxId: p.tax.id,
+      unitMeasureId: p.unitMeasure?.id,
     }));
-
-    const emissionDate = data.invoiceDate ?? new Date();
-    const selectedDueDate = data.dueDate ?? emissionDate;
 
     return {
       ...data,
-      invoiceDate: emissionDate,
-      dueDate: selectedDueDate,
       details,
     };
   };
@@ -261,14 +285,16 @@ export default function InvoiceCreateView() {
             customer={customer}
             products={products}
             totals={totals}
-            invoiceDate={invoiceDate}
-            dueDate={dueDate}
             openCustomerModal={openCustomerModal}
             setOpenCustomerModal={setOpenCustomerModal}
             openProductModal={openProductModal}
             setOpenProductModal={setOpenProductModal}
             handleSelectCustomer={handleSelectCustomer}
             handleSelectProduct={handleSelectProduct}
+            openUnitMeasureModal={openUnitMeasureModal}
+            onOpenUnitMeasureModal={handleOpenUnitMeasureModal}
+            onCloseUnitMeasureModal={handleCloseUnitMeasureModal}
+            handleSelectUnitMeasure={handleSelectUnitMeasure}
             handleQuantityChange={handleQuantityChange}
             handleRemoveProduct={handleRemoveProduct}
             onSaveDraft={handleSaveDraftAndExit}
@@ -277,7 +303,7 @@ export default function InvoiceCreateView() {
             savingAndContinuing={savingAndContinue}
           />
         ) : (
-          <InvoicePaymentStep
+          <InvoiceCreatePayment
             customer={customer}
             products={products}
             totals={totals}

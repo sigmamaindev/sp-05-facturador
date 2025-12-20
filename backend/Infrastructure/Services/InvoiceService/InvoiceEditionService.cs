@@ -14,19 +14,33 @@ public class InvoiceEditionService(StoreContext context, IInvoiceStockService st
         foreach (var detail in details)
         {
             var product = await context.Products
-                .Include(p => p.Tax)
-                .FirstOrDefaultAsync(p => p.Id == detail.ProductId)
-                ?? throw new InvalidOperationException($"Producto {detail.ProductId} no encontrado");
+            .Include(p => p.Tax)
+            .FirstOrDefaultAsync(p => p.Id == detail.ProductId)
+            ?? throw new InvalidOperationException($"Producto {detail.ProductId} no encontrado");
 
             var warehouse = await context.Warehouses
-                .FirstOrDefaultAsync(w => w.Id == detail.WarehouseId)
-                ?? throw new InvalidOperationException($"Bodega {detail.WarehouseId} no encontrada");
+            .FirstOrDefaultAsync(w => w.Id == detail.WarehouseId)
+            ?? throw new InvalidOperationException($"Bodega {detail.WarehouseId} no encontrada");
+
+            var unitMeasureId = detail.UnitMeasureId > 0
+                ? detail.UnitMeasureId
+                : product.UnitMeasureId;
+
+            var unitMeasure = await context.UnitMeasures
+            .FirstOrDefaultAsync(
+                um =>
+                um.Id == unitMeasureId &&
+                um.BusinessId == invoice.BusinessId)
+            ?? throw new InvalidOperationException($"Unidad de medida {unitMeasureId} no encontrada para el negocio actual");
 
             await stock.ReserveStockAsync(
                 detail.ProductId,
                 detail.WarehouseId,
                 detail.Quantity
             );
+
+            var netWeight = detail.Quantity;
+            var grossWeight = netWeight;
 
             var subtotal = detail.Quantity * product.Price;
             var taxableBase = subtotal - detail.Discount;
@@ -36,8 +50,12 @@ public class InvoiceEditionService(StoreContext context, IInvoiceStockService st
 
             invoice.InvoiceDetails.Add(new InvoiceDetail
             {
+                InvoiceId = invoice.Id,
                 ProductId = product.Id,
                 WarehouseId = warehouse.Id,
+                UnitMeasureId = unitMeasure.Id,
+                NetWeight = netWeight,
+                GrossWeight = grossWeight,
                 Quantity = detail.Quantity,
                 UnitPrice = product.Price,
                 Discount = detail.Discount,
@@ -90,6 +108,8 @@ public class InvoiceEditionService(StoreContext context, IInvoiceStockService st
         .ThenInclude(d => d.Product)
         .ThenInclude(p => p!.UnitMeasure)
         .Include(i => i.InvoiceDetails)
+        .ThenInclude(d => d.UnitMeasure)
+        .Include(i => i.InvoiceDetails)
         .ThenInclude(d => d.Warehouse)
         .Include(i => i.InvoiceDetails)
         .ThenInclude(d => d.Tax)
@@ -137,6 +157,17 @@ public class InvoiceEditionService(StoreContext context, IInvoiceStockService st
                 p.Id == detail.ProductId) ??
             throw new Exception($"Producto {detail.ProductId} no encontrado");
 
+            var unitMeasureId = detail.UnitMeasureId > 0
+                ? detail.UnitMeasureId
+                : product.UnitMeasureId;
+
+            var unitMeasure = await context.UnitMeasures
+            .FirstOrDefaultAsync(
+                um =>
+                um.Id == unitMeasureId &&
+                um.BusinessId == invoice.BusinessId)
+            ?? throw new InvalidOperationException($"Unidad de medida {unitMeasureId} no encontrada para el negocio actual");
+
             if (existingDetail != null)
             {
                 var diff = detail.Quantity - existingDetail.Quantity;
@@ -152,6 +183,11 @@ public class InvoiceEditionService(StoreContext context, IInvoiceStockService st
 
                 existingDetail.Quantity = detail.Quantity;
                 existingDetail.Discount = detail.Discount;
+                existingDetail.UnitMeasureId = unitMeasure.Id;
+                existingDetail.UnitMeasure = unitMeasure;
+
+                var netWeight = existingDetail.Quantity;
+                var grossWeight = netWeight;
 
                 var subtotal = existingDetail.Quantity * product.Price;
                 var taxableBase = subtotal - existingDetail.Discount;
@@ -159,6 +195,8 @@ public class InvoiceEditionService(StoreContext context, IInvoiceStockService st
                 var taxValue = taxableBase * (taxRate / 100);
                 var total = taxableBase + taxValue;
 
+                existingDetail.NetWeight = netWeight;
+                existingDetail.GrossWeight = grossWeight;
                 existingDetail.UnitPrice = product.Price;
                 existingDetail.Subtotal = taxableBase;
                 existingDetail.TaxValue = taxValue;
@@ -183,6 +221,9 @@ public class InvoiceEditionService(StoreContext context, IInvoiceStockService st
 
                 await stock.ReserveStockAsync(detail.ProductId, detail.WarehouseId, detail.Quantity);
 
+                var netWeight = detail.Quantity;
+                var grossWeight = netWeight;
+
                 var subtotal = detail.Quantity * product.Price;
                 var taxableBase = subtotal - detail.Discount;
                 var taxRate = product.Tax?.Rate ?? 0;
@@ -194,7 +235,11 @@ public class InvoiceEditionService(StoreContext context, IInvoiceStockService st
                     InvoiceId = invoice.Id,
                     ProductId = detail.ProductId,
                     WarehouseId = detail.WarehouseId,
+                    UnitMeasureId = unitMeasure.Id,
+                    UnitMeasure = unitMeasure,
                     Quantity = detail.Quantity,
+                    NetWeight = netWeight,
+                    GrossWeight = grossWeight,
                     UnitPrice = product.Price,
                     Discount = detail.Discount,
                     Subtotal = taxableBase,

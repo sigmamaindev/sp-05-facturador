@@ -23,5 +23,19 @@ namespace API.Controllers
 
             return Ok(response);
         }
+
+        [HttpGet("{id:int}")]
+        [Authorize]
+        public async Task<ActionResult<ApiResponse<UnitMeasureResDto>>> GetUnitMeasureById(int id)
+        {
+            var response = await unitMeasureRepository.GetUnitMeasureByIdAsync(id);
+
+            if (!response.Success)
+            {
+                return BadRequest(response);
+            }
+
+            return Ok(response);
+        }
     }
 }

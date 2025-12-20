@@ -15,12 +15,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -38,7 +33,7 @@ const paymentOptions = [
   { value: "20", label: "Tarjeta de débito" },
 ];
 
-interface InvoicePaymentStepProps {
+interface InvoiceCreatePaymentProps {
   customer: Customer | null;
   products: InvoiceProduct[];
   totals: InvoiceTotals;
@@ -51,7 +46,7 @@ interface InvoicePaymentStepProps {
   sequential?: string;
 }
 
-export default function InvoicePaymentStep({
+export default function InvoiceCreatePayment({
   customer,
   products,
   totals,
@@ -62,7 +57,7 @@ export default function InvoicePaymentStep({
   onConfirmPayment,
   loading,
   sequential,
-}: InvoicePaymentStepProps) {
+}: InvoiceCreatePaymentProps) {
   const [confirmOpen, setConfirmOpen] = useState(false);
 
   return (
@@ -142,7 +137,10 @@ export default function InvoicePaymentStep({
           <CardContent className="space-y-4">
             <div className="space-y-2">
               <Label>Método de pago</Label>
-              <Select value={paymentMethod} onValueChange={onPaymentMethodChange}>
+              <Select
+                value={paymentMethod}
+                onValueChange={onPaymentMethodChange}
+              >
                 <SelectTrigger className="w-full">
                   <SelectValue placeholder="Seleccionar método" />
                 </SelectTrigger>
@@ -187,7 +185,10 @@ export default function InvoicePaymentStep({
 
             <AlertDialog open={confirmOpen} onOpenChange={setConfirmOpen}>
               <AlertDialogTrigger asChild>
-                <Button className="w-full" disabled={loading || totals.total <= 0}>
+                <Button
+                  className="w-full"
+                  disabled={loading || totals.total <= 0}
+                >
                   Confirmar pago y marcar como pendiente
                 </Button>
               </AlertDialogTrigger>
@@ -195,8 +196,8 @@ export default function InvoicePaymentStep({
                 <AlertDialogHeader>
                   <AlertDialogTitle>Confirmar envío</AlertDialogTitle>
                   <AlertDialogDescription>
-                    Se actualizará el pago y la factura pasará de borrador a pendiente
-                    para ser enviada al SRI. ¿Desea continuar?
+                    Se actualizará el pago y la factura pasará de borrador a
+                    pendiente para ser enviada al SRI. ¿Desea continuar?
                   </AlertDialogDescription>
                 </AlertDialogHeader>
                 <AlertDialogFooter>

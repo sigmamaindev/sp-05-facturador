@@ -6,5 +6,6 @@ export interface Business {
   city: string;
   province: string;
   isActive: boolean;
+  sriEnvironment: string;
   createdAt: Date;
 }

@@ -9,6 +9,7 @@ import type { Customer } from "@/types/customer.types";
 import type { CreateInvoiceForm, InvoiceProduct } from "@/types/invoice.type";
 import type { Product } from "@/types/product.types";
 import type { Invoice } from "@/types/invoice.type";
+import type { UnitMeasure } from "@/types/unitMeasure.types";
 
 import {
   getInvoiceById,
@@ -22,7 +23,7 @@ import InvoiceUpdateHeader from "./InvoiceUpdateHeader";
 import InvoiceUpdateForm from "./InvoiceUpdateForm";
 import Loading from "@/components/shared/Loading";
 import AlertMessage from "@/components/shared/AlertMessage";
-import InvoicePaymentStep from "./InvoicePaymentStep";
+import InvoicePaymentStep from "./InvoiceCreatePayment";
 
 export default function InvoiceUpdateView() {
   const { id } = useParams<{ id: string }>();
@@ -38,13 +39,17 @@ export default function InvoiceUpdateView() {
   const [customer, setCustomer] = useState<Customer | null>(null);
   const [openProductModal, setOpenProductModal] = useState(false);
   const [products, setProducts] = useState<InvoiceProduct[]>([]);
+  const [openUnitMeasureModal, setOpenUnitMeasureModal] = useState(false);
+  const [productIdForUnitMeasure, setProductIdForUnitMeasure] = useState<
+    number | null
+  >(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [currentStep, setCurrentStep] = useState<1 | 2>(1);
   const [paymentMethod, setPaymentMethod] = useState("01");
   const [paymentTermDays, setPaymentTermDays] = useState(0);
 
-  const { setValue, handleSubmit, watch } = useForm<CreateInvoiceForm>({
+  const { setValue, handleSubmit } = useForm<CreateInvoiceForm>({
     defaultValues: {
       receiptType: "01",
       isElectronic: true,
@@ -198,6 +203,28 @@ export default function InvoiceUpdateView() {
     setProducts((prev) => prev.filter((p) => p.id !== productId));
   };
 
+  const handleOpenUnitMeasureModal = (productId: number) => {
+    setProductIdForUnitMeasure(productId);
+    setOpenUnitMeasureModal(true);
+  };
+
+  const handleCloseUnitMeasureModal = () => {
+    setOpenUnitMeasureModal(false);
+    setProductIdForUnitMeasure(null);
+  };
+
+  const handleSelectUnitMeasure = (unitMeasure: UnitMeasure) => {
+    if (productIdForUnitMeasure == null) return;
+
+    setProducts((prev) =>
+      prev.map((p) =>
+        p.id === productIdForUnitMeasure ? { ...p, unitMeasure } : p
+      )
+    );
+
+    handleCloseUnitMeasureModal();
+  };
+
   const calculateTotals = useMemo(() => {
     const subtotal = products.reduce((sum, p) => sum + p.subtotal, 0);
     const discount = products.reduce((sum, p) => sum + p.discount, 0);
@@ -215,9 +242,6 @@ export default function InvoiceUpdateView() {
     setValue("totalInvoice", calculateTotals.total);
   }, [calculateTotals, setValue]);
 
-  const invoiceDate = watch("invoiceDate");
-  const dueDate = watch("dueDate");
-
   const buildInvoicePayload = (data: CreateInvoiceForm) => {
     const details = products.map((p) => ({
       productId: p.id,
@@ -226,6 +250,7 @@ export default function InvoiceUpdateView() {
       discount: p.discount,
       warehouseId: p.inventory[0].warehouseId,
       taxId: p.tax.id,
+      unitMeasureId: p.unitMeasure?.id,
     }));
 
     const emissionDate = data.invoiceDate ?? new Date();
@@ -239,7 +264,10 @@ export default function InvoiceUpdateView() {
     };
   };
 
-  const saveInvoice = async (data: CreateInvoiceForm, exitAfterSave: boolean) => {
+  const saveInvoice = async (
+    data: CreateInvoiceForm,
+    exitAfterSave: boolean
+  ) => {
     if (!customer) {
       toast.error("Debe seleccionar un cliente");
       return;
@@ -269,7 +297,9 @@ export default function InvoiceUpdateView() {
       if (response.data) {
         setInvoice(response.data);
         setPaymentMethod(response.data.paymentMethod ?? payload.paymentMethod);
-        setPaymentTermDays(response.data.paymentTermDays ?? payload.paymentTermDays);
+        setPaymentTermDays(
+          response.data.paymentTermDays ?? payload.paymentTermDays
+        );
       }
 
       toast.success(response.message || "Factura actualizada correctamente.");
@@ -339,14 +369,16 @@ export default function InvoiceUpdateView() {
                 customer={customer}
                 products={products}
                 totals={calculateTotals}
-                invoiceDate={invoiceDate}
-                dueDate={dueDate}
                 openCustomerModal={openCustomerModal}
                 setOpenCustomerModal={setOpenCustomerModal}
                 openProductModal={openProductModal}
                 setOpenProductModal={setOpenProductModal}
                 handleSelectCustomer={handleSelectCustomer}
                 handleSelectProduct={handleSelectProduct}
+                openUnitMeasureModal={openUnitMeasureModal}
+                onOpenUnitMeasureModal={handleOpenUnitMeasureModal}
+                onCloseUnitMeasureModal={handleCloseUnitMeasureModal}
+                handleSelectUnitMeasure={handleSelectUnitMeasure}
                 handleQuantityChange={handleQuantityChange}
                 handleRemoveProduct={handleRemoveProduct}
                 onSaveDraft={handleUpdateDraft}

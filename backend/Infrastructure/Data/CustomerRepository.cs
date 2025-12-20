@@ -268,14 +268,13 @@ public class CustomerRepository(StoreContext context, IHttpContextAccessor httpC
             };
 
             response.Success = true;
-            response.Message = "Cliente obtenido correctamente";
+            response.Message = "Cliente actualizado correctamente";
             response.Data = customer;
         }
         catch (Exception ex)
         {
-
             response.Success = false;
-            response.Message = "Error al obtener el cliente";
+            response.Message = "Error al actualizar el cliente";
             response.Error = ex.Message;
         }
 

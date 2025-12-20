@@ -1,8 +1,8 @@
-using Microsoft.AspNetCore.Http;
-using Core.Interfaces.Repository;
-using Core.DTOs;
-using Core.DTOs.UnitMeasureDto;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Http;
+using Core.DTOs;
+using Core.Interfaces.Repository;
+using Core.DTOs.UnitMeasureDto;
 
 namespace Infrastructure.Data;
 
@@ -11,7 +11,6 @@ public class UnitMeasureRepository(StoreContext context, IHttpContextAccessor ht
     public async Task<ApiResponse<List<UnitMeasureResDto>>> GetUnitMeasuresAsync(string? keyword, int page, int limit)
     {
         var response = new ApiResponse<List<UnitMeasureResDto>>();
-
         try
         {
             var businessId = GetBusinessIdFromToken();
@@ -65,6 +64,62 @@ public class UnitMeasureRepository(StoreContext context, IHttpContextAccessor ht
         {
             response.Success = false;
             response.Message = "Error al obtener las unidades de medida";
+            response.Error = ex.Message;
+        }
+
+        return response;
+    }
+
+    public async Task<ApiResponse<UnitMeasureResDto>> GetUnitMeasureByIdAsync(int id)
+    {
+        var response = new ApiResponse<UnitMeasureResDto>();
+
+        try
+        {
+            var businessId = GetBusinessIdFromToken();
+
+            if (businessId == 0)
+            {
+                response.Success = false;
+                response.Message = "Negocio no asociado a esta usuario";
+                response.Error = "Error de asociación";
+
+                return response;
+            }
+
+            var existingUnitMeasure = await context.UnitMeasures
+            .FirstOrDefaultAsync(
+                um =>
+                um.Id == id &&
+                um.BusinessId == businessId &&
+                um.IsActive);
+
+            if (existingUnitMeasure == null)
+            {
+                response.Success = false;
+                response.Message = "Unidad de medida no encontrada";
+                response.Error = "No existe una unidad de medida con el ID especificado";
+
+                return response;
+            }
+
+            var unitMeasure = new UnitMeasureResDto
+            {
+                Id = existingUnitMeasure.Id,
+                Code = existingUnitMeasure.Code,
+                Name = existingUnitMeasure.Name,
+                FactorBase = existingUnitMeasure.FactorBase,
+                IsActive = existingUnitMeasure.IsActive
+            };
+
+            response.Success = true;
+            response.Message = "Unidad de medida obtenida correctamente";
+            response.Data = unitMeasure;
+        }
+        catch (Exception ex)
+        {
+            response.Success = false;
+            response.Message = "Error al obtener la unidad de medida";
             response.Error = ex.Message;
         }
 
