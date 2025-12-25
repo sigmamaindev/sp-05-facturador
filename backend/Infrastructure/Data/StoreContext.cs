@@ -385,27 +385,38 @@ public class StoreContext(DbContextOptions options) : DbContext(options)
         modelBuilder.Entity<Purchase>(entity =>
         {
             entity.ToTable("Compra");
-            entity.Property(p => p.BusinessId).HasColumnName("EmpresaId");
-            entity.Property(p => p.EstablishmentId).HasColumnName("EstablecimientoId");
-            entity.Property(p => p.EmissionPointId).HasColumnName("PuntoEmisionId");
+            entity.Property(p => p.Environment).HasColumnName("Ambiente");
+            entity.Property(p => p.EmissionTypeCode).HasColumnName("TipoEmision");
+            entity.Property(p => p.BusinessName).HasColumnName("RazonSocial");
+            entity.Property(p => p.Name).HasColumnName("NombreComercial");
+            entity.Property(p => p.Document).HasColumnName("Documento");
+            entity.Property(p => p.AccessKey).HasColumnName("ClaveAcceso");
+            entity.Property(p => p.ReceiptType).HasColumnName("TipoRecibo");
+            entity.Property(p => p.EstablishmentCode).HasColumnName("Establecimiento");
+            entity.Property(p => p.EmissionPointCode).HasColumnName("PuntoEmision");
+            entity.Property(p => p.Sequential).HasColumnName("Secuencial");
+            entity.Property(p => p.MainAddress).HasColumnName("DireccionMatriz");
+            entity.Property(p => p.IssueDate).HasColumnName("FechaEmision");
+            entity.Property(p => p.EstablishmentAddress).HasColumnName("DireccionEstablecimiento");
+            entity.Property(p => p.SpecialTaxpayer).HasColumnName("ContribuyenteEspecial");
+            entity.Property(p => p.MandatoryAccounting).HasColumnName("ObligadoContabilidad");
+            entity.Property(p => p.Sequential).HasColumnName("Secuencial");
+            entity.Property(p => p.TypeDocumentSubjectDetained).HasColumnName("TipoIdSujetoRetenido");
+            entity.Property(p => p.TypeSubjectDetained).HasColumnName("TipoSujetoRetenido");
+            entity.Property(p => p.RelatedParty).HasColumnName("PartidoRelacionado");
+            entity.Property(p => p.BusinessNameSubjectDetained).HasColumnName("RazSocSujetoRetenido");
+            entity.Property(p => p.DocumentSubjectDetained).HasColumnName("DocumentoSujetoRetenido");
+            entity.Property(p => p.FiscalPeriod).HasColumnName("PeriodoFiscal");
             entity.Property(p => p.SupplierId).HasColumnName("ProveedorId");
-            entity.Property(p => p.PurchaseDate).HasColumnName("FechaCompra").HasColumnType("timestamp without time zone");
-            entity.Property(p => p.DocumentNumber).HasColumnName("NumeroDocumento");
-            entity.Property(p => p.Reference).HasColumnName("Referencia");
+            entity.Property(p => p.Status).HasColumnName("Estado");
+            entity.Property(p => p.IsElectronic).HasColumnName("Electronico");
+            entity.Property(p => p.AuthorizationNumber).HasColumnName("NumeroAutorizacion");
+            entity.Property(p => p.AuthorizationDate).HasColumnName("FechaAutorizacion");
             entity.Property(p => p.SubtotalWithoutTaxes).HasColumnName("SubtotalBase");
             entity.Property(p => p.SubtotalWithTaxes).HasColumnName("Subtotal");
             entity.Property(p => p.DiscountTotal).HasColumnName("TotalDescuento");
             entity.Property(p => p.TaxTotal).HasColumnName("TotalImpuesto");
             entity.Property(p => p.TotalPurchase).HasColumnName("Total");
-            entity.Property(p => p.Status).HasColumnName("Estado");
-
-            entity.HasOne(p => p.Business)
-            .WithMany(b => b.Purchases)
-            .HasForeignKey(p => p.BusinessId);
-
-            entity.HasOne(p => p.Establishment)
-            .WithMany(e => e.Purchases)
-            .HasForeignKey(p => p.EstablishmentId);
 
             entity.HasOne(p => p.Supplier)
             .WithMany(s => s.Purchases)
@@ -423,6 +434,8 @@ public class StoreContext(DbContextOptions options) : DbContext(options)
             entity.Property(pd => pd.TaxValue).HasColumnName("ValorImpuesto");
             entity.Property(pd => pd.Discount).HasColumnName("Descuento");
             entity.Property(pd => pd.Quantity).HasColumnName("Cantidad");
+            entity.Property(pd => pd.NetWeight).HasColumnName("PesoNeto");
+            entity.Property(pd => pd.GrossWeight).HasColumnName("PesoBruto");
             entity.Property(pd => pd.UnitCost).HasColumnName("CostoUnitario");
             entity.Property(pd => pd.Subtotal).HasColumnName("Subtotal");
             entity.Property(pd => pd.Total).HasColumnName("Total");

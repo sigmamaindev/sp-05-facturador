@@ -173,6 +173,12 @@ public class PurchaseRepository(
         return new PurchaseSimpleResDto
         {
             Id = purchase.Id,
+            Sequential = purchase.Sequential,
+            AccessKey = purchase.AccessKey,
+            Environment = purchase.Environment,
+            ReceiptType = purchase.ReceiptType,
+            Status = purchase.Status,
+            IsElectronic = purchase.IsElectronic,
             BusinessId = purchase.BusinessId,
             EstablishmentId = purchase.EstablishmentId,
             EmissionPointId = purchase.EmissionPointId,
@@ -185,19 +191,19 @@ public class PurchaseRepository(
             DiscountTotal = purchase.DiscountTotal,
             TaxTotal = purchase.TaxTotal,
             TotalPurchase = purchase.TotalPurchase,
-            Status = purchase.Status,
-            Details = purchase.PurchaseDetails.Select(detail => new PurchaseDetailResDto
+            Details = [.. purchase.PurchaseDetails.Select(detail => new PurchaseDetailResDto
             {
                 ProductId = detail.ProductId,
                 WarehouseId = detail.WarehouseId,
                 TaxId = detail.TaxId,
                 Quantity = detail.Quantity,
                 UnitCost = detail.UnitCost,
+                Discount = detail.Discount,
                 Subtotal = detail.Subtotal,
                 TaxRate = detail.TaxRate,
                 TaxValue = detail.TaxValue,
                 Total = detail.Total
-            }).ToList()
+            })]
         };
     }
 

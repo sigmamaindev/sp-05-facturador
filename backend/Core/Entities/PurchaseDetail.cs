@@ -13,6 +13,8 @@ public class PurchaseDetail : BaseEntity
     public decimal TaxRate { get; set; }
     public decimal TaxValue { get; set; }
     public decimal Quantity { get; set; }
+    public decimal NetWeight { get; set; }
+    public decimal GrossWeight { get; set; }
     public decimal UnitCost { get; set; }
     public decimal Discount { get; set; }
     public decimal Subtotal { get; set; }
