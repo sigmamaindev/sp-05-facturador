@@ -385,6 +385,7 @@ public class StoreContext(DbContextOptions options) : DbContext(options)
         modelBuilder.Entity<Purchase>(entity =>
         {
             entity.ToTable("Compra");
+            entity.Property(p => p.BusinessId).HasColumnName("EmpresaId");
             entity.Property(p => p.Environment).HasColumnName("Ambiente");
             entity.Property(p => p.EmissionTypeCode).HasColumnName("TipoEmision");
             entity.Property(p => p.BusinessName).HasColumnName("RazonSocial");
@@ -430,6 +431,7 @@ public class StoreContext(DbContextOptions options) : DbContext(options)
             entity.Property(pd => pd.ProductId).HasColumnName("ProductoId");
             entity.Property(pd => pd.WarehouseId).HasColumnName("BodegaId");
             entity.Property(pd => pd.TaxId).HasColumnName("ImpuestoId");
+            entity.Property(pd => pd.UnitMeasureId).HasColumnName("UnidadMedidaId");
             entity.Property(pd => pd.TaxRate).HasColumnName("TasaImpuesto");
             entity.Property(pd => pd.TaxValue).HasColumnName("ValorImpuesto");
             entity.Property(pd => pd.Discount).HasColumnName("Descuento");

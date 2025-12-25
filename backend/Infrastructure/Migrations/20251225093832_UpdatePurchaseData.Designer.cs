@@ -3,6 +3,7 @@ using System;
 using Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Infrastructure.Migrations
 {
     [DbContext(typeof(StoreContext))]
-    partial class StoreContextModelSnapshot : ModelSnapshot
+    [Migration("20251225093832_UpdatePurchaseData")]
+    partial class UpdatePurchaseData
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -707,6 +710,9 @@ namespace Infrastructure.Migrations
                         .HasColumnType("text")
                         .HasColumnName("Establecimiento");
 
+                    b.Property<int?>("EstablishmentId")
+                        .HasColumnType("integer");
+
                     b.Property<string>("FiscalPeriod")
                         .HasColumnType("text")
                         .HasColumnName("PeriodoFiscal");
@@ -789,6 +795,8 @@ namespace Infrastructure.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("BusinessId");
+
+                    b.HasIndex("EstablishmentId");
 
                     b.HasIndex("SupplierId");
 
@@ -1461,6 +1469,10 @@ namespace Infrastructure.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("Core.Entities.Establishment", null)
+                        .WithMany("Purchases")
+                        .HasForeignKey("EstablishmentId");
+
                     b.HasOne("Core.Entities.Supplier", "Supplier")
                         .WithMany("Purchases")
                         .HasForeignKey("SupplierId")
@@ -1679,6 +1691,8 @@ namespace Infrastructure.Migrations
                     b.Navigation("EmissionPoints");
 
                     b.Navigation("Invoices");
+
+                    b.Navigation("Purchases");
 
                     b.Navigation("UserEstablishments");
                 });

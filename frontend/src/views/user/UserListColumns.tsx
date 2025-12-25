@@ -27,13 +27,13 @@ export const columns: ColumnDef<User>[] = [
       const roles = row.original.roles;
 
       if (!roles || roles.length === 0) {
-        return <span className="text-muted-foreground text-sm">Sin roles</span>;
+        return <span className="text-muted-foreground">Sin roles</span>;
       }
 
       return (
         <div className="flex flex-wrap gap-1">
           {roles.map((role) => (
-            <Badge key={role.id} variant="default" className="text-xs">
+            <Badge key={role.id} variant="default">
               {role.name}
             </Badge>
           ))}

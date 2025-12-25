@@ -26,14 +26,9 @@ export async function getPurchases(
     return data;
   } catch (error) {
     if (isAxiosError(error) && error.response) {
-      throw new Error(
-        error.response.data.error ??
-          "El backend aún no expone un listado de compras"
-      );
+      throw new Error(error.response.data.error ?? "Error en la API");
     }
-    throw new Error(
-      "No se pudo obtener el listado de compras en este entorno"
-    );
+    throw new Error("Error desconocido");
   }
 }
 
@@ -100,10 +95,7 @@ export async function updatePurchase(
     return data;
   } catch (error) {
     if (isAxiosError(error) && error.response) {
-      throw new Error(
-        error.response.data.error ??
-          "El backend aún no soporta la actualización de compras"
-      );
+      throw new Error(error.response.data.error ?? "Error en la API");
     }
     throw new Error("Error desconocido");
   }

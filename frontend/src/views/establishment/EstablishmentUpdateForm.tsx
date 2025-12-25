@@ -42,7 +42,13 @@ export default function EstablishmentUpdateForm({
     try {
       setSavingEstablishment(true);
 
-      await updateEstablishment(establishment.id, data, token!);
+      const response = await updateEstablishment(
+        establishment.id,
+        data,
+        token!
+      );
+
+      toast.success(response.message);
 
       navigate("/establecimientos");
     } catch (err: any) {

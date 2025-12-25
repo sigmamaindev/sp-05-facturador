@@ -3,6 +3,7 @@ using System;
 using Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Infrastructure.Migrations
 {
     [DbContext(typeof(StoreContext))]
-    partial class StoreContextModelSnapshot : ModelSnapshot
+    [Migration("20251225093256_NewPurchaseData")]
+    partial class NewPurchaseData
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -658,8 +661,7 @@ namespace Infrastructure.Migrations
                         .HasColumnName("NumeroAutorizacion");
 
                     b.Property<int>("BusinessId")
-                        .HasColumnType("integer")
-                        .HasColumnName("EmpresaId");
+                        .HasColumnType("integer");
 
                     b.Property<string>("BusinessName")
                         .IsRequired()
@@ -706,6 +708,9 @@ namespace Infrastructure.Migrations
                         .IsRequired()
                         .HasColumnType("text")
                         .HasColumnName("Establecimiento");
+
+                    b.Property<int?>("EstablishmentId")
+                        .HasColumnType("integer");
 
                     b.Property<string>("FiscalPeriod")
                         .HasColumnType("text")
@@ -790,6 +795,8 @@ namespace Infrastructure.Migrations
 
                     b.HasIndex("BusinessId");
 
+                    b.HasIndex("EstablishmentId");
+
                     b.HasIndex("SupplierId");
 
                     b.ToTable("Compra", (string)null);
@@ -852,8 +859,7 @@ namespace Infrastructure.Migrations
                         .HasColumnName("CostoUnitario");
 
                     b.Property<int>("UnitMeasureId")
-                        .HasColumnType("integer")
-                        .HasColumnName("UnidadMedidaId");
+                        .HasColumnType("integer");
 
                     b.Property<int>("WarehouseId")
                         .HasColumnType("integer")
@@ -1461,6 +1467,10 @@ namespace Infrastructure.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("Core.Entities.Establishment", null)
+                        .WithMany("Purchases")
+                        .HasForeignKey("EstablishmentId");
+
                     b.HasOne("Core.Entities.Supplier", "Supplier")
                         .WithMany("Purchases")
                         .HasForeignKey("SupplierId")
@@ -1679,6 +1689,8 @@ namespace Infrastructure.Migrations
                     b.Navigation("EmissionPoints");
 
                     b.Navigation("Invoices");
+
+                    b.Navigation("Purchases");
 
                     b.Navigation("UserEstablishments");
                 });

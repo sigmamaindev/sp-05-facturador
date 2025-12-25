@@ -117,4 +117,32 @@
   body {
     @apply bg-background text-foreground;
   }
+
+  table {
+    font-size: 10px;
+    border-collapse: collapse;
+    border-spacing: 0;
+  }
+
+  table[class] {
+    font-size: 10px;
+    border-collapse: collapse;
+    border-spacing: 0;
+  }
+
+  table :is(th, td, caption) {
+    font-size: inherit;
+  }
+
+  table :is(th, td, caption)[class] {
+    font-size: inherit;
+  }
+
+  table :is(th, td) :is(p, span, div, a, label, small)[class] {
+    font-size: inherit;
+  }
+
+  table :is(th, td) {
+    border: 1px solid var(--border);
+  }
 }

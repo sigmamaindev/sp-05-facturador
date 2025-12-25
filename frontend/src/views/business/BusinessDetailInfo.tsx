@@ -61,6 +61,16 @@ export default function BusinessDetailInfo({
               {date.toLocaleDateString("es-EC")}
             </dd>
           </div>
+          <div className="bg-gray-50 px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4">
+            <dt className="text-sm font-medium text-gray-500">Ambiente SRI</dt>
+            <dd className="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
+              {business.sriEnvironment === "1"
+                ? "PRUEBAS"
+                : business.sriEnvironment === "2"
+                ? "PRODUCCIÓN"
+                : "AMBIENTE DESCONOCIDO"}
+            </dd>
+          </div>
         </dl>
       </CardContent>
     </Card>

@@ -1,17 +1,23 @@
-import { useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import type { ColumnDef } from "@tanstack/react-table";
 
 import type { Establishment } from "@/types/establishment.types";
 
 import { useAuth } from "@/contexts/AuthContext";
 
-import RowActions from "@/components/shared/RowActions";
+import { buttonVariants } from "@/components/ui/button";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import { Badge } from "@/components/ui/badge";
+
+import { cn } from "@/lib/utils";
+
+import { Eye, Pencil } from "lucide-react";
 
 export const columns: ColumnDef<Establishment>[] = [
-  {
-    accessorKey: "id",
-    header: "ID",
-  },
   {
     accessorKey: "code",
     header: "Código",
@@ -21,33 +27,77 @@ export const columns: ColumnDef<Establishment>[] = [
     header: "Nombre",
   },
   {
+    accessorKey: "isActive",
+    header: "Activo",
+    cell: ({ row }) => {
+      const isActive = row.original.isActive;
+
+      return (
+        <Badge
+          className={cn(
+            "min-w-10 justify-center",
+            isActive
+              ? "bg-green-600 text-white hover:bg-green-600"
+              : "bg-red-600 text-white hover:bg-red-600"
+          )}
+        >
+          {isActive ? "SI" : "NO"}
+        </Badge>
+      );
+    },
+  },
+  {
     id: "actions",
     header: "Acciones",
     cell: ({ row }) => {
-      const navigate = useNavigate();
-
       const { user } = useAuth();
+
+      const establishment = row.original;
 
       const hasPermission =
         user?.roles?.includes("SuperAdmin") || user?.roles?.includes("Admin");
 
-      const establishment = row.original;
-      const actions = [
-        {
-          label: "Detalles",
-          onClick: () => navigate(`/establecimientos/${establishment.id}`),
-        },
-      ];
+      return (
+        <div className="flex flex-col sm:flex-row items-center justify-center gap-2">
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Link
+                to={`/establecimientos/${establishment.id}`}
+                aria-label="Ver detalles"
+                className={cn(
+                  buttonVariants({ size: "icon-sm" }),
+                  "bg-gray-200 text-white hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600"
+                )}
+              >
+                <Eye className="size-4 text-white" />
+              </Link>
+            </TooltipTrigger>
+            <TooltipContent side="top" sideOffset={6}>
+              Detalles
+            </TooltipContent>
+          </Tooltip>
 
-      if (hasPermission) {
-        actions.push({
-          label: "Editar",
-          onClick: () =>
-            navigate(`/establecimientos/actualizar/${establishment.id}`),
-        });
-      }
-
-      return <RowActions actions={actions} />;
+          {hasPermission ? (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Link
+                  to={`/establecimientos/actualizar/${establishment.id}`}
+                  aria-label="Editar empresa"
+                  className={cn(
+                    buttonVariants({ size: "icon-sm" }),
+                    "bg-blue-600 text-white hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600"
+                  )}
+                >
+                  <Pencil className="size-4 text-white" />
+                </Link>
+              </TooltipTrigger>
+              <TooltipContent side="top" sideOffset={6}>
+                Editar
+              </TooltipContent>
+            </Tooltip>
+          ) : null}
+        </div>
+      );
     },
   },
 ];

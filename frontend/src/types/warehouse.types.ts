@@ -14,11 +14,11 @@ const createWarehouseSchema = z.object({
   address: z.string().min(4, "La direccion debe tener al menos 4 caracteres"),
 });
 
-export type createWarehouseForm = z.infer<typeof createWarehouseSchema>;
+export type CreateWarehouseForm = z.infer<typeof createWarehouseSchema>;
 
 const updateWarehouseSchema = z.object({
   name: z.string().min(4, "El nombre debe tener al menos 4 caracteres"),
   address: z.string().min(4, "La direccion debe tener al menos 4 caracteres"),
 });
 
-export type updateWarehouseForm = z.infer<typeof updateWarehouseSchema>;
+export type UpdateWarehouseForm = z.infer<typeof updateWarehouseSchema>;

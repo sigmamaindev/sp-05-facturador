@@ -26,11 +26,11 @@ export default function WarehouseListHeader({
     user?.roles?.includes("SuperAdmin") || user?.roles?.includes("Admin");
 
   return (
-    <div className="grid grid-cols-1 md:flex md:flex-row md:justify-between md:items-center items-center gap-4 pb-4">
+    <div className="grid grid-cols-1 md:flex md:flex-row md:justify-between md:items-center gap-4 pb-4">
       <div className="grid grid-cols-2 items-center gap-4 md:inline-flex w-auto">
         <h1 className="text-lg font-semibold">BODEGAS</h1>
       </div>
-      <div className="inline-flex items-center gap-4 w-auto">
+      <div className="flex flex-col md:flex-row md:items-center gap-3 md:gap-4 w-full md:w-auto">
         <Input
           placeholder="Buscar bodegas..."
           value={keyword}
@@ -38,13 +38,15 @@ export default function WarehouseListHeader({
             setPage(1);
             setKeyword(e.target.value);
           }}
-          className="max-w-sm"
+          className="w-full md:w-auto md:max-w-sm"
         />
         {hasPermission && (
-          <Button onClick={() => navigate("/bodegas/crear")}>
-            <PlusIcon />
-            Bodegas
-          </Button>
+          <div className="flex justify-end w-full md:w-auto">
+            <Button onClick={() => navigate("/bodegas/crear")}>
+              <PlusIcon />
+              Bodega
+            </Button>
+          </div>
         )}
       </div>
     </div>

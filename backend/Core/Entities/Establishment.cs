@@ -14,5 +14,4 @@ public class Establishment : BaseEntity
     public ICollection<EmissionPoint> EmissionPoints { get; set; } = [];
     public ICollection<UserEstablishment> UserEstablishments { get; set; } = [];
     public ICollection<Invoice> Invoices { get; set; } = [];
-    public ICollection<Purchase> Purchases { get; set; } = [];
 }

@@ -1,7 +1,8 @@
 namespace Core.DTOs.PurchaseDto;
 
-public class PurchaseCreateReqDto
+public class PurchaseComplexResDto
 {
+    public int Id { get; set; }
     public string Environment { get; set; } = string.Empty;
     public string EmissionTypeCode { get; set; } = string.Empty;
     public string BusinessName { get; set; } = string.Empty;
@@ -28,5 +29,10 @@ public class PurchaseCreateReqDto
     public bool IsElectronic { get; set; }
     public string? AuthorizationNumber { get; set; }
     public DateTime? AuthorizationDate { get; set; }
-    public List<PurchaseDetailCreateReqDto> Details { get; set; } = [];
+    public decimal SubtotalWithoutTaxes { get; set; }
+    public decimal SubtotalWithTaxes { get; set; }
+    public decimal DiscountTotal { get; set; }
+    public decimal TaxTotal { get; set; }
+    public decimal TotalPurchase { get; set; }
+    public List<PurchaseDetailResDto> Details { get; set; } = [];
 }

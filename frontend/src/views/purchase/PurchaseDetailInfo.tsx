@@ -55,7 +55,7 @@ export default function PurchaseDetailInfo({ purchase }: PurchaseDetailInfoProps
         </CardHeader>
         <CardContent>
           <ScrollArea className="max-h-[260px]">
-            <table className="w-full border-collapse text-sm">
+            <table className="w-full border-collapse">
               <thead>
                 <tr className="border-b">
                   <th className="text-left py-2 px-2">Producto</th>

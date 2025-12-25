@@ -10,6 +10,7 @@ import DashboardView from "@/views/dashboard/DashboardView";
 import LoginView from "@/views/auth/LoginView";
 import BusinessListView from "@/views/business/BusinessListView";
 import BusinessDetailView from "@/views/business/BusinessDetailView";
+import BusinessUpdateView from "@/views/business/BusinessUpdateView";
 import EstablishmentListView from "@/views/establishment/EstablishmentListView";
 import EstablishmentDetailView from "@/views/establishment/EstablishmentDetailView";
 import EstablishmentCreateView from "@/views/establishment/EstablishmentCreateView";
@@ -36,6 +37,9 @@ import InvoiceCreateView from "@/views/invoice/InvoiceCreateView";
 import InvoiceUpdateView from "@/views/invoice/InvoiceUpdateView";
 import WarehouseListView from "@/views/warehouse/WarehouseListView";
 import InvoiceDetailView from "@/views/invoice/InvoiceDetailView";
+import WarehouseCreateView from "@/views/warehouse/WarehouseCreateView";
+import WarehouseDetailView from "@/views/warehouse/WarehouseDetailView";
+import WarehouseUpdateView from "@/views/warehouse/WarehouseUpdateView";
 
 export default function Router() {
   return (
@@ -47,6 +51,10 @@ export default function Router() {
               <Route path="/" element={<DashboardView />} />
               <Route path="/empresas" element={<BusinessListView />} />
               <Route path="/empresas/:id" element={<BusinessDetailView />} />
+              <Route
+                path="/empresas/actualizar/:id"
+                element={<BusinessUpdateView />}
+              />
               <Route
                 path="/establecimientos"
                 element={<EstablishmentListView />}
@@ -80,6 +88,12 @@ export default function Router() {
                 element={<EmissionPointUpdateView />}
               />
               <Route path="/bodegas" element={<WarehouseListView />} />
+              <Route path="/bodegas/:id" element={<WarehouseDetailView />} />
+              <Route path="/bodegas/crear" element={<WarehouseCreateView />} />
+              <Route
+                path="/bodegas/actualizar/:id"
+                element={<WarehouseUpdateView />}
+              />
               <Route path="/usuarios" element={<UserListView />} />
               <Route path="/usuarios/crear" element={<UserCreateView />} />
               <Route

@@ -1,7 +1,8 @@
 import { Link } from "react-router-dom";
 import type { ColumnDef } from "@tanstack/react-table";
+import { Eye, Pencil } from "lucide-react";
 
-import type { Business } from "@/types/business.types";
+import type { Warehouse } from "@/types/warehouse.types";
 
 import { useAuth } from "@/contexts/AuthContext";
 
@@ -11,53 +12,61 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { Badge } from "@/components/ui/badge";
 
 import { cn } from "@/lib/utils";
 
-import { Eye, Pencil } from "lucide-react";
-
-const formatSriEnvironment = (value: Business["sriEnvironment"]) => {
-  switch (String(value)) {
-    case "1":
-      return "PRUEBAS";
-    case "2":
-      return "PRODUCCIÓN";
-    default:
-      return value ? String(value) : "-";
-  }
-};
-
-export const columns: ColumnDef<Business>[] = [
+export const columns: ColumnDef<Warehouse>[] = [
   {
-    id: "company",
-    accessorFn: (business) => `${business.document} ${business.name}`,
-    header: "Empresa",
-    cell: ({ row }) => (
-      <div className="flex flex-col">
-        <span className="font-semibold">{row.original.document}</span>
-        <span className="text-sm text-muted-foreground">
-          {row.original.name}
-        </span>
-      </div>
-    ),
+    accessorKey: "code",
+    header: "Código",
   },
   {
-    accessorKey: "sriEnvironment",
-    header: "Ambiente SRI",
-    cell: ({ row }) => (
-      <span>{formatSriEnvironment(row.original.sriEnvironment)}</span>
-    ),
+    accessorKey: "name",
+    header: "Nombre",
   },
   {
     accessorKey: "address",
     header: "Dirección",
   },
   {
-    accessorKey: "createdAt",
-    header: "Fecha Creación",
+    accessorKey: "isMain",
+    header: "Principal",
     cell: ({ row }) => {
-      const date = new Date(row.original.createdAt);
-      return <span>{date.toLocaleDateString("es-EC")}</span>;
+      const isMain = row.original.isMain;
+
+      return (
+        <Badge
+          className={cn(
+            "min-w-10 justify-center",
+            isMain
+              ? "bg-blue-600 text-white hover:bg-blue-600"
+              : "bg-gray-600 text-white hover:bg-gray-600"
+          )}
+        >
+          {isMain ? "SI" : "NO"}
+        </Badge>
+      );
+    },
+  },
+  {
+    accessorKey: "isActive",
+    header: "Activo",
+    cell: ({ row }) => {
+      const isActive = row.original.isActive;
+
+      return (
+        <Badge
+          className={cn(
+            "min-w-10 justify-center",
+            isActive
+              ? "bg-green-600 text-white hover:bg-green-600"
+              : "bg-red-600 text-white hover:bg-red-600"
+          )}
+        >
+          {isActive ? "SI" : "NO"}
+        </Badge>
+      );
     },
   },
   {
@@ -65,8 +74,7 @@ export const columns: ColumnDef<Business>[] = [
     header: "Acciones",
     cell: ({ row }) => {
       const { user } = useAuth();
-
-      const business = row.original;
+      const warehouse = row.original;
 
       const hasPermission =
         user?.roles?.includes("SuperAdmin") || user?.roles?.includes("Admin");
@@ -76,7 +84,7 @@ export const columns: ColumnDef<Business>[] = [
           <Tooltip>
             <TooltipTrigger asChild>
               <Link
-                to={`/empresas/${business.id}`}
+                to={`/bodegas/${warehouse.id}`}
                 aria-label="Ver detalles"
                 className={cn(
                   buttonVariants({ size: "icon-sm" }),
@@ -95,8 +103,8 @@ export const columns: ColumnDef<Business>[] = [
             <Tooltip>
               <TooltipTrigger asChild>
                 <Link
-                  to={`/empresas/actualizar/${business.id}`}
-                  aria-label="Editar empresa"
+                  to={`/bodegas/actualizar/${warehouse.id}`}
+                  aria-label="Editar bodega"
                   className={cn(
                     buttonVariants({ size: "icon-sm" }),
                     "bg-blue-600 text-white hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600"
@@ -115,3 +123,4 @@ export const columns: ColumnDef<Business>[] = [
     },
   },
 ];
+

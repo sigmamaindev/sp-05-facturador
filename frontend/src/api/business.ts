@@ -3,7 +3,7 @@ import { isAxiosError } from "axios";
 import api from "@/utils/axios";
 
 import type { ApiResponseList, ApiResponseSingle } from "@/types/api.types";
-import type { Business } from "@/types/business.types";
+import type { Business, UpdateBusinessForm } from "@/types/business.types";
 
 export async function getBusiness(
   keyword: string,
@@ -42,6 +42,30 @@ export async function getBusinessById(
     const { data } = await api.get<ApiResponseSingle<Business>>(url, {
       headers: {
         Authorization: `Bearer ${token}`,
+      },
+    });
+
+    return data;
+  } catch (error) {
+    if (isAxiosError(error) && error.response) {
+      throw new Error(error.response.data.error ?? "Error en la API");
+    }
+    throw new Error("Error desconocido");
+  }
+}
+
+export async function updateBusiness(
+  id: number,
+  body: UpdateBusinessForm,
+  token: string
+): Promise<ApiResponseSingle<Business>> {
+  try {
+    const url = `/business/${id}`;
+
+    const { data } = await api.put<ApiResponseSingle<Business>>(url, body, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
       },
     });
 

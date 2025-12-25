@@ -8,6 +8,8 @@ public class PurchaseDetail : BaseEntity
     public Product? Product { get; set; }
     public int WarehouseId { get; set; }
     public Warehouse? Warehouse { get; set; }
+    public int UnitMeasureId { get; set; }
+    public UnitMeasure? UnitMeasure { get; set; }
     public int TaxId { get; set; }
     public Tax? Tax { get; set; }
     public decimal TaxRate { get; set; }

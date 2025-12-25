@@ -4,27 +4,29 @@ namespace Core.Entities;
 
 public class Purchase : BaseEntity
 {
+    public int BusinessId { get; set; }
+    public Business? Business { get; set; }
     public string Environment { get; set; } = string.Empty;
     public string EmissionTypeCode { get; set; } = EmissionType.NORMAL;
     public required string BusinessName { get; set; }
     public string Name { get; set; } = string.Empty;
     public required string Document { get; set; }
-    public string AccessKey { get; set; } = string.Empty;
+    public required string AccessKey { get; set; }
     public string ReceiptType { get; set; } = ReceiptCodeType.WITHHOLDING_RECEIPT;
     public required string EstablishmentCode { get; set; }
     public required string EmissionPointCode { get; set; }
     public required string Sequential { get; set; }
     public required string MainAddress { get; set; }
-    public DateTime IssueDate { get; set; }                            
-    public string? EstablishmentAddress { get; set; }                  
+    public DateTime IssueDate { get; set; }
+    public string? EstablishmentAddress { get; set; }
     public string? SpecialTaxpayer { get; set; }
     public string? MandatoryAccounting { get; set; }
-    public string TypeDocumentSubjectDetained { get; set; } = DocumentType.RUC; 
-    public required string TypeSubjectDetained { get; set; }
+    public string TypeDocumentSubjectDetained { get; set; } = DocumentType.RUC;
+    public string? TypeSubjectDetained { get; set; }
     public string RelatedParty { get; set; } = "NO";
-    public required string BusinessNameSubjectDetained { get; set; }
-    public required string DocumentSubjectDetained { get; set; }
-    public required string FiscalPeriod { get; set; }
+    public string? BusinessNameSubjectDetained { get; set; }
+    public string? DocumentSubjectDetained { get; set; }
+    public string? FiscalPeriod { get; set; }
     public int SupplierId { get; set; }
     public Supplier? Supplier { get; set; }
     public string Status { get; set; } = string.Empty;

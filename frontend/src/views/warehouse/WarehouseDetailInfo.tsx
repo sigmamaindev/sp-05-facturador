@@ -1,16 +1,14 @@
-import type { Establishment } from "@/types/establishment.types";
+import type { Warehouse } from "@/types/warehouse.types";
 
 import { Card, CardContent } from "@/components/ui/card";
 
-interface EstablishmentDetailInfoProps {
-  establishment: Establishment;
+interface WarehouseDetailInfoProps {
+  warehouse: Warehouse;
 }
 
-export default function EstablishmentDetailInfo({
-  establishment,
-}: EstablishmentDetailInfoProps) {
-  const date = new Date(establishment.createdAt);
-
+export default function WarehouseDetailInfo({
+  warehouse,
+}: WarehouseDetailInfoProps) {
   return (
     <Card>
       <CardContent>
@@ -18,27 +16,31 @@ export default function EstablishmentDetailInfo({
           <div className="bg-gray-100 px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4">
             <dt className="text-sm font-medium text-gray-500">Código</dt>
             <dd className="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
-              {establishment.code}
+              {warehouse.code}
             </dd>
           </div>
           <div className="bg-gray-50 px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4">
             <dt className="text-sm font-medium text-gray-500">Nombre</dt>
             <dd className="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
-              {establishment.name}
+              {warehouse.name}
+            </dd>
+          </div>
+          <div className="bg-gray-100 px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4">
+            <dt className="text-sm font-medium text-gray-500">Dirección</dt>
+            <dd className="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
+              {warehouse.address}
+            </dd>
+          </div>
+          <div className="bg-gray-50 px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4">
+            <dt className="text-sm font-medium text-gray-500">Principal</dt>
+            <dd className="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
+              {warehouse.isMain ? "SI" : "NO"}
             </dd>
           </div>
           <div className="bg-gray-100 px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4">
             <dt className="text-sm font-medium text-gray-500">Activo</dt>
             <dd className="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
-              {establishment.isActive ? "SI" : "NO"}
-            </dd>
-          </div>
-          <div className="bg-gray-50 px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4">
-            <dt className="text-sm font-medium text-gray-500">
-              Fecha de creación
-            </dt>
-            <dd className="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
-              {date.toLocaleDateString("es-EC")}
+              {warehouse.isActive ? "SI" : "NO"}
             </dd>
           </div>
         </dl>
@@ -46,3 +48,4 @@ export default function EstablishmentDetailInfo({
     </Card>
   );
 }
+

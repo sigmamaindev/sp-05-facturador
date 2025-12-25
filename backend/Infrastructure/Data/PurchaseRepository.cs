@@ -39,10 +39,6 @@ public class PurchaseRepository(
             var newPurchase = edition.BuildPurchase(
                 purchaseCreateReqDto,
                 supplier,
-                business,
-                establishment,
-                emissionPoint,
-                user,
                 ecTime);
 
             await edition.AddPurchaseDetailsAsync(newPurchase, purchaseCreateReqDto.Details);
@@ -93,8 +89,7 @@ public class PurchaseRepository(
                 .Include(p => p.PurchaseDetails)
                 .FirstOrDefaultAsync(p =>
                     p.Id == id &&
-                    p.BusinessId == currentUser.BusinessId &&
-                    p.EstablishmentId == currentUser.EstablishmentId);
+                    p.BusinessId == currentUser.BusinessId);
 
             if (purchase == null)
             {
@@ -130,20 +125,18 @@ public class PurchaseRepository(
             var query = context.Purchases
                 .Include(p => p.PurchaseDetails)
                 .Where(p =>
-                    p.BusinessId == currentUser.BusinessId &&
-                    p.EstablishmentId == currentUser.EstablishmentId);
+                    p.BusinessId == currentUser.BusinessId);
 
             if (!string.IsNullOrWhiteSpace(keyword))
             {
                 keyword = keyword.ToLower();
                 query = query.Where(p =>
-                    EF.Functions.ILike(p.DocumentNumber, $"%{keyword}%") ||
-                    EF.Functions.ILike(p.Reference, $"%{keyword}%"));
+                    EF.Functions.ILike(p.BusinessName, $"%{keyword}%"));
             }
 
             var total = await query.CountAsync();
             var purchases = await query
-                .OrderByDescending(p => p.PurchaseDate)
+                .OrderByDescending(p => p.IssueDate)
                 .Skip((page - 1) * limit)
                 .Take(limit)
                 .ToListAsync();
@@ -179,31 +172,14 @@ public class PurchaseRepository(
             ReceiptType = purchase.ReceiptType,
             Status = purchase.Status,
             IsElectronic = purchase.IsElectronic,
-            BusinessId = purchase.BusinessId,
-            EstablishmentId = purchase.EstablishmentId,
-            EmissionPointId = purchase.EmissionPointId,
             SupplierId = purchase.SupplierId,
-            PurchaseDate = purchase.PurchaseDate,
-            DocumentNumber = purchase.DocumentNumber,
-            Reference = purchase.Reference,
+            IssueDate = purchase.IssueDate,
+            Document = purchase.Document,
             SubtotalWithoutTaxes = purchase.SubtotalWithoutTaxes,
             SubtotalWithTaxes = purchase.SubtotalWithTaxes,
             DiscountTotal = purchase.DiscountTotal,
             TaxTotal = purchase.TaxTotal,
             TotalPurchase = purchase.TotalPurchase,
-            Details = [.. purchase.PurchaseDetails.Select(detail => new PurchaseDetailResDto
-            {
-                ProductId = detail.ProductId,
-                WarehouseId = detail.WarehouseId,
-                TaxId = detail.TaxId,
-                Quantity = detail.Quantity,
-                UnitCost = detail.UnitCost,
-                Discount = detail.Discount,
-                Subtotal = detail.Subtotal,
-                TaxRate = detail.TaxRate,
-                TaxValue = detail.TaxValue,
-                Total = detail.Total
-            })]
         };
     }
 
