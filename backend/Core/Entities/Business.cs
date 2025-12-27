@@ -24,5 +24,6 @@ public class Business : BaseEntity
     public ICollection<Supplier> Suppliers { get; set; } = [];
     public ICollection<Purchase> Purchases { get; set; } = [];
     public ICollection<Kardex> Kardexes { get; set; } = [];
+    public ICollection<AccountsReceivable> AccountsReceivables { get; set; } = [];
     public BusinessCertificate? BusinessCertificate { get; set; }
 }

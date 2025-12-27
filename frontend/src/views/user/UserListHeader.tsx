@@ -29,9 +29,9 @@ export default function UserListHeader({
       <div className="grid grid-cols-2 items-center gap-4 md:inline-flex w-auto">
         <h1 className="text-lg font-semibold">USUARIOS</h1>
       </div>
-      <div className="inline-flex items-center gap-4 w-auto">
+      <div className="flex flex-col md:flex-row md:items-center gap-3 md:gap-4 w-full md:w-auto">
         <Input
-          placeholder="Buscar usuario..."
+          placeholder="Buscar usuarios..."
           value={keyword}
           onChange={(e) => {
             setPage(1);
@@ -40,10 +40,12 @@ export default function UserListHeader({
           className="max-w-sm"
         />
         {hasPermission && (
-          <Button onClick={() => navigate("/usuarios/crear")}>
-            <PlusIcon />
-            Nuevo
-          </Button>
+          <div className="flex justify-end w-full md:w-auto">
+            <Button onClick={() => navigate("/usuarios/crear")}>
+              <PlusIcon />
+              Usuario
+            </Button>
+          </div>
         )}
       </div>
     </div>

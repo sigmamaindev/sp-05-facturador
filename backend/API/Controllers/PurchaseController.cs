@@ -12,10 +12,7 @@ public class PurchaseController(IPurchaseRepository purchaseRepository) : Contro
 {
     [HttpGet]
     [Authorize]
-    public async Task<ActionResult<ApiResponse<List<PurchaseSimpleResDto>>>> GetPurchases(
-        [FromQuery] string? keyword = "",
-        [FromQuery] int page = 1,
-        [FromQuery] int limit = 10)
+    public async Task<ActionResult<ApiResponse<List<PurchaseSimpleResDto>>>> GetPurchases([FromQuery] string? keyword = "", [FromQuery] int page = 1, [FromQuery] int limit = 10)
     {
         var response = await purchaseRepository.GetPurchasesAsync(keyword, page, limit);
 

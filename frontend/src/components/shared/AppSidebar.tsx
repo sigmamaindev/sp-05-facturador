@@ -8,6 +8,7 @@ import {
   List,
   Power,
   User,
+  Users,
   DollarSign,
   ShoppingCart,
   Building2,
@@ -31,6 +32,7 @@ import {
 
 import { useAuth } from "@/contexts/AuthContext";
 import NavOrganization from "./NavOrganization";
+import NavPeople from "./NavPeople";
 
 const data = {
   dashboard: { to: "/", label: "Dashboard", icon: Home },
@@ -44,9 +46,15 @@ const data = {
       { to: "/bodegas", label: "Bodegas", icon: Warehouse },
     ],
   },
-  user: { to: "/usuarios", label: "Usuarios", icon: User },
-  customer: { to: "/clientes", label: "Clientes", icon: HandHelping },
-  supplier: { to: "/proveedores", label: "Proveedores", icon: HandHelping },
+  people: {
+    label: "Personas",
+    icon: Users,
+    items: [
+      { to: "/usuarios", label: "Usuarios", icon: User },
+      { to: "/clientes", label: "Clientes", icon: HandHelping },
+      { to: "/proveedores", label: "Proveedores", icon: HandHelping },
+    ],
+  },
   product: { to: "/productos", label: "Productos", icon: List },
   purchase: { to: "/compras", label: "Compras", icon: ShoppingCart },
   invoice: { to: "/facturas", label: "Facturas", icon: DollarSign },
@@ -88,36 +96,7 @@ export default function AppSidebar() {
               </SidebarMenuItem>
             </SidebarMenu>
             <NavOrganization items={data.organization} />
-            <SidebarMenu>
-              <SidebarMenuItem key={data.user.to}>
-                <SidebarMenuButton asChild>
-                  <Link to={data.user.to}>
-                    <data.user.icon />
-                    <span>{data.user.label}</span>
-                  </Link>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-            </SidebarMenu>
-            <SidebarMenu>
-              <SidebarMenuItem key={data.customer.to}>
-                <SidebarMenuButton asChild>
-                  <Link to={data.customer.to}>
-                    <data.customer.icon />
-                    <span>{data.customer.label}</span>
-                  </Link>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-            </SidebarMenu>
-            <SidebarMenu>
-              <SidebarMenuItem key={data.supplier.to}>
-                <SidebarMenuButton asChild>
-                  <Link to={data.supplier.to}>
-                    <data.supplier.icon />
-                    <span>{data.supplier.label}</span>
-                  </Link>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-            </SidebarMenu>
+            <NavPeople items={data.people} />
             <SidebarMenu>
               <SidebarMenuItem key={data.product.to}>
                 <SidebarMenuButton asChild>

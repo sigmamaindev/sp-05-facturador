@@ -28,7 +28,7 @@ export default function InvoiceListHeader({
       <div className="grid grid-cols-2 items-center gap-4 md:inline-flex w-auto">
         <h1 className="text-lg font-semibold">FACTURAS</h1>
       </div>
-      <div className="inline-flex items-center gap-4 w-auto">
+      <div className="flex flex-col md:flex-row md:items-center gap-3 md:gap-4 w-full md:w-auto">
         <Input
           placeholder="Buscar facturas..."
           value={keyword}
@@ -39,10 +39,12 @@ export default function InvoiceListHeader({
           className="max-w-sm"
         />
         {hasPermission && (
-          <Button onClick={() => navigate("/facturas/crear")}>
-            <PlusIcon />
-            Factura
-          </Button>
+          <div className="flex justify-end w-full md:w-auto">
+            <Button onClick={() => navigate("/facturas/crear")}>
+              <PlusIcon />
+              Factura
+            </Button>
+          </div>
         )}
       </div>
     </div>

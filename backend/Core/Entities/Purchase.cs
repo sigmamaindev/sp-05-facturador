@@ -6,6 +6,8 @@ public class Purchase : BaseEntity
 {
     public int BusinessId { get; set; }
     public Business? Business { get; set; }
+    public int UserId { get; set; }
+    public User? User { get; set; }
     public string Environment { get; set; } = string.Empty;
     public string EmissionTypeCode { get; set; } = EmissionType.NORMAL;
     public required string BusinessName { get; set; }

@@ -29,8 +29,6 @@ public class PurchaseRepository(
 
             var supplier = await validate.ValidateSupplierAsync(purchaseCreateReqDto.SupplierId);
             var business = await validate.ValidateBusinessAsync(currentUser.BusinessId);
-            var establishment = await validate.ValidateEstablishmentAsync(currentUser.EstablishmentId);
-            var emissionPoint = await validate.ValidateEmissionPointAsync(currentUser.EmissionPointId);
             var user = await validate.ValidateUserAsync(currentUser.UserId);
 
             var ecTime = TimeZoneInfo.ConvertTime(DateTime.UtcNow,
@@ -38,6 +36,7 @@ public class PurchaseRepository(
 
             var newPurchase = edition.BuildPurchase(
                 purchaseCreateReqDto,
+                business,
                 supplier,
                 ecTime);
 

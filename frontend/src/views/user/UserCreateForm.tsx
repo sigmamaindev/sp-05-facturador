@@ -272,7 +272,7 @@ export default function UserCreateForm({
               Guardando...
             </>
           ) : (
-            "Crear Usuario"
+            "Guardar"
           )}
         </Button>
       </div>

@@ -17,4 +17,5 @@ public class Customer : BaseEntity
     public int BusinessId { get; set; }
     public Business? Business { get; set; }
     public ICollection<Invoice> Invoices { get; set; } = [];
+    public ICollection<AccountsReceivable> AccountsReceivables { get; set; } = [];
 }

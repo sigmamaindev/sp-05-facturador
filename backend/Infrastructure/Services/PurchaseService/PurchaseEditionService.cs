@@ -58,10 +58,11 @@ public class PurchaseEditionService(StoreContext context) : IPurchaseEditionServ
         }
     }
 
-    public Purchase BuildPurchase(PurchaseCreateReqDto dto, Supplier supplier, DateTime purchaseDate)
+    public Purchase BuildPurchase(PurchaseCreateReqDto dto, Business business, Supplier supplier, DateTime purchaseDate)
     {
         return new Purchase
         {
+            BusinessId = business.Id,
             Environment = EnvironmentStatus.PROD,
             EmissionTypeCode = EmissionType.NORMAL,
             BusinessName = dto.BusinessName,

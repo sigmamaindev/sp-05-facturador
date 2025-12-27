@@ -14,6 +14,8 @@ using Core.Interfaces.Services.IUtilService;
 using Core.Interfaces.Services.IKardexService;
 using Core.Interfaces.Services.IPurchaseService;
 using Infrastructure.Services.PurchaseService;
+using Core.Interfaces.Services.IARService;
+using Infrastructure.Services.ARService;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -66,6 +68,8 @@ builder.Services.AddScoped<IInvoiceEditionService, InvoiceEditionService>();
 builder.Services.AddScoped<IInvoiceDtoFactory, InvoiceDtoFactory>();
 builder.Services.AddScoped<ISriSignService, SriSignService>();
 builder.Services.AddHttpClient<ISriReceptionService, SriReceptionService>();
+// Accounts Receivable Services
+builder.Services.AddScoped<IAccountsReceivableService, AccountsReceivableService>();
 // Kardex Services
 builder.Services.AddScoped<IKardexService, KardexService>();
 // Purchase Services
@@ -133,6 +137,14 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 builder.Services.AddHttpContextAccessor();
 
 var app = builder.Build();
+
+app.MapGet("/", () => Results.Json(new
+{
+    success = true,
+    message = "API funcionando correctamente",
+    serverTime = DateTime.UtcNow,
+    environment = app.Environment.EnvironmentName
+}));
 
 app.UseCors("AllowAll");
 

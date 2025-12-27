@@ -74,6 +74,7 @@ export const columns: ColumnDef<Warehouse>[] = [
     header: "Acciones",
     cell: ({ row }) => {
       const { user } = useAuth();
+
       const warehouse = row.original;
 
       const hasPermission =
@@ -114,7 +115,7 @@ export const columns: ColumnDef<Warehouse>[] = [
                 </Link>
               </TooltipTrigger>
               <TooltipContent side="top" sideOffset={6}>
-                Editar
+                Editar bodega
               </TooltipContent>
             </Tooltip>
           ) : null}

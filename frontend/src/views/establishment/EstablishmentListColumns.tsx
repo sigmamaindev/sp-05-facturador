@@ -82,7 +82,7 @@ export const columns: ColumnDef<Establishment>[] = [
               <TooltipTrigger asChild>
                 <Link
                   to={`/establecimientos/actualizar/${establishment.id}`}
-                  aria-label="Editar empresa"
+                  aria-label="Editar establecimiento"
                   className={cn(
                     buttonVariants({ size: "icon-sm" }),
                     "bg-blue-600 text-white hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600"

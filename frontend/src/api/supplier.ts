@@ -3,7 +3,11 @@ import { isAxiosError } from "axios";
 import api from "@/utils/axios";
 
 import type { ApiResponseList, ApiResponseSingle } from "@/types/api.types";
-import type { CreateSupplierForm, Supplier } from "@/types/supplier.types";
+import type {
+  CreateSupplierForm,
+  Supplier,
+  UpdateSupplierForm,
+} from "@/types/supplier.types";
 
 export async function getSuppliers(
   keyword: string,
@@ -40,6 +44,52 @@ export async function createSupplier(
     const url = `/supplier`;
 
     const { data } = await api.post<ApiResponseSingle<Supplier>>(url, body, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+    });
+
+    return data;
+  } catch (error) {
+    if (isAxiosError(error) && error.response) {
+      throw new Error(error.response.data.error ?? "Error en la API");
+    }
+    throw new Error("Error desconocido");
+  }
+}
+
+export async function getSupplierById(
+  id: number,
+  token: string
+): Promise<ApiResponseSingle<Supplier>> {
+  try {
+    const url = `/supplier/${id}`;
+
+    const { data } = await api.get<ApiResponseSingle<Supplier>>(url, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    return data;
+  } catch (error) {
+    if (isAxiosError(error) && error.response) {
+      throw new Error(error.response.data.error ?? "Error en la API");
+    }
+    throw new Error("Error desconocido");
+  }
+}
+
+export async function updateSupplier(
+  id: number,
+  body: UpdateSupplierForm,
+  token: string
+): Promise<ApiResponseSingle<Supplier>> {
+  try {
+    const url = `/supplier/${id}`;
+
+    const { data } = await api.put<ApiResponseSingle<Supplier>>(url, body, {
       headers: {
         Authorization: `Bearer ${token}`,
         "Content-Type": "application/json",

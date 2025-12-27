@@ -281,3 +281,6 @@ obj/
 /wwwroot/node_modules
 
 # End of https://www.toptal.com/developers/gitignore/api/aspnetcore,dotnetcore
+
+# Local sandbox dotnet home (Codex / CI)
+.dotnet_home/

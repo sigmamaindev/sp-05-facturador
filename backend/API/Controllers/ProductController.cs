@@ -37,5 +37,33 @@ namespace API.Controllers
 
             return Ok(response);
         }
+
+        [HttpGet("{id:int}")]
+        [Authorize]
+        public async Task<ActionResult<ApiResponse<ProductResDto>>> GetProductById(int id)
+        {
+            var response = await productRepository.GetProductByIdAsync(id);
+
+            if (!response.Success)
+            {
+                return BadRequest(response);
+            }
+
+            return Ok(response);
+        }
+
+        [HttpPut("{id:int}")]
+        [Authorize(Roles = "SuperAdmin, Admin")]
+        public async Task<ActionResult<ApiResponse<ProductResDto>>> UpdateProduct(int id, [FromBody] ProductUpdateReqDto productUpdateReqDto)
+        {
+            var response = await productRepository.UpdateProductAsync(id, productUpdateReqDto);
+
+            if (!response.Success)
+            {
+                return BadRequest(response);
+            }
+
+            return Ok(response);
+        }
     }
 }

@@ -40,6 +40,7 @@ export async function getUserById(
     const url = `/user/${id}`;
 
     const { data } = await api.get<ApiResponseSingle<User>>(url, {
+      
       headers: {
         Authorization: `Bearer ${token}`,
       },

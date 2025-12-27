@@ -243,6 +243,7 @@ public class UserRepository(StoreContext context, IConfiguration config, IHttpCo
                 CompanyName = user.CompanyName,
                 Sequence = user.Sequence,
                 IsActive = user.IsActive,
+                CreatedAt = user.CreatedAt,
                 Roles = [.. user.UserRole.Select(ur => new RolResDto
                 {
                     Id = ur.Role!.Id,
@@ -254,7 +255,8 @@ public class UserRepository(StoreContext context, IConfiguration config, IHttpCo
                     Document = ub.Business.Document,
                     Name = ub.Business.Name,
                     Address = ub.Business.Address,
-                    IsActive = ub.Business.IsActive
+                    IsActive = ub.Business.IsActive,
+                    CreatedAt = ub.Business.CreatedAt,
                 }).FirstOrDefault(),
                 Establishment = [..user.UserEstablishment.Select(ue => new EstablishmentResDto
                 {
@@ -656,6 +658,8 @@ public class UserRepository(StoreContext context, IConfiguration config, IHttpCo
                     Id = ub.Business!.Id,
                     Name = ub.Business.Name,
                     Document = ub.Business.Document,
+                    City = ub.Business.City,
+                    Province = ub.Business.Province,
                     Address = ub.Business.Address,
                     IsActive = ub.Business.IsActive,
                     CreatedAt = ub.Business.CreatedAt
@@ -666,14 +670,16 @@ public class UserRepository(StoreContext context, IConfiguration config, IHttpCo
                     Id = ue.Establishment!.Id,
                     Code = ue.Establishment.Code,
                     Name = ue.Establishment.Name,
-                    IsActive = ue.Establishment.IsActive
+                    IsActive = ue.Establishment.IsActive,
+                    CreatedAt = ue.Establishment.CreatedAt
                 })],
                 EmissionPoint = [..existingUser.UserEmissionPoint.Select(ep=>new EmissionPointResDto
                 {
                     Id = ep.EmissionPoint!.Id,
                     Code = ep.EmissionPoint.Code,
                     Description = ep.EmissionPoint.Description,
-                    IsActive = ep.EmissionPoint.IsActive
+                    IsActive = ep.EmissionPoint.IsActive,
+                    CreatedAt = ep.EmissionPoint.CreatedAt
                 })]
             };
 

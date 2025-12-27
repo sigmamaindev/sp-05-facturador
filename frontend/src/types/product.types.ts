@@ -8,13 +8,15 @@ export type Product = {
   id: number;
   sku: string;
   name: string;
-  description: string;
+  description?: string;
   price: number;
   iva: boolean;
+  type?: "BIEN" | "SERVICIO" | "OTRO";
   isActive: boolean;
   tax: Tax;
   unitMeasure: UnitMeasure;
   inventory: Inventory[];
+  createdAt?: Date;
 };
 
 export const createProductSchema = z.object({
@@ -51,3 +53,7 @@ export const createProductSchema = z.object({
 });
 
 export type CreateProductForm = z.infer<typeof createProductSchema>;
+
+export const updateProductSchema = createProductSchema;
+
+export type UpdateProductForm = z.infer<typeof updateProductSchema>;

@@ -6,6 +6,8 @@ using Core.Interfaces.Repository;
 using Core.Interfaces.Services.IUtilService;
 using Core.Interfaces.Services.IInvoiceService;
 using Core.Interfaces.Services.IKardexService;
+using Core.Interfaces.Services.IARService;
+using Core.DTOs.ARDto;
 
 namespace Infrastructure.Data;
 
@@ -17,6 +19,7 @@ public class InvoiceRepository(
     IInvoiceEditionService edition,
     IInvoiceValidationService validate,
     IInvoiceCalculationService calc,
+    IAccountsReceivableService accountsReceivableService,
     IInvoiceDtoFactory invoiceDtoFactory) : IInvoiceRepository
 {
     public async Task<ApiResponse<InvoiceComplexResDto>> ConfirmInvoiceAsync(int id)
@@ -386,11 +389,36 @@ public class InvoiceRepository(
                 return response;
             }
 
+            var requiresAR = invoicePaymentUpdateReqDto.PaymentTermDays > 0 ||
+            !invoicePaymentUpdateReqDto.PaymentMethod.Equals(
+                PaymentMethod.NFS,
+                StringComparison.OrdinalIgnoreCase);
+
+            using var trx = await context.Database.BeginTransactionAsync();
+
             existingInvoice.PaymentMethod = invoicePaymentUpdateReqDto.PaymentMethod;
             existingInvoice.PaymentTermDays = invoicePaymentUpdateReqDto.PaymentTermDays;
             existingInvoice.Status = InvoiceStatus.PENDING;
 
+            if (requiresAR)
+            {
+                var arDto = new ARCreateFromInvoiceReqDto
+                {
+                    PaymentMethod = invoicePaymentUpdateReqDto.PaymentMethod,
+                    TermDays = invoicePaymentUpdateReqDto.PaymentTermDays,
+                    ExpectedPaymentDate = invoicePaymentUpdateReqDto.ExpectedPaymentDate,
+                    Reference = invoicePaymentUpdateReqDto.Reference,
+                    Notes = invoicePaymentUpdateReqDto.Notes,
+                    InitialPaymentAmount = 0,
+                    InitialPaymentMethodCode = null
+                };
+
+                await accountsReceivableService.UpsertFromInvoiceAsync(existingInvoice, arDto);
+            }
+
             await context.SaveChangesAsync();
+
+            await trx.CommitAsync();
 
             response.Success = true;
             response.Message = "Pago registrado en factura";

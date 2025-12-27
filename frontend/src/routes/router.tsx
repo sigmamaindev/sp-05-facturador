@@ -20,14 +20,21 @@ import EmissionPointDetailView from "@/views/emissionPoint/EmissionPointDetailVi
 import EmissionPointCreateView from "@/views/emissionPoint/EmissionPointCreateView";
 import EmissionPointUpdateView from "@/views/emissionPoint/EmissionPointUpdateView";
 import UserListView from "@/views/user/UserListView";
+import UserDetailView from "@/views/user/UserDetailView";
 import UserCreateView from "@/views/user/UserCreateView";
 import UserUpdateView from "@/views/user/UserUpdateView";
 import CustomerListView from "@/views/customer/CustomerListView";
 import CustomerCreateView from "@/views/customer/CustomerCreateView";
+import CustomerDetailView from "@/views/customer/CustomerDetailView";
+import CustomerUpdateView from "@/views/customer/CustomerUpdateView";
 import SupplierListView from "@/views/supplier/SupplierListView";
 import SupplierCreateView from "@/views/supplier/SupplierCreateView";
+import SupplierDetailView from "@/views/supplier/SupplierDetailView";
+import SupplierUpdateView from "@/views/supplier/SupplierUpdateView";
 import ProductListView from "@/views/product/ProductListView";
 import ProductCreateView from "@/views/product/ProductCreateView";
+import ProductDetailView from "@/views/product/ProductDetailView";
+import ProductUpdateView from "@/views/product/ProductUpdateView";
 import PurchaseListView from "@/views/purchase/PurchaseListView";
 import PurchaseCreateView from "@/views/purchase/PurchaseCreateView";
 import PurchaseUpdateView from "@/views/purchase/PurchaseUpdateView";
@@ -95,6 +102,7 @@ export default function Router() {
                 element={<WarehouseUpdateView />}
               />
               <Route path="/usuarios" element={<UserListView />} />
+              <Route path="/usuarios/:id" element={<UserDetailView />} />
               <Route path="/usuarios/crear" element={<UserCreateView />} />
               <Route
                 path="/usuarios/actualizar/:id"
@@ -102,10 +110,25 @@ export default function Router() {
               />
               <Route path="/clientes" element={<CustomerListView />} />
               <Route path="/clientes/crear" element={<CustomerCreateView />} />
+              <Route path="/clientes/:id" element={<CustomerDetailView />} />
+              <Route
+                path="/clientes/actualizar/:id"
+                element={<CustomerUpdateView />}
+              />
               <Route path="/proveedores" element={<SupplierListView />} />
               <Route path="/proveedores/crear" element={<SupplierCreateView />} />
+              <Route path="/proveedores/:id" element={<SupplierDetailView />} />
+              <Route
+                path="/proveedores/actualizar/:id"
+                element={<SupplierUpdateView />}
+              />
               <Route path="/productos" element={<ProductListView />} />
               <Route path="/productos/crear" element={<ProductCreateView />} />
+              <Route path="/productos/:id" element={<ProductDetailView />} />
+              <Route
+                path="/productos/actualizar/:id"
+                element={<ProductUpdateView />}
+              />
               <Route path="/compras" element={<PurchaseListView />} />
               <Route path="/compras/:id" element={<PurchaseDetailView />} />
               <Route path="/compras/crear" element={<PurchaseCreateView />} />

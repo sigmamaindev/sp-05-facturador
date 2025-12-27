@@ -272,10 +272,10 @@ export default function UserUpdateForm({
           {savingUser ? (
             <>
               <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-              Guardando...
+              Actualizando...
             </>
           ) : (
-            "Actualizar Usuario"
+            "Actualizar"
           )}
         </Button>
       </div>

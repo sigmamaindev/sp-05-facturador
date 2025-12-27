@@ -25,11 +25,14 @@ public class StoreContext(DbContextOptions options) : DbContext(options)
     public DbSet<Supplier> Suppliers { get; set; }
     public DbSet<Purchase> Purchases { get; set; }
     public DbSet<PurchaseDetail> PurchaseDetails { get; set; }
+    public DbSet<AccountsReceivable> AccountsReceivables { get; set; }
+    public DbSet<ARTransaction> ARTransactions { get; set; }
     public DbSet<Kardex> Kardexes { get; set; }
     public DbSet<BusinessCertificate> BusinessCertificates => Set<BusinessCertificate>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
+        modelBuilder.ApplyConfigurationsFromAssembly(typeof(StoreContext).Assembly);
 
         modelBuilder.Entity<User>(entity =>
         {
@@ -484,6 +487,59 @@ public class StoreContext(DbContextOptions options) : DbContext(options)
             entity.HasOne(k => k.Warehouse)
             .WithMany(w => w.Kardexes)
             .HasForeignKey(k => k.WarehouseId);
+        });
+
+        modelBuilder.Entity<AccountsReceivable>(entity =>
+        {
+            entity.ToTable("CuentaPorCobrar");
+            entity.Property(a => a.BusinessId).HasColumnName("EmpresaId");
+            entity.Property(a => a.CustomerId).HasColumnName("ClienteId");
+            entity.Property(a => a.InvoiceId).HasColumnName("FacturaId");
+            entity.Property(a => a.IssueDate).HasColumnName("FechaEmision").HasColumnType("timestamp without time zone");
+            entity.Property(a => a.DueDate).HasColumnName("FechaVencimiento").HasColumnType("timestamp without time zone");
+            entity.Property(a => a.ExpectedPaymentDate).HasColumnName("FechaPagoEsperado").HasColumnType("timestamp without time zone");
+            entity.Property(a => a.OriginalAmount).HasColumnName("MontoOriginal");
+            entity.Property(a => a.Balance).HasColumnName("Saldo");
+            entity.Property(a => a.Status).HasColumnName("Estado");
+
+            entity.HasOne(a => a.Business)
+            .WithMany(b => b.AccountsReceivables)
+            .HasForeignKey(a => a.BusinessId);
+
+            entity.HasOne(a => a.Customer)
+            .WithMany(c => c.AccountsReceivables)
+            .HasForeignKey(a => a.CustomerId);
+
+            entity.HasOne(a => a.Invoice)
+            .WithOne(i => i.AccountsReceivable)
+            .HasForeignKey<AccountsReceivable>(a => a.InvoiceId);
+
+            entity.HasMany(a => a.Transactions)
+            .WithOne(t => t.AccountsReceivable)
+            .HasForeignKey(t => t.AccountReceivableId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasIndex(a => new { a.BusinessId, a.InvoiceId })
+            .IsUnique()
+            .HasDatabaseName("UX_CuentaPorCobrar_Empresa_Factura");
+        });
+
+        modelBuilder.Entity<ARTransaction>(entity =>
+        {
+            entity.ToTable("CuentaPorCobrarTransaccion");
+            entity.Property(t => t.AccountReceivableId).HasColumnName("CuentaPorCobrarId");
+            entity.Property(t => t.ARTransactionType).HasColumnName("Tipo");
+            entity.Property(t => t.Amount).HasColumnName("Monto");
+            entity.Property(t => t.PaymentMethod).HasColumnName("MetodoPago");
+            entity.Property(t => t.Reference).HasColumnName("Referencia");
+            entity.Property(t => t.PaymentDetails).HasColumnName("DetallesPago");
+            entity.Property(t => t.Notes).HasColumnName("Notas");
+            entity.Property(t => t.CreatedAt).HasColumnName("FechaCreado");
+            entity.Property(t => t.UpdatedAt).HasColumnName("FechaActualizado");
+
+            entity.HasOne(t => t.AccountsReceivable)
+            .WithMany(a => a.Transactions)
+            .HasForeignKey(t => t.AccountReceivableId);
         });
 
         modelBuilder.Entity<BusinessCertificate>(entity =>

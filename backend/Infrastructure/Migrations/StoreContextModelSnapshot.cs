@@ -22,6 +22,117 @@ namespace Infrastructure.Migrations
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
+            modelBuilder.Entity("Core.Entities.ARTransaction", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("ARTransactionType")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("Tipo");
+
+                    b.Property<int>("AccountReceivableId")
+                        .HasColumnType("integer")
+                        .HasColumnName("CuentaPorCobrarId");
+
+                    b.Property<decimal>("Amount")
+                        .HasColumnType("numeric")
+                        .HasColumnName("Monto");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("FechaCreado");
+
+                    b.Property<string>("Notes")
+                        .HasColumnType("text")
+                        .HasColumnName("Notas");
+
+                    b.Property<string>("PaymentDetails")
+                        .HasColumnType("text")
+                        .HasColumnName("DetallesPago");
+
+                    b.Property<string>("PaymentMethod")
+                        .HasColumnType("text")
+                        .HasColumnName("MetodoPago");
+
+                    b.Property<string>("Reference")
+                        .HasColumnType("text")
+                        .HasColumnName("Referencia");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("FechaActualizado");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AccountReceivableId");
+
+                    b.ToTable("CuentaPorCobrarTransaccion", (string)null);
+                });
+
+            modelBuilder.Entity("Core.Entities.AccountsReceivable", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<decimal>("Balance")
+                        .HasColumnType("numeric")
+                        .HasColumnName("Saldo");
+
+                    b.Property<int>("BusinessId")
+                        .HasColumnType("integer")
+                        .HasColumnName("EmpresaId");
+
+                    b.Property<int>("CustomerId")
+                        .HasColumnType("integer")
+                        .HasColumnName("ClienteId");
+
+                    b.Property<DateTime>("DueDate")
+                        .HasColumnType("timestamp without time zone")
+                        .HasColumnName("FechaVencimiento");
+
+                    b.Property<DateTime?>("ExpectedPaymentDate")
+                        .HasColumnType("timestamp without time zone")
+                        .HasColumnName("FechaPagoEsperado");
+
+                    b.Property<int>("InvoiceId")
+                        .HasColumnType("integer")
+                        .HasColumnName("FacturaId");
+
+                    b.Property<DateTime>("IssueDate")
+                        .HasColumnType("timestamp without time zone")
+                        .HasColumnName("FechaEmision");
+
+                    b.Property<decimal>("OriginalAmount")
+                        .HasColumnType("numeric")
+                        .HasColumnName("MontoOriginal");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("Estado");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CustomerId");
+
+                    b.HasIndex("InvoiceId")
+                        .IsUnique();
+
+                    b.HasIndex("BusinessId", "InvoiceId")
+                        .IsUnique()
+                        .HasDatabaseName("UX_CuentaPorCobrar_Empresa_Factura");
+
+                    b.ToTable("CuentaPorCobrar", (string)null);
+                });
+
             modelBuilder.Entity("Core.Entities.Business", b =>
                 {
                     b.Property<int>("Id")
@@ -786,11 +897,16 @@ namespace Infrastructure.Migrations
                         .HasColumnType("text")
                         .HasColumnName("TipoSujetoRetenido");
 
+                    b.Property<int>("UserId")
+                        .HasColumnType("integer");
+
                     b.HasKey("Id");
 
                     b.HasIndex("BusinessId");
 
                     b.HasIndex("SupplierId");
+
+                    b.HasIndex("UserId");
 
                     b.ToTable("Compra", (string)null);
                 });
@@ -1250,6 +1366,44 @@ namespace Infrastructure.Migrations
                     b.ToTable("Bodega", (string)null);
                 });
 
+            modelBuilder.Entity("Core.Entities.ARTransaction", b =>
+                {
+                    b.HasOne("Core.Entities.AccountsReceivable", "AccountsReceivable")
+                        .WithMany("Transactions")
+                        .HasForeignKey("AccountReceivableId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("AccountsReceivable");
+                });
+
+            modelBuilder.Entity("Core.Entities.AccountsReceivable", b =>
+                {
+                    b.HasOne("Core.Entities.Business", "Business")
+                        .WithMany("AccountsReceivables")
+                        .HasForeignKey("BusinessId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Core.Entities.Customer", "Customer")
+                        .WithMany("AccountsReceivables")
+                        .HasForeignKey("CustomerId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Core.Entities.Invoice", "Invoice")
+                        .WithOne("AccountsReceivable")
+                        .HasForeignKey("Core.Entities.AccountsReceivable", "InvoiceId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Business");
+
+                    b.Navigation("Customer");
+
+                    b.Navigation("Invoice");
+                });
+
             modelBuilder.Entity("Core.Entities.BusinessCertificate", b =>
                 {
                     b.HasOne("Core.Entities.Business", "Business")
@@ -1467,9 +1621,17 @@ namespace Infrastructure.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("Core.Entities.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
                     b.Navigation("Business");
 
                     b.Navigation("Supplier");
+
+                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("Core.Entities.PurchaseDetail", b =>
@@ -1635,8 +1797,15 @@ namespace Infrastructure.Migrations
                     b.Navigation("Business");
                 });
 
+            modelBuilder.Entity("Core.Entities.AccountsReceivable", b =>
+                {
+                    b.Navigation("Transactions");
+                });
+
             modelBuilder.Entity("Core.Entities.Business", b =>
                 {
+                    b.Navigation("AccountsReceivables");
+
                     b.Navigation("BusinessCertificate");
 
                     b.Navigation("Customers");
@@ -1664,6 +1833,8 @@ namespace Infrastructure.Migrations
 
             modelBuilder.Entity("Core.Entities.Customer", b =>
                 {
+                    b.Navigation("AccountsReceivables");
+
                     b.Navigation("Invoices");
                 });
 
@@ -1685,6 +1856,8 @@ namespace Infrastructure.Migrations
 
             modelBuilder.Entity("Core.Entities.Invoice", b =>
                 {
+                    b.Navigation("AccountsReceivable");
+
                     b.Navigation("InvoiceDetails");
                 });
 

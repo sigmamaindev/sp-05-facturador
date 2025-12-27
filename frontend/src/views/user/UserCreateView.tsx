@@ -32,7 +32,7 @@ export default function UserCreateView() {
       setLoading(true);
 
       const [rolRes, estRes, emiRes] = await Promise.all([
-        getRoles(),
+        getRoles(token!),
         getEstablishments("", 1, 100, token!),
         getEmissionPoints(1, "", 1, 100, token!),
       ]);

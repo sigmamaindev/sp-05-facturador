@@ -84,7 +84,7 @@ export const columns = (
               <TooltipTrigger asChild>
                 <Link
                   to={`/puntos-emision/actualizar/${emissionPoint.id}?establecimiento=${establishmentId}`}
-                  aria-label="Editar empresa"
+                  aria-label="Editar punto de emisión"
                   className={cn(
                     buttonVariants({ size: "icon-sm" }),
                     "bg-blue-600 text-white hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600"

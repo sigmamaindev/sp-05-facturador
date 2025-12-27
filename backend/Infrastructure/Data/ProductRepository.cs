@@ -123,10 +123,12 @@ public class ProductRepository(StoreContext context, IHttpContextAccessor httpCo
             var product = new ProductResDto
             {
                 Id = existingProduct.Id,
+                Sku = existingProduct.Sku,
                 Name = existingProduct.Name,
                 Description = existingProduct.Description,
                 Price = existingProduct.Price,
                 Iva = existingProduct.Iva,
+                Type = existingProduct.Type,
                 IsActive = existingProduct.IsActive,
                 Tax = new TaxResDto
                 {

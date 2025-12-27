@@ -3,7 +3,11 @@ import { isAxiosError } from "axios";
 import api from "@/utils/axios";
 
 import type { ApiResponseList, ApiResponseSingle } from "@/types/api.types";
-import type { CreateProductForm, Product } from "@/types/product.types";
+import type {
+  CreateProductForm,
+  Product,
+  UpdateProductForm,
+} from "@/types/product.types";
 
 export async function getProducts(
   keyword: string,
@@ -40,6 +44,52 @@ export async function createProduct(
     const url = `/product`;
 
     const { data } = await api.post<ApiResponseSingle<Product>>(url, body, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+    });
+
+    return data;
+  } catch (error) {
+    if (isAxiosError(error) && error.response) {
+      throw new Error(error.response.data.error ?? "Error en la API");
+    }
+    throw new Error("Error desconocido");
+  }
+}
+
+export async function getProductById(
+  id: number,
+  token: string
+): Promise<ApiResponseSingle<Product>> {
+  try {
+    const url = `/product/${id}`;
+
+    const { data } = await api.get<ApiResponseSingle<Product>>(url, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    return data;
+  } catch (error) {
+    if (isAxiosError(error) && error.response) {
+      throw new Error(error.response.data.error ?? "Error en la API");
+    }
+    throw new Error("Error desconocido");
+  }
+}
+
+export async function updateProduct(
+  id: number,
+  body: UpdateProductForm,
+  token: string
+): Promise<ApiResponseSingle<Product>> {
+  try {
+    const url = `/product/${id}`;
+
+    const { data } = await api.put<ApiResponseSingle<Product>>(url, body, {
       headers: {
         Authorization: `Bearer ${token}`,
         "Content-Type": "application/json",
