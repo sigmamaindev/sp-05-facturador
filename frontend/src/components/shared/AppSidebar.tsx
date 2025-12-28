@@ -9,11 +9,14 @@ import {
   Power,
   User,
   Users,
-  DollarSign,
   ShoppingCart,
   Building2,
   MapPin,
   Warehouse,
+  Wallet,
+  HandCoins,
+  CreditCard,
+  DollarSign,
 } from "lucide-react";
 
 import {
@@ -33,6 +36,7 @@ import {
 import { useAuth } from "@/contexts/AuthContext";
 import NavOrganization from "./NavOrganization";
 import NavPeople from "./NavPeople";
+import NavFinance from "./NavFinance";
 
 const data = {
   dashboard: { to: "/", label: "Dashboard", icon: Home },
@@ -56,8 +60,24 @@ const data = {
     ],
   },
   product: { to: "/productos", label: "Productos", icon: List },
-  purchase: { to: "/compras", label: "Compras", icon: ShoppingCart },
-  invoice: { to: "/facturas", label: "Facturas", icon: DollarSign },
+  finance: {
+    label: "Finanzas",
+    icon: Wallet,
+    items: [
+      { to: "/facturas", label: "Facturas", icon: DollarSign },
+      {
+        to: "/cuentas-por-cobrar",
+        label: "Cuentas por cobrar",
+        icon: HandCoins,
+      },
+      { to: "/compras", label: "Compras", icon: ShoppingCart },
+      {
+        to: "/cuentas-por-pagar",
+        label: "Cuentas por pagar",
+        icon: CreditCard,
+      },
+    ],
+  },
 };
 
 export default function AppSidebar() {
@@ -107,26 +127,7 @@ export default function AppSidebar() {
                 </SidebarMenuButton>
               </SidebarMenuItem>
             </SidebarMenu>
-            <SidebarMenu>
-              <SidebarMenuItem key={data.invoice.to}>
-                <SidebarMenuButton asChild>
-                  <Link to={data.invoice.to}>
-                    <data.invoice.icon />
-                    <span>{data.invoice.label}</span>
-                  </Link>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-            </SidebarMenu>
-            <SidebarMenu>
-              <SidebarMenuItem key={data.purchase.to}>
-                <SidebarMenuButton asChild>
-                  <Link to={data.purchase.to}>
-                    <data.purchase.icon />
-                    <span>{data.purchase.label}</span>
-                  </Link>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-            </SidebarMenu>
+            <NavFinance items={data.finance} />
           </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>

@@ -43,7 +43,7 @@ namespace API.Controllers
 
         [HttpGet("{id:int}")]
         [Authorize]
-        public async Task<ActionResult<ApiResponse<List<InvoiceComplexResDto>>>> GetInvoiceById(int id)
+        public async Task<ActionResult<ApiResponse<InvoiceComplexResDto>>> GetInvoiceById(int id)
         {
             var response = await invoiceRepository.GetInvoiceByIdAsync(id);
 

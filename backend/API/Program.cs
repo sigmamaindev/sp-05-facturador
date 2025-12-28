@@ -51,6 +51,7 @@ builder.Services.AddScoped<ITaxRepository, TaxRepository>();
 builder.Services.AddScoped<IInventoryRepository, InventoryRepository>();
 builder.Services.AddScoped<ICustomerRepository, CustomerRepository>();
 builder.Services.AddScoped<IInvoiceRepository, InvoiceRepository>();
+builder.Services.AddScoped<IAccountsReceivableRepository, AccountsReceivableRepository>();
 builder.Services.AddScoped<ISupplierRepository, SupplierRepository>();
 builder.Services.AddScoped<ICertificateRepository, CertificateRepository>();
 builder.Services.AddScoped<IPurchaseRepository, PurchaseRepository>();
@@ -70,6 +71,7 @@ builder.Services.AddScoped<ISriSignService, SriSignService>();
 builder.Services.AddHttpClient<ISriReceptionService, SriReceptionService>();
 // Accounts Receivable Services
 builder.Services.AddScoped<IAccountsReceivableService, AccountsReceivableService>();
+builder.Services.AddScoped<IARDtoFactory, ARDtoFactory>();
 // Kardex Services
 builder.Services.AddScoped<IKardexService, KardexService>();
 // Purchase Services

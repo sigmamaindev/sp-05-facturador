@@ -47,6 +47,10 @@ import InvoiceDetailView from "@/views/invoice/InvoiceDetailView";
 import WarehouseCreateView from "@/views/warehouse/WarehouseCreateView";
 import WarehouseDetailView from "@/views/warehouse/WarehouseDetailView";
 import WarehouseUpdateView from "@/views/warehouse/WarehouseUpdateView";
+import AccountsReceivableListView from "@/views/accountsReceivable/AccountsReceivableListView";
+import AccountsReceivableDetailView from "@/views/accountsReceivable/AccountsReceivableDetailView";
+import AccountsPayableListView from "@/views/accountsPayable/AccountsPayableListView";
+import NotFoundRoute from "./notFoundRoute";
 
 export default function Router() {
   return (
@@ -136,6 +140,18 @@ export default function Router() {
                 path="/compras/actualizar/:id"
                 element={<PurchaseUpdateView />}
               />
+              <Route
+                path="/cuentas-por-cobrar"
+                element={<AccountsReceivableListView />}
+              />
+              <Route
+                path="/cuentas-por-cobrar/:id"
+                element={<AccountsReceivableDetailView />}
+              />
+              <Route
+                path="/cuentas-por-pagar"
+                element={<AccountsPayableListView />}
+              />
               <Route path="/facturas" element={<InvoiceListView />} />
               <Route path="/facturas/:id" element={<InvoiceDetailView />} />
               <Route path="/facturas/crear" element={<InvoiceCreateView />} />
@@ -150,6 +166,7 @@ export default function Router() {
               <Route path="/auth/login" element={<LoginView />} />
             </Route>
           </Route>
+          <Route path="*" element={<NotFoundRoute />} />
         </Routes>
       </AuthProvider>
     </BrowserRouter>

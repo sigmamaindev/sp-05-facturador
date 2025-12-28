@@ -1,5 +1,4 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { ScrollArea } from "@/components/ui/scroll-area";
 
 import type { Invoice } from "@/types/invoice.type";
 
@@ -11,80 +10,85 @@ export default function InvoiceDetailInfo({ invoice }: InvoiceDetailInfoProps) {
   return (
     <div className="flex flex-col md:flex-row gap-4">
       <>
-        <div className="md:w-3/4">
+       < div className="md:w-3/4">
           <Card className="h-full">
             <CardHeader>
               <CardTitle>PRODUCTOS AGREGADOS</CardTitle>
             </CardHeader>
             <CardContent>
-              <ScrollArea className="max-h-[400px]">
-                <table className="w-full border-collapse">
-                  <thead>
-                    <tr className="border-b">
-                      <th className="text-left py-2 px-2 font-semibold">
-                        Código
-                      </th>
-                      <th className="text-left py-2 px-2 font-semibold">
-                        Nombre
-                      </th>
-                      <th className="text-left py-2 px-2 font-semibold">
-                        Cant. / U.M.
-                      </th>
-                      <th className="text-right py-2 px-2 font-semibold">
-                        P. Unitario
-                      </th>
-                      <th className="text-right py-2 px-2 font-semibold">
-                        Desc.
-                      </th>
-                      <th className="text-right py-2 px-2 font-semibold">
-                        Base IVA
-                      </th>
-                      <th className="text-right py-2 px-2 font-semibold">
-                        IVA
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {invoice.details.length === 0 ? (
-                      <tr>
-                        <td
-                          colSpan={9}
-                          className="text-center py-4 text-muted-foreground"
-                        >
-                          No hay productos
-                        </td>
+              <div className="max-h-[400px] overflow-auto rounded-md border">
+                <div className="min-w-[500px]">
+                  <table className="w-full">
+                    <thead className="sticky top-0 bg-background z-10">
+                      <tr className="border-b">
+                        <th className="text-left py-2 px-2 font-semibold">
+                          Código
+                        </th>
+                        <th className="text-left py-2 px-2 font-semibold">
+                          Nombre
+                        </th>
+                        <th className="text-left py-2 px-2 font-semibold">
+                          Cant. / U.M.
+                        </th>
+                        <th className="text-right py-2 px-2 font-semibold">
+                          P. Unitario
+                        </th>
+                        <th className="text-right py-2 px-2 font-semibold">
+                          Desc.
+                        </th>
+                        <th className="text-right py-2 px-2 font-semibold">
+                          Base IVA
+                        </th>
+                        <th className="text-right py-2 px-2 font-semibold">
+                          IVA
+                        </th>
                       </tr>
-                    ) : (
-                      invoice.details.map((d) => (
-                        <tr key={d.id}>
-                          <td className="py-2 px-2">{d.productCode}</td>
-                          <td className="py-2 px-2">{d.productName}</td>
-                          <td className="py-2 px-2">
-                            <div className="flex flex-col items-end">
-                              <span>{d.quantity.toFixed(2)}</span>
-                              <span className="text-xs text-muted-foreground">
-                                {d.unitMeasureCode} {d.unitMeasureName}
-                              </span>
-                            </div>
-                          </td>
-                          <td className="py-2 px-2 text-right">
-                            {d.unitPrice.toFixed(2)}
-                          </td>
-                          <td className="py-2 px-2 text-right">
-                            {d.discount.toFixed(2)}
-                          </td>
-                          <td className="py-2 px-2 text-right">
-                            {d.subtotal.toFixed(2)}
-                          </td>
-                          <td className="py-2 px-2 text-right">
-                            {d.taxValue.toFixed(2)}
+                    </thead>
+
+                    <tbody>
+                      {invoice.details.length === 0 ? (
+                        <tr>
+                          <td
+                            colSpan={7}
+                            className="text-center py-4 text-muted-foreground"
+                          >
+                            No hay productos
                           </td>
                         </tr>
-                      ))
-                    )}
-                  </tbody>
-                </table>
-              </ScrollArea>
+                      ) : (
+                        invoice.details.map((d) => (
+                          <tr key={d.id} className="border-b last:border-b-0">
+                            <td className="py-2 px-2 whitespace-nowrap">
+                              {d.productCode}
+                            </td>
+                            <td className="py-2 px-2">{d.productName}</td>
+                            <td className="py-2 px-2">
+                              <div className="flex flex-col items-end whitespace-nowrap">
+                                <span>{d.quantity.toFixed(2)}</span>
+                                <span className="text-xs text-muted-foreground">
+                                  {d.unitMeasureCode} {d.unitMeasureName}
+                                </span>
+                              </div>
+                            </td>
+                            <td className="py-2 px-2 text-right whitespace-nowrap">
+                              {d.unitPrice.toFixed(2)}
+                            </td>
+                            <td className="py-2 px-2 text-right whitespace-nowrap">
+                              {d.discount.toFixed(2)}
+                            </td>
+                            <td className="py-2 px-2 text-right whitespace-nowrap">
+                              {d.subtotal.toFixed(2)}
+                            </td>
+                            <td className="py-2 px-2 text-right whitespace-nowrap">
+                              {d.taxValue.toFixed(2)}
+                            </td>
+                          </tr>
+                        ))
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
             </CardContent>
           </Card>
         </div>

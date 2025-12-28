@@ -11,7 +11,9 @@ public class AccountsReceivableService(StoreContext context) : IAccountsReceivab
 {
     public async Task<AccountsReceivable> UpsertFromInvoiceAsync(Invoice invoice, ARCreateFromInvoiceReqDto aRCreateFromInvoiceReqDto)
     {
-        var issueDate = invoice.InvoiceDate == default ? DateTime.UtcNow : invoice.InvoiceDate.ToUniversalTime();
+        var ecTime = TimeZoneInfo.ConvertTime(DateTime.UtcNow, TimeZoneInfo.FindSystemTimeZoneById("America/Guayaquil"));
+
+        var issueDate = invoice.InvoiceDate == default ? ecTime : invoice.InvoiceDate;
         var dueDate = issueDate.AddDays(aRCreateFromInvoiceReqDto.TermDays);
 
         if (aRCreateFromInvoiceReqDto.TermDays < 0)

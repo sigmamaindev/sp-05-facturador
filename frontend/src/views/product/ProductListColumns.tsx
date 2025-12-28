@@ -19,6 +19,7 @@ import { Eye, Pencil } from "lucide-react";
 export const columns: ColumnDef<Product>[] = [
   {
     id: "product",
+    header: "Producto",
     accessorFn: (product) => `${product.sku} ${product.name}`,
     cell: ({ row }) => (
       <div className="flex flex-col">

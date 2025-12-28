@@ -6,14 +6,7 @@ import type { Customer } from "@/types/customer.types";
 import type { Product } from "@/types/product.types";
 import type { UnitMeasure } from "@/types/unitMeasure.types";
 
-import {
-  Card,
-  CardAction,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { ScrollArea } from "@/components/ui/scroll-area";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
@@ -70,119 +63,137 @@ export default function InvoiceCreateForm({
     <div className="flex flex-col md:flex-row gap-4">
       <div className="md:w-3/4">
         <Card className="h-full">
-          <CardHeader>
-            <CardTitle>PRODUCTOS AGREGADOS</CardTitle>
-            <CardAction>
-              <Button type="button" onClick={() => setOpenProductModal(true)}>
+          <CardHeader className="gap-2">
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+              <CardTitle>PRODUCTOS AGREGADOS</CardTitle>
+              <Button
+                type="button"
+                onClick={() => setOpenProductModal(true)}
+                size="sm"
+                className="h-8 px-3 text-xs sm:text-sm w-full sm:w-auto"
+              >
                 Agregar Producto
               </Button>
-            </CardAction>
+            </div>
           </CardHeader>
           <CardContent>
-            <ScrollArea className="max-h-[400px]">
-              <table className="w-full border-collapse">
-                <thead>
-                  <tr className="border-b">
-                    <th className="text-left py-2 px-2 font-semibold">
-                      Código
-                    </th>
-                    <th className="text-left py-2 px-2 font-semibold">
-                      Nombre
-                    </th>
-                    <th className="text-left py-2 px-2 font-semibold">
-                      Cant. / U.M.
-                    </th>
-                    <th className="text-right py-2 px-2 font-semibold">
-                      P. Unitario
-                    </th>
-                    <th className="text-right py-2 px-2 font-semibold">
-                      Desc.
-                    </th>
-                    <th className="text-right py-2 px-2 font-semibold">
-                      Base IVA
-                    </th>
-                    <th className="text-right py-2 px-2 font-semibold">IVA</th>
-                    <th className="text-center py-2 px-2 font-semibold">
-                      Acciones
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {products.length === 0 ? (
-                    <tr>
-                      <td
-                        colSpan={9}
-                        className="text-center py-4 text-muted-foreground"
-                      >
-                        No hay productos agregados
-                      </td>
+            <div className="max-h-[400px] overflow-auto rounded-md border">
+              <div className="min-w-[500px]">
+                <table className="w-full border-collapse">
+                  <thead className="sticky top-0 z-10 bg-background">
+                    <tr className="border-b">
+                      <th className="text-left py-2 px-2 font-semibold">
+                        Código
+                      </th>
+                      <th className="text-left py-2 px-2 font-semibold">
+                        Nombre
+                      </th>
+                      <th className="text-left py-2 px-2 font-semibold">
+                        Cant. / U.M.
+                      </th>
+                      <th className="text-right py-2 px-2 font-semibold">
+                        P. Unitario
+                      </th>
+                      <th className="text-right py-2 px-2 font-semibold">
+                        Desc.
+                      </th>
+                      <th className="text-right py-2 px-2 font-semibold">
+                        Base IVA
+                      </th>
+                      <th className="text-right py-2 px-2 font-semibold">
+                        IVA
+                      </th>
+                      <th className="text-center py-2 px-2 font-semibold">
+                        Acciones
+                      </th>
                     </tr>
-                  ) : (
-                    products.map((p) => (
-                      <tr key={p.id} className="border-b">
-                        <td className="py-2 px-2">{p.sku}</td>
-                        <td className="py-2 px-2">{p.name}</td>
-                        <td className="py-2 px-2">
-                          <div className="flex items-center gap-2">
-                            <Input
-                              type="number"
-                              step="0.01"
-                              min={1}
-                              value={p.quantity}
-                              onChange={(e) =>
-                                handleQuantityChange(
-                                  p.id,
-                                  Number(e.target.value)
-                                )
-                              }
-                              className="w-20 text-center"
-                            />
-                            <Button
-                              type="button"
-                              variant="outline"
-                              size="sm"
-                              onClick={() => onOpenUnitMeasureModal(p.id)}
-                            >
-                              {p.unitMeasure?.code ?? "UND"}
-                            </Button>
-                          </div>
-                          {p.unitMeasure?.name && (
-                            <p className="text-xs text-muted-foreground mt-1">
-                              {p.unitMeasure.name}
-                            </p>
-                          )}
-                        </td>
-                        <td className="py-2 px-2 text-right">
-                          ${p.price.toFixed(2)}
-                        </td>
-                        <td className="py-2 px-2 text-right">
-                          ${p.discount.toFixed(2)}
-                        </td>
-                        <td className="py-2 px-2 text-right">
-                          ${p.subtotal.toFixed(2)}
-                        </td>
-                        <td className="py-2 px-2 text-right">
-                          ${p.taxValue.toFixed(2)}
-                        </td>
-                        <td className="py-2 px-2 text-center">
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => handleRemoveProduct(p.id)}
-                          >
-                            <Trash2Icon className="h-4 w-4 text-red-500" />
-                          </Button>
+                  </thead>
+
+                  <tbody>
+                    {products.length === 0 ? (
+                      <tr>
+                        <td
+                          colSpan={8}
+                          className="text-center py-4 text-muted-foreground"
+                        >
+                          No hay productos agregados
                         </td>
                       </tr>
-                    ))
-                  )}
-                </tbody>
-              </table>
-            </ScrollArea>
+                    ) : (
+                      products.map((p) => (
+                        <tr key={p.id} className="border-b last:border-b-0">
+                          <td className="py-2 px-2 whitespace-nowrap">
+                            {p.sku}
+                          </td>
+                          <td className="py-2 px-2">{p.name}</td>
+
+                          <td className="py-2 px-2">
+                            <div className="flex items-center gap-2 whitespace-nowrap">
+                              <Input
+                                type="number"
+                                step="0.01"
+                                min={1}
+                                value={p.quantity}
+                                onChange={(e) =>
+                                  handleQuantityChange(
+                                    p.id,
+                                    Number(e.target.value)
+                                  )
+                                }
+                                className="h-8 w-20 px-2 text-center text-sm"
+                              />
+
+                              <Button
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                onClick={() => onOpenUnitMeasureModal(p.id)}
+                                className="h-8 px-2 text-xs"
+                              >
+                                {p.unitMeasure?.code ?? "UND"}
+                              </Button>
+                            </div>
+
+                            {p.unitMeasure?.name && (
+                              <p className="mt-1 text-xs text-muted-foreground">
+                                {p.unitMeasure.name}
+                              </p>
+                            )}
+                          </td>
+
+                          <td className="py-2 px-2 text-right whitespace-nowrap">
+                            ${p.price.toFixed(2)}
+                          </td>
+                          <td className="py-2 px-2 text-right whitespace-nowrap">
+                            ${p.discount.toFixed(2)}
+                          </td>
+                          <td className="py-2 px-2 text-right whitespace-nowrap">
+                            ${p.subtotal.toFixed(2)}
+                          </td>
+                          <td className="py-2 px-2 text-right whitespace-nowrap">
+                            ${p.taxValue.toFixed(2)}
+                          </td>
+
+                          <td className="py-2 px-2 text-center">
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => handleRemoveProduct(p.id)}
+                              className="h-8 w-8"
+                            >
+                              <Trash2Icon className="h-4 w-4 text-red-500" />
+                            </Button>
+                          </td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
           </CardContent>
         </Card>
       </div>
-
       <div className="md:w-1/4 flex flex-col gap-4">
         <Card>
           <CardHeader>

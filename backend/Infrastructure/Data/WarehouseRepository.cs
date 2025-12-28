@@ -61,7 +61,8 @@ public class WarehouseRepository(StoreContext context, IHttpContextAccessor http
             {
                 Code = newWarehouseCode,
                 Name = warehouseCreateReqDto.Name,
-                Address = warehouseCreateReqDto.Address
+                Address = warehouseCreateReqDto.Address,
+                BusinessId = businessId
             };
 
             context.Warehouses.Add(newWarehouse);

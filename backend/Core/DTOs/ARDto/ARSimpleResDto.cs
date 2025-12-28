@@ -1,10 +1,12 @@
 namespace Core.DTOs.ARDto;
 
-public class AccountsReceivableResDto
+using Core.DTOs.CustomerDto;
+
+public class ARSimpleResDto
 {
     public int Id { get; set; }
-    public int InvoiceId { get; set; }
-    public int CustomerId { get; set; }
+    public ARInvoiceSimpleResDto? Invoice { get; set; }
+    public CustomerResDto? Customer { get; set; }
     public DateTime IssueDate { get; set; }
     public DateTime DueDate { get; set; }
     public DateTime? ExpectedPaymentDate { get; set; }

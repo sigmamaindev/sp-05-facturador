@@ -18,7 +18,6 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   Select,
   SelectContent,
@@ -61,62 +60,73 @@ export default function InvoiceCreatePayment({
   const [confirmOpen, setConfirmOpen] = useState(false);
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-      <Card className="md:col-span-2">
-        <CardHeader>
-          <CardTitle>Productos seleccionados</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <ScrollArea className="max-h-[420px]">
-            <table className="w-full border-collapse">
-              <thead>
-                <tr className="border-b text-left">
-                  <th className="py-2 px-2">Código</th>
-                  <th className="py-2 px-2">Nombre</th>
-                  <th className="py-2 px-2">Cant.</th>
-                  <th className="py-2 px-2 text-right">Base IVA</th>
-                  <th className="py-2 px-2 text-right">IVA</th>
-                  <th className="py-2 px-2 text-right">Total</th>
-                </tr>
-              </thead>
-              <tbody>
-                {products.length === 0 ? (
-                  <tr>
-                    <td
-                      colSpan={6}
-                      className="py-4 text-center text-muted-foreground"
-                    >
-                      No hay productos agregados
-                    </td>
-                  </tr>
-                ) : (
-                  products.map((product) => (
-                    <tr key={product.id} className="border-b">
-                      <td className="py-2 px-2">{product.sku}</td>
-                      <td className="py-2 px-2">{product.name}</td>
-                      <td className="py-2 px-2">{product.quantity}</td>
-                      <td className="py-2 px-2 text-right">
-                        ${product.subtotal.toFixed(2)}
-                      </td>
-                      <td className="py-2 px-2 text-right">
-                        ${product.taxValue.toFixed(2)}
-                      </td>
-                      <td className="py-2 px-2 text-right">
-                        ${(product.subtotal + product.taxValue).toFixed(2)}
-                      </td>
+    <div className="flex flex-col md:flex-row gap-4">
+      <div className="md:w-3/4">
+        <Card className="md:col-span-2">
+          <CardHeader>
+            <CardTitle>Productos seleccionados</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="max-h-[400px] overflow-auto rounded-md border">
+              <div className="min-w-[500px]">
+                <table className="w-full border-collapse">
+                  <thead className="sticky top-0 z-10 bg-background">
+                    <tr className="border-b text-left">
+                      <th className="py-2 px-2">Código</th>
+                      <th className="py-2 px-2">Nombre</th>
+                      <th className="py-2 px-2">Cant.</th>
+                      <th className="py-2 px-2 text-right">Base IVA</th>
+                      <th className="py-2 px-2 text-right">IVA</th>
+                      <th className="py-2 px-2 text-right">Total</th>
                     </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-          </ScrollArea>
-        </CardContent>
-      </Card>
+                  </thead>
 
-      <div className="flex flex-col gap-4">
+                  <tbody>
+                    {products.length === 0 ? (
+                      <tr>
+                        <td
+                          colSpan={6}
+                          className="py-4 text-center text-muted-foreground"
+                        >
+                          No hay productos agregados
+                        </td>
+                      </tr>
+                    ) : (
+                      products.map((product) => (
+                        <tr
+                          key={product.id}
+                          className="border-b last:border-b-0"
+                        >
+                          <td className="py-2 px-2 whitespace-nowrap">
+                            {product.sku}
+                          </td>
+                          <td className="py-2 px-2">{product.name}</td>
+                          <td className="py-2 px-2 whitespace-nowrap">
+                            {product.quantity}
+                          </td>
+                          <td className="py-2 px-2 text-right whitespace-nowrap">
+                            ${product.subtotal.toFixed(2)}
+                          </td>
+                          <td className="py-2 px-2 text-right whitespace-nowrap">
+                            ${product.taxValue.toFixed(2)}
+                          </td>
+                          <td className="py-2 px-2 text-right whitespace-nowrap">
+                            ${(product.subtotal + product.taxValue).toFixed(2)}
+                          </td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+      <div className="md:w-1/4 flex flex-col gap-4">
         <Card>
           <CardHeader>
-            <CardTitle>Datos del cliente</CardTitle>
+            <CardTitle>CLIENTE</CardTitle>
           </CardHeader>
           <CardContent className="space-y-1 text-sm">
             <p className="font-semibold">{customer?.name}</p>
@@ -129,7 +139,6 @@ export default function InvoiceCreatePayment({
             )}
           </CardContent>
         </Card>
-
         <Card>
           <CardHeader>
             <CardTitle>Confirmar pago</CardTitle>
@@ -189,12 +198,12 @@ export default function InvoiceCreatePayment({
                   className="w-full"
                   disabled={loading || totals.total <= 0}
                 >
-                  Confirmar pago y marcar como pendiente
+                  Confirmar pago
                 </Button>
               </AlertDialogTrigger>
               <AlertDialogContent>
                 <AlertDialogHeader>
-                  <AlertDialogTitle>Confirmar envío</AlertDialogTitle>
+                  <AlertDialogTitle>Confirmar pago</AlertDialogTitle>
                   <AlertDialogDescription>
                     Se actualizará el pago y la factura pasará de borrador a
                     pendiente para ser enviada al SRI. ¿Desea continuar?
@@ -210,7 +219,7 @@ export default function InvoiceCreatePayment({
                       }}
                       disabled={loading}
                     >
-                      {loading ? "Guardando pago..." : "Confirmar"}
+                      {loading ? "Guardando pago..." : "Pagar"}
                     </Button>
                   </AlertDialogAction>
                 </AlertDialogFooter>

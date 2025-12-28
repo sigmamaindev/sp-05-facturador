@@ -14,6 +14,7 @@ interface AuthContextType {
   login: (formdata: UserLoginForm) => void;
   logout: () => void;
   isAuthenticated: boolean;
+  isAuthReady: boolean;
   error: string | null;
   isPending: boolean;
 }
@@ -32,12 +33,15 @@ export default function AuthProvider({
   const [user, setUser] = useState<AuthData | null>(null);
   const [token, setToken] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [isAuthReady, setIsAuthReady] = useState(false);
 
   const navigate = useNavigate();
 
   useEffect(() => {
     const storedToken = localStorage.getItem("AUTH_TOKEN");
     const storedUser = localStorage.getItem("AUTH_USER");
+
+    let timer: ReturnType<typeof setTimeout> | undefined;
 
     if (storedToken && storedUser) {
       try {
@@ -51,14 +55,18 @@ export default function AuthProvider({
           setUser(JSON.parse(storedUser));
 
           const timeLeft = decoded.exp - now;
-          const timer = setTimeout(() => logout(), timeLeft * 1000);
-
-          return () => clearTimeout(timer);
+          timer = setTimeout(() => logout(), timeLeft * 1000);
         }
       } catch {
         logout();
       }
     }
+
+    setIsAuthReady(true);
+
+    return () => {
+      if (timer) clearTimeout(timer);
+    };
   }, []);
 
   const { mutate: loginMutation, isPending } = useMutation<
@@ -114,6 +122,7 @@ export default function AuthProvider({
         login,
         logout,
         isAuthenticated: !!token,
+        isAuthReady,
         error,
         isPending,
       }}

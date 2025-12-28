@@ -236,7 +236,7 @@ public class InvoiceRepository(
                 .Take(limit)
                 .ToListAsync();
 
-            var invoices = invoiceList.Select(i => invoiceDtoFactory.InvoiceSimpleRes(i)).ToList();
+            var invoices = invoiceList.Select(invoiceDtoFactory.InvoiceSimpleRes).ToList();
 
             response.Success = true;
             response.Message = "Listado de facturas obtenido correctamente.";
