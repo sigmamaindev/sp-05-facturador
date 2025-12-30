@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Controller, useForm, useWatch } from "react-hook-form";
+import { Controller, useFieldArray, useForm, useWatch } from "react-hook-form";
 import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
 
@@ -35,39 +35,60 @@ export default function ProductCreateForm({
 }: ProductCreateFormProps) {
   const [savingProduct, setSavingProduct] = useState(false);
 
+  const defaultTaxId = taxes.find((t) => t.code === "4")?.id ?? taxes[0]?.id ?? 0;
+  const defaultUnitMeasureId = unitMeasures[0]?.id ?? 0;
+
   const {
     control,
     setValue,
     register,
     handleSubmit,
     formState: { errors },
-  } = useForm<CreateProductForm>();
+  } = useForm<CreateProductForm>({
+    defaultValues: {
+      type: "BIEN",
+      taxId: defaultTaxId,
+      defaultPresentation: {
+        unitMeasureId: defaultUnitMeasureId,
+        price01: 0,
+        price02: 0,
+        price03: 0,
+        price04: 0,
+        netWeight: 0,
+        grossWeight: 0,
+        isActive: true,
+      },
+      presentations: [],
+    },
+  });
 
-  const hasIva = useWatch({ control, name: "iva" });
   const productType = useWatch({ control, name: "type" });
 
   useEffect(() => {
-    if (!hasIva) {
-      const ivaZero = taxes.find((t) => t.code === "0");
-      if (ivaZero) {
-        setValue("taxId", ivaZero.id);
-      }
-    } else {
-      const defaultIva = taxes.find((t) => t.code === "4");
-      if (defaultIva) {
-        setValue("taxId", defaultIva.id);
-      }
-    }
-  }, [hasIva, taxes, setValue]);
+    if (!taxes.length) return;
+
+    setValue("taxId", defaultTaxId);
+  }, [defaultTaxId, taxes.length, setValue]);
 
   useEffect(() => {
+    if (!unitMeasures.length) return;
+
     if (productType === "SERVICIO") {
       const defaultUnit = unitMeasures.find((u) => u.code === "UND");
       if (defaultUnit) {
-        setValue("unitMeasureId", defaultUnit.id);
+        setValue("defaultPresentation.unitMeasureId", defaultUnit.id);
       }
+      return;
     }
+
+    setValue("defaultPresentation.unitMeasureId", defaultUnitMeasureId);
   }, [productType, unitMeasures, setValue]);
+
+  const { fields, append, remove } = useFieldArray({
+    control,
+    name: "presentations",
+    keyName: "fieldKey",
+  });
 
   const onSubmit = async (data: CreateProductForm) => {
     try {
@@ -75,7 +96,7 @@ export default function ProductCreateForm({
 
       const response = await createProduct(data, token!);
 
-      onNext(response.data);
+      if (response.data) onNext(response.data);
 
       toast.success(response.message);
     } catch (err: any) {
@@ -108,7 +129,7 @@ export default function ProductCreateForm({
           id="name"
           type="text"
           placeholder="Nombre"
-          {...register("name", { required: "El código es obligatorio" })}
+          {...register("name", { required: "El nombre es obligatorio" })}
         />
         {errors.name && (
           <p className="text-red-500 text-sm">{errors.name.message}</p>
@@ -126,77 +147,28 @@ export default function ProductCreateForm({
           <p className="text-red-500 text-sm">{errors.description.message}</p>
         )}
       </div>
-      <div className="grid gap-2">
-        <Label htmlFor="price">Precio</Label>
-        <Input
-          id="price"
-          type="number"
-          step="0.01"
-          inputMode="decimal"
-          placeholder="Precio"
-          {...register("price", {
-            required: "El precio es obligatorio",
-            valueAsNumber: true,
-          })}
-        />
-        {errors.price && (
-          <p className="text-red-500 text-sm">{errors.price.message}</p>
-        )}
-      </div>
-      <Controller
-        name="iva"
-        control={control}
-        rules={{ required: "Debe escoger una opción" }}
-        render={({ field }) => (
-          <div className="grid gap-2">
-            <Label>¿Tiene IVA?</Label>
-            <Select
-              onValueChange={(val) => field.onChange(val === "true")}
-              value={field.value?.toString() ?? ""}
-            >
-              <SelectTrigger className="w-full">
-                <SelectValue placeholder="Seleccionar una opción" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="true">Sí</SelectItem>
-                <SelectItem value="false">No</SelectItem>
-              </SelectContent>
-            </Select>
-            {errors.iva && (
-              <p className="text-red-500 text-sm">{errors.iva.message}</p>
-            )}
-          </div>
-        )}
-      />
       <Controller
         name="taxId"
         control={control}
         rules={{
-          required: hasIva ? "Debe seleccionar un tipo de IVA" : undefined,
+          required: "Debe seleccionar un impuesto",
         }}
         render={({ field }) => (
           <div className="grid gap-2">
-            <Label>Tipo de IVA</Label>
+            <Label>Impuesto</Label>
             <Select
-              disabled={!hasIva}
               onValueChange={(val) => field.onChange(Number(val))}
               value={field.value ? String(field.value) : ""}
             >
               <SelectTrigger className="w-full">
-                <SelectValue
-                  placeholder={
-                    hasIva ? "Seleccionar tipo de IVA" : "IVA 0% automático"
-                  }
-                />
+                <SelectValue placeholder="Seleccionar impuesto" />
               </SelectTrigger>
               <SelectContent>
-                {taxes
-                  .filter((t) => t.code !== "0")
-                  .map((t) => (
-                    <SelectItem key={t.id} value={String(t.id)}>
-                      {t.name}
-                    </SelectItem>
-                  ))}
+                {taxes.map((t) => (
+                  <SelectItem key={t.id} value={String(t.id)}>
+                    {t.code} - {t.name}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
             {errors.taxId && (
@@ -231,7 +203,7 @@ export default function ProductCreateForm({
         )}
       />
       <Controller
-        name="unitMeasureId"
+        name="defaultPresentation.unitMeasureId"
         control={control}
         rules={{
           required: "Seleccione una unidad de medida",
@@ -255,14 +227,197 @@ export default function ProductCreateForm({
                 ))}
               </SelectContent>
             </Select>
-            {errors.unitMeasureId && (
+            {errors.defaultPresentation?.unitMeasureId && (
               <p className="text-red-500 text-sm">
-                {errors.unitMeasureId.message}
+                {errors.defaultPresentation?.unitMeasureId.message}
               </p>
             )}
           </div>
         )}
       />
+      <div className="grid gap-2">
+        <Label htmlFor="defaultPrice01">Precio</Label>
+        <Input
+          id="defaultPrice01"
+          type="number"
+          step="0.01"
+          inputMode="decimal"
+          placeholder="Precio"
+          {...register("defaultPresentation.price01", {
+            required: "El precio es obligatorio",
+            valueAsNumber: true,
+          })}
+        />
+        {errors.defaultPresentation?.price01 && (
+          <p className="text-red-500 text-sm">
+            {errors.defaultPresentation.price01.message}
+          </p>
+        )}
+      </div>
+
+      <input
+        type="hidden"
+        {...register("defaultPresentation.price02", { valueAsNumber: true })}
+        defaultValue={0}
+      />
+      <input
+        type="hidden"
+        {...register("defaultPresentation.price03", { valueAsNumber: true })}
+        defaultValue={0}
+      />
+      <input
+        type="hidden"
+        {...register("defaultPresentation.price04", { valueAsNumber: true })}
+        defaultValue={0}
+      />
+      <input
+        type="hidden"
+        {...register("defaultPresentation.netWeight", { valueAsNumber: true })}
+        defaultValue={0}
+      />
+      <input
+        type="hidden"
+        {...register("defaultPresentation.grossWeight", { valueAsNumber: true })}
+        defaultValue={0}
+      />
+      <input
+        type="hidden"
+        {...register("defaultPresentation.isActive", {
+          setValueAs: (v) => v === "true",
+        })}
+        defaultValue="true"
+      />
+
+      <div className="md:col-span-2 mt-4 space-y-3">
+        <div className="flex items-center justify-between">
+          <h3 className="text-sm font-medium">Presentaciones adicionales</h3>
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() =>
+              append({
+                unitMeasureId: defaultUnitMeasureId,
+                price01: 0,
+                price02: 0,
+                price03: 0,
+                price04: 0,
+                netWeight: 0,
+                grossWeight: 0,
+                isActive: true,
+              })
+            }
+          >
+            Agregar
+          </Button>
+        </div>
+
+        {fields.length ? (
+          <div className="space-y-4">
+            {fields.map((field, index) => (
+              <div
+                key={field.fieldKey}
+                className="grid grid-cols-1 md:grid-cols-2 gap-4 rounded-md border p-4"
+              >
+                <Controller
+                  name={`presentations.${index}.unitMeasureId`}
+                  control={control}
+                  rules={{ required: "Seleccione una unidad de medida" }}
+                  render={({ field }) => (
+                    <div className="grid gap-2">
+                      <Label>Unidad de medida</Label>
+                      <Select
+                        onValueChange={(val) => field.onChange(Number(val))}
+                        value={field.value ? String(field.value) : ""}
+                      >
+                        <SelectTrigger className="w-full">
+                          <SelectValue placeholder="Seleccionar unidad" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {unitMeasures.map((um) => (
+                            <SelectItem key={um.id} value={String(um.id)}>
+                              {um.code} - {um.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  )}
+                />
+
+                <div className="grid gap-2">
+                  <Label>Precio</Label>
+                  <Input
+                    type="number"
+                    step="0.01"
+                    inputMode="decimal"
+                    {...register(`presentations.${index}.price01`, {
+                      required: "El precio es obligatorio",
+                      valueAsNumber: true,
+                    })}
+                  />
+                </div>
+
+                <input
+                  type="hidden"
+                  {...register(`presentations.${index}.price02`, {
+                    valueAsNumber: true,
+                  })}
+                  defaultValue={0}
+                />
+                <input
+                  type="hidden"
+                  {...register(`presentations.${index}.price03`, {
+                    valueAsNumber: true,
+                  })}
+                  defaultValue={0}
+                />
+                <input
+                  type="hidden"
+                  {...register(`presentations.${index}.price04`, {
+                    valueAsNumber: true,
+                  })}
+                  defaultValue={0}
+                />
+                <input
+                  type="hidden"
+                  {...register(`presentations.${index}.netWeight`, {
+                    valueAsNumber: true,
+                  })}
+                  defaultValue={0}
+                />
+                <input
+                  type="hidden"
+                  {...register(`presentations.${index}.grossWeight`, {
+                    valueAsNumber: true,
+                  })}
+                  defaultValue={0}
+                />
+                <input
+                  type="hidden"
+                  {...register(`presentations.${index}.isActive`, {
+                    setValueAs: (v) => v === "true",
+                  })}
+                  defaultValue="true"
+                />
+
+                <div className="md:col-span-2 flex justify-end">
+                  <Button
+                    type="button"
+                    variant="destructive"
+                    onClick={() => remove(index)}
+                  >
+                    Quitar
+                  </Button>
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <p className="text-sm text-muted-foreground">
+            No hay presentaciones adicionales.
+          </p>
+        )}
+      </div>
       <div className="md:col-span-2 flex justify-end mt-4">
         <Button type="submit" disabled={savingProduct}>
           {savingProduct ? (

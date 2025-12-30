@@ -1,17 +1,8 @@
 import type { Customer } from "./customer.types";
 
-export type AccountsReceivableStatus = "ABIERTO" | "CERRADO" | "ANULADO" | string;
-
-export type AccountsReceivableTransactionType =
-  | "CARGO"
-  | "ABONO"
-  | "PAGO"
-  | "ANULACION"
-  | string;
-
 export type AccountsReceivableTransaction = {
   id: number;
-  arTransactionType: AccountsReceivableTransactionType;
+  arTransactionType: string;
   amount: number;
   paymentMethod: string | null;
   reference: string;
@@ -50,25 +41,6 @@ export type AccountsReceivable = {
   paymentMethod: string;
   originalAmount: number;
   balance: number;
-  status: AccountsReceivableStatus;
-};
-
-export type AccountsReceivableDetail = {
-  id: number;
-  establishmentCode: string;
-  emissionPointCode: string;
-  sequential: string;
-  accessKey: string;
-  authorizationNumber: string | null;
-  environment: string;
-  receiptType: string;
-  status: AccountsReceivableStatus;
-  isElectronic: boolean;
-  invoiceDate: string;
-  authorizationDate: string | null;
-  originalAmount: number;
-  paymentMethod: string;
-  paymentTermDays: number;
-  dueDate: string;
+  status: string;
   transactions: AccountsReceivableTransaction[];
 };

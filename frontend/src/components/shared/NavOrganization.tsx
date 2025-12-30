@@ -14,10 +14,17 @@ import {
   SidebarMenuSubButton,
   SidebarMenuSubItem,
 } from "@/components/ui/sidebar";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
+
+function isPathActive(pathname: string, to: string) {
+  if (to === "/") return pathname === "/";
+  return pathname === to || pathname.startsWith(`${to}/`);
+}
 
 export default function NavOrganization({
   items,
+  open,
+  onOpenChange,
 }: {
   items: {
     label: string;
@@ -28,13 +35,26 @@ export default function NavOrganization({
       icon: LucideIcon;
     }[];
   };
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
 }) {
+  const { pathname } = useLocation();
+  const isGroupActive = items.items.some((subItem) =>
+    isPathActive(pathname, subItem.to),
+  );
+
   return (
     <SidebarMenu>
-      <Collapsible key={items.label} asChild className="group/collapsible">
+      <Collapsible
+        key={items.label}
+        asChild
+        className="group/collapsible"
+        open={open}
+        onOpenChange={onOpenChange}
+      >
         <SidebarMenuItem>
           <CollapsibleTrigger asChild>
-            <SidebarMenuButton tooltip={items.label}>
+            <SidebarMenuButton tooltip={items.label} isActive={isGroupActive}>
               {<items.icon />}
               <span>{items.label}</span>
               <ChevronRight className="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
@@ -44,7 +64,10 @@ export default function NavOrganization({
             <SidebarMenuSub>
               {items.items.map((subItem) => (
                 <SidebarMenuSubItem key={subItem.label}>
-                  <SidebarMenuSubButton asChild>
+                  <SidebarMenuSubButton
+                    asChild
+                    isActive={isPathActive(pathname, subItem.to)}
+                  >
                     <Link to={subItem.to}>
                       <span>{subItem.label}</span>
                     </Link>

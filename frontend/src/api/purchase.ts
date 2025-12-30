@@ -3,7 +3,11 @@ import { isAxiosError } from "axios";
 import api from "@/utils/axios";
 
 import type { ApiResponseList, ApiResponseSingle } from "@/types/api.types";
-import type { CreatePurchaseForm, Purchase } from "@/types/purchase.type";
+import type {
+  CreatePurchaseForm,
+  CreatePurchasePayload,
+  Purchase,
+} from "@/types/purchase.type";
 
 export async function getPurchases(
   keyword: string,
@@ -55,7 +59,7 @@ export async function getPurchaseById(
 }
 
 export async function createPurchase(
-  body: CreatePurchaseForm,
+  body: CreatePurchasePayload,
   token: string
 ): Promise<ApiResponseSingle<Purchase>> {
   try {

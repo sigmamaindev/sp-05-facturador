@@ -1,6 +1,7 @@
-import { useState } from "react";
-import { useForm, Controller } from "react-hook-form";
-
+import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { useForm, Controller, useWatch } from "react-hook-form";
+import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
 
 import type { Role } from "@/types/role.types";
@@ -20,43 +21,79 @@ import {
 } from "@/components/ui/select";
 
 import { createUser } from "@/api/user";
+import { getEmissionPoints } from "@/api/emissionPoint";
 
 interface UserCreateFormProps {
   roles: Role[];
   establishments: Establishment[];
-  emissionPoints: EmissionPoint[];
   token: string | null;
 }
 
 export default function UserCreateForm({
   roles,
   establishments,
-  emissionPoints,
   token,
 }: UserCreateFormProps) {
+  const navigate = useNavigate();
+
   const [savingUser, setSavingUser] = useState(false);
+  const [emissionPoints, setEmissionPoints] = useState<EmissionPoint[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const {
     control,
     register,
     handleSubmit,
-    reset,
+    setValue,
     formState: { errors },
   } = useForm<CreateUserForm>();
+
+  const establishmentId = useWatch({ control, name: "establishmentId" });
+
+  const fetchAllData = async () => {
+    if (!establishmentId) {
+      setEmissionPoints([]);
+      setValue("emissionPointId", undefined as any);
+      return;
+    }
+
+    try {
+      setLoading(true);
+
+      setValue("emissionPointId", undefined as any);
+
+      const res = await getEmissionPoints(establishmentId, "", 1, 200, token!);
+      setEmissionPoints(res.data);
+    } catch (err: any) {
+      setEmissionPoints([]);
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchAllData();
+  }, [establishmentId, token, setValue]);
 
   const onSubmit = async (data: CreateUserForm) => {
     try {
       setSavingUser(true);
 
-      await createUser(data, token!);
+      const response = await createUser(data, token!);
 
-      reset();
+      toast.success(response.message);
+
+      navigate("/clientes");
     } catch (err: any) {
-      console.log(err.message);
+      toast.error(err.message);
     } finally {
       setSavingUser(false);
     }
   };
+
+  const emissionDisabled = !establishmentId || loading || !!error;
 
   return (
     <form
@@ -243,18 +280,31 @@ export default function UserCreateForm({
             <Select
               onValueChange={(val) => field.onChange(Number(val))}
               value={field.value ? String(field.value) : ""}
+              disabled={emissionDisabled}
             >
               <SelectTrigger className="w-full">
-                <SelectValue placeholder="Seleccionar punto de emisión" />
+                <SelectValue
+                  placeholder={
+                    !establishmentId
+                      ? "Seleccione un establecimiento primero"
+                      : loading
+                      ? "Cargando puntos de emisión..."
+                      : error
+                      ? "Error cargando puntos de emisión"
+                      : "Seleccionar punto de emisión"
+                  }
+                />
               </SelectTrigger>
               <SelectContent>
                 {emissionPoints.map((p) => (
                   <SelectItem key={p.id} value={p.id.toString()}>
-                    {p.code}
+                    {p.description}
                   </SelectItem>
                 ))}
               </SelectContent>
             </Select>
+
+            {error && <p className="text-red-500 text-sm">{error}</p>}
             {errors.emissionPointId && (
               <p className="text-red-500 text-sm">
                 {errors.emissionPointId.message}

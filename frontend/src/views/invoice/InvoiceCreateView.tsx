@@ -5,11 +5,17 @@ import { toast } from "sonner";
 
 import { useAuth } from "@/contexts/AuthContext";
 
+import {
+  PaymentMethodCode,
+  type PaymentMethodCode as PaymentMethodCodeType,
+} from "@/constants/paymentMethods";
+
 import type { Customer } from "@/types/customer.types";
 import type { Product } from "@/types/product.types";
-import type { UnitMeasure } from "@/types/unitMeasure.types";
+import type { ProductPresentation } from "@/types/product.types";
 
 import { createInvoice, updateInvoicePayment } from "@/api/invoice";
+import { getProductById } from "@/api/product";
 
 import { Card, CardContent } from "@/components/ui/card";
 
@@ -25,6 +31,17 @@ import InvoiceCreateHeader from "./InvoiceCreateHeader";
 import InvoiceCreateForm from "./InvoiceCreateForm";
 import InvoiceCreatePayment from "./InvoiceCreatePayment";
 
+const PAYMENT_METHOD_VALUES = Object.values(
+  PaymentMethodCode
+) as PaymentMethodCodeType[];
+
+function isPaymentMethodCode(v: unknown): v is PaymentMethodCodeType {
+  return (
+    typeof v === "string" &&
+    PAYMENT_METHOD_VALUES.includes(v as PaymentMethodCodeType)
+  );
+}
+
 export default function InvoiceCreateView() {
   const navigate = useNavigate();
 
@@ -37,13 +54,15 @@ export default function InvoiceCreateView() {
   const [customer, setCustomer] = useState<Customer | null>(null);
   const [openProductModal, setOpenProductModal] = useState(false);
   const [products, setProducts] = useState<InvoiceProduct[]>([]);
-  const [openUnitMeasureModal, setOpenUnitMeasureModal] = useState(false);
-  const [productIdForUnitMeasure, setProductIdForUnitMeasure] = useState<
+  const [openPresentationModal, setOpenPresentationModal] = useState(false);
+  const [productIdForPresentation, setProductIdForPresentation] = useState<
     number | null
   >(null);
   const [currentStep, setCurrentStep] = useState<1 | 2>(1);
   const [draftInvoice, setDraftInvoice] = useState<Invoice | null>(null);
-  const [paymentMethod, setPaymentMethod] = useState("01");
+  const [paymentMethod, setPaymentMethod] = useState<PaymentMethodCodeType>(
+    PaymentMethodCode.NFS
+  );
   const [paymentTermDays, setPaymentTermDays] = useState(0);
 
   const { setValue, handleSubmit } = useForm<CreateInvoiceForm>({
@@ -59,7 +78,7 @@ export default function InvoiceCreateView() {
       discountTotal: 0,
       taxTotal: 0,
       totalInvoice: 0,
-      paymentMethod: "",
+      paymentMethod: PaymentMethodCode.NFS,
       paymentTermDays: 0,
       description: "",
       additionalInformation: "",
@@ -94,11 +113,14 @@ export default function InvoiceCreateView() {
       const price = product.price ?? 0;
       const discount = 0;
       const base = price - discount;
-      const ivaRate = product.tax.rate ?? 12;
+      const ivaRate = product.tax?.rate ?? 12;
       const taxValue = base * (ivaRate / 100);
 
-      const newProduct = {
+      const newProduct: InvoiceProduct = {
         ...product,
+        price,
+        netWeight: 0,
+        grossWeight: 0,
         quantity: 1,
         discount: discount,
         subtotal: base,
@@ -109,26 +131,81 @@ export default function InvoiceCreateView() {
     });
   };
 
-  const handleOpenUnitMeasureModal = (productId: number) => {
-    setProductIdForUnitMeasure(productId);
-    setOpenUnitMeasureModal(true);
+  const handleOpenPresentationModal = async (productId: number) => {
+    setProductIdForPresentation(productId);
+    setOpenPresentationModal(true);
+
+    const current = products.find((p) => p.id === productId);
+    if (!token || !current) return;
+    if (current.defaultPresentation || current.presentations?.length) return;
+
+    try {
+      const fetched = await getProductById(productId, token);
+      if (!fetched.data) return;
+
+      setProducts((prev) =>
+        prev.map((p) =>
+          p.id === productId
+            ? {
+                ...fetched.data,
+                ...p,
+                defaultPresentation:
+                  fetched.data.defaultPresentation ?? p.defaultPresentation,
+                presentations: fetched.data.presentations ?? p.presentations,
+              }
+            : p
+        )
+      );
+    } catch (err: any) {
+      toast.error(err.message);
+    }
   };
 
-  const handleCloseUnitMeasureModal = () => {
-    setOpenUnitMeasureModal(false);
-    setProductIdForUnitMeasure(null);
+  const handleClosePresentationModal = () => {
+    setOpenPresentationModal(false);
+    setProductIdForPresentation(null);
   };
 
-  const handleSelectUnitMeasure = (unitMeasure: UnitMeasure) => {
-    if (productIdForUnitMeasure == null) return;
+  const productForPresentation = useMemo(() => {
+    if (productIdForPresentation == null) return null;
+    return products.find((p) => p.id === productIdForPresentation) ?? null;
+  }, [productIdForPresentation, products]);
+
+  const handleSelectPresentation = (presentation: ProductPresentation) => {
+    if (productIdForPresentation == null) return;
 
     setProducts((prev) =>
-      prev.map((p) =>
-        p.id === productIdForUnitMeasure ? { ...p, unitMeasure } : p
-      )
+      prev.map((p) => {
+        if (p.id !== productIdForPresentation) return p;
+
+        const price = presentation.price01 ?? 0;
+        const unitMeasure = presentation.unitMeasure ?? p.unitMeasure;
+        const base = (price - p.discount) * p.quantity;
+        const ivaRate = p.tax?.rate ?? 12;
+        const taxValue = base * (ivaRate / 100);
+
+        return {
+          ...p,
+          unitMeasure,
+          price,
+          subtotal: base,
+          taxValue,
+        };
+      })
     );
 
-    handleCloseUnitMeasureModal();
+    handleClosePresentationModal();
+  };
+
+  const handleWeightChange = (
+    productId: number,
+    field: "netWeight" | "grossWeight",
+    value: number
+  ) => {
+    const nextValue = Number.isFinite(value) ? value : 0;
+    setProducts((prev) =>
+      prev.map((p) => (p.id === productId ? { ...p, [field]: nextValue } : p))
+    );
   };
 
   const handleQuantityChange = (productId: number, newQty: number) => {
@@ -136,7 +213,7 @@ export default function InvoiceCreateView() {
       prev.map((p) => {
         if (p.id === productId) {
           const base = (p.price - p.discount) * newQty;
-          const ivaRate = p.tax.rate ?? 12;
+          const ivaRate = p.tax?.rate ?? 12;
           const taxValue = base * (ivaRate / 100);
           return {
             ...p,
@@ -178,8 +255,10 @@ export default function InvoiceCreateView() {
       unitPrice: p.price,
       discount: p.discount,
       warehouseId: p.inventory[0]?.warehouseId ?? 0,
-      taxId: p.tax.id,
-      unitMeasureId: p.unitMeasure?.id,
+      taxId: p.tax?.id ?? 0,
+      unitMeasureId: p.unitMeasure?.id ?? 0,
+      netWeight: p.netWeight ?? 0,
+      grossWeight: p.grossWeight ?? 0,
     }));
 
     return {
@@ -220,7 +299,14 @@ export default function InvoiceCreateView() {
 
       if (response.data) {
         setDraftInvoice(response.data);
-        setPaymentMethod(response.data.paymentMethod ?? payload.paymentMethod);
+        
+        const pm =
+          response.data.paymentMethod ??
+          payload.paymentMethod ??
+          PaymentMethodCode.NFS;
+
+        setPaymentMethod(isPaymentMethodCode(pm) ? pm : PaymentMethodCode.NFS);
+
         setPaymentTermDays(
           response.data.paymentTermDays ?? payload.paymentTermDays
         );
@@ -291,10 +377,12 @@ export default function InvoiceCreateView() {
             setOpenProductModal={setOpenProductModal}
             handleSelectCustomer={handleSelectCustomer}
             handleSelectProduct={handleSelectProduct}
-            openUnitMeasureModal={openUnitMeasureModal}
-            onOpenUnitMeasureModal={handleOpenUnitMeasureModal}
-            onCloseUnitMeasureModal={handleCloseUnitMeasureModal}
-            handleSelectUnitMeasure={handleSelectUnitMeasure}
+            openPresentationModal={openPresentationModal}
+            presentationProduct={productForPresentation}
+            onOpenPresentationModal={handleOpenPresentationModal}
+            onClosePresentationModal={handleClosePresentationModal}
+            handleSelectPresentation={handleSelectPresentation}
+            handleWeightChange={handleWeightChange}
             handleQuantityChange={handleQuantityChange}
             handleRemoveProduct={handleRemoveProduct}
             onSaveDraft={handleSaveDraftAndExit}

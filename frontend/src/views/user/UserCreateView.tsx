@@ -4,11 +4,9 @@ import { useAuth } from "@/contexts/AuthContext";
 
 import type { Role } from "@/types/role.types";
 import type { Establishment } from "@/types/establishment.types";
-import type { EmissionPoint } from "@/types/emissionPoint.types";
 
 import { getRoles } from "@/api/role";
 import { getEstablishments } from "@/api/establishment";
-import { getEmissionPoints } from "@/api/emissionPoint";
 
 import { Card, CardContent } from "@/components/ui/card";
 
@@ -23,7 +21,6 @@ export default function UserCreateView() {
 
   const [roles, setRoles] = useState<Role[]>([]);
   const [establishments, setEstablishments] = useState<Establishment[]>([]);
-  const [emissionPoints, setEmissionPoints] = useState<EmissionPoint[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -31,15 +28,13 @@ export default function UserCreateView() {
     try {
       setLoading(true);
 
-      const [rolRes, estRes, emiRes] = await Promise.all([
+      const [rolRes, estRes] = await Promise.all([
         getRoles(token!),
         getEstablishments("", 1, 100, token!),
-        getEmissionPoints(1, "", 1, 100, token!),
       ]);
 
       setRoles(rolRes.data);
       setEstablishments(estRes.data);
-      setEmissionPoints(emiRes.data);
     } catch (err: any) {
       setError(err.message);
     } finally {
@@ -48,7 +43,7 @@ export default function UserCreateView() {
   };
 
   useEffect(() => {
-    fetchAllData();
+    if (token) fetchAllData();
   }, [token]);
 
   return (
@@ -59,9 +54,7 @@ export default function UserCreateView() {
           <Loading />
         ) : error ? (
           <AlertMessage message={error} variant="destructive" />
-        ) : !roles.length ||
-          !establishments.length ||
-          !emissionPoints.length ? (
+        ) : !roles.length || !establishments.length ? (
           <AlertMessage
             message="Los datos del catálogo no se han cargado completamente."
             variant="destructive"
@@ -70,7 +63,6 @@ export default function UserCreateView() {
           <UserCreateForm
             roles={roles}
             establishments={establishments}
-            emissionPoints={emissionPoints}
             token={token}
           />
         )}

@@ -32,7 +32,7 @@ export const columns: ColumnDef<Product>[] = [
     accessorKey: "price",
     header: "Precio",
     cell: ({ row }) => {
-      const price = row.original.price.toFixed(2);
+      const price = (row.original.price ?? 0).toFixed(2);
 
       return <span>{price}</span>;
     },

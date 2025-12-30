@@ -1,11 +1,11 @@
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 
 import { useAuth } from "@/contexts/AuthContext";
 
 import { getAccountsReceivableById } from "@/api/accountsReceivable";
 
-import type { AccountsReceivableDetail } from "@/types/accountsReceivable.types";
+import type { AccountsReceivable } from "@/types/accountsReceivable.types";
 
 import { Card, CardContent } from "@/components/ui/card";
 
@@ -20,38 +20,28 @@ export default function AccountsReceivableDetailView() {
   const { token } = useAuth();
 
   const [accountsReceivable, setAccountsReceivable] =
-    useState<AccountsReceivableDetail | null>(null);
+    useState<AccountsReceivable | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
-  const fetchData = useCallback(async () => {
-    if (!id || !token) return;
-
-    const numericId = Number(id);
-    if (Number.isNaN(numericId)) {
-      setError("ID inválido");
-      setAccountsReceivable(null);
-      setLoading(false);
-      return;
-    }
-
+  const fetchData = async () => {
     try {
       setLoading(true);
       setError(null);
 
-      const response = await getAccountsReceivableById(numericId, token);
+      const response = await getAccountsReceivableById(Number(id), token!);
 
       setAccountsReceivable(response.data);
-    } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : "Error desconocido");
+    } catch (err: any) {
+      setError(err.message);
     } finally {
       setLoading(false);
     }
-  }, [id, token]);
+  };
 
   useEffect(() => {
-    fetchData();
-  }, [fetchData]);
+    if (id && token) fetchData();
+  }, [id, token]);
 
   return (
     <Card>

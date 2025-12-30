@@ -1,22 +1,19 @@
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
+import { useState } from "react";
 
 import {
   BriefcaseBusiness,
-  Edit,
   HandHelping,
   Home,
   List,
   Power,
   User,
-  Users,
   ShoppingCart,
   Building2,
-  MapPin,
-  Warehouse,
-  Wallet,
-  HandCoins,
-  CreditCard,
   DollarSign,
+  MapPin,
+  BadgeCheck,
+  Edit,
 } from "lucide-react";
 
 import {
@@ -35,53 +32,43 @@ import {
 
 import { useAuth } from "@/contexts/AuthContext";
 import NavOrganization from "./NavOrganization";
-import NavPeople from "./NavPeople";
 import NavFinance from "./NavFinance";
 
 const data = {
-  dashboard: { to: "/", label: "Dashboard", icon: Home },
+  dashboard: { to: "/", label: "Principal", icon: Home },
   organization: {
     label: "Organización",
     icon: Building2,
     items: [
-      { to: "/empresas", label: "Empresas", icon: BriefcaseBusiness },
-      { to: "/establecimientos", label: "Establecimientos", icon: MapPin },
-      { to: "/puntos-emision", label: "Puntos de Emisión", icon: List },
-      { to: "/bodegas", label: "Bodegas", icon: Warehouse },
-    ],
-  },
-  people: {
-    label: "Personas",
-    icon: Users,
-    items: [
+      { to: "/empresas", label: "Empresa", icon: BriefcaseBusiness },
+      { to: "/certificados", label: "Cetificados", icon: BadgeCheck },
       { to: "/usuarios", label: "Usuarios", icon: User },
-      { to: "/clientes", label: "Clientes", icon: HandHelping },
-      { to: "/proveedores", label: "Proveedores", icon: HandHelping },
+      { to: "/establecimientos", label: "Establecimientos", icon: MapPin },
+      { to: "/puntos-emision", label: "Puntos de emisión", icon: List },
     ],
   },
   product: { to: "/productos", label: "Productos", icon: List },
-  finance: {
-    label: "Finanzas",
-    icon: Wallet,
+  invoices: {
+    label: "Facturas",
+    icon: DollarSign,
     items: [
-      { to: "/facturas", label: "Facturas", icon: DollarSign },
-      {
-        to: "/cuentas-por-cobrar",
-        label: "Cuentas por cobrar",
-        icon: HandCoins,
-      },
-      { to: "/compras", label: "Compras", icon: ShoppingCart },
-      {
-        to: "/cuentas-por-pagar",
-        label: "Cuentas por pagar",
-        icon: CreditCard,
-      },
+      { to: "/clientes", label: "Clientes", icon: HandHelping },
+      { to: "/facturas", label: "Ventas", icon: ShoppingCart },
     ],
   },
 };
 
+function isPathActive(pathname: string, to: string) {
+  if (to === "/") return pathname === "/";
+  return pathname === to || pathname.startsWith(`${to}/`);
+}
+
 export default function AppSidebar() {
   const { setOpenMobile } = useSidebar();
+  const { pathname } = useLocation();
+  const [openNav, setOpenNav] = useState<"organization" | "invoices" | null>(
+    null
+  );
 
   const { logout } = useAuth();
 
@@ -107,7 +94,10 @@ export default function AppSidebar() {
           <SidebarGroupContent>
             <SidebarMenu>
               <SidebarMenuItem key={data.dashboard.to}>
-                <SidebarMenuButton asChild>
+                <SidebarMenuButton
+                  asChild
+                  isActive={isPathActive(pathname, data.dashboard.to)}
+                >
                   <Link to={data.dashboard.to}>
                     <data.dashboard.icon />
                     <span>{data.dashboard.label}</span>
@@ -115,11 +105,22 @@ export default function AppSidebar() {
                 </SidebarMenuButton>
               </SidebarMenuItem>
             </SidebarMenu>
-            <NavOrganization items={data.organization} />
-            <NavPeople items={data.people} />
+            <NavOrganization
+              items={data.organization}
+              open={openNav === "organization"}
+              onOpenChange={(open) => setOpenNav(open ? "organization" : null)}
+            />
+            <NavFinance
+              items={data.invoices}
+              open={openNav === "invoices"}
+              onOpenChange={(open) => setOpenNav(open ? "invoices" : null)}
+            />
             <SidebarMenu>
               <SidebarMenuItem key={data.product.to}>
-                <SidebarMenuButton asChild>
+                <SidebarMenuButton
+                  asChild
+                  isActive={isPathActive(pathname, data.product.to)}
+                >
                   <Link to={data.product.to}>
                     <data.product.icon />
                     <span>{data.product.label}</span>
@@ -127,7 +128,6 @@ export default function AppSidebar() {
                 </SidebarMenuButton>
               </SidebarMenuItem>
             </SidebarMenu>
-            <NavFinance items={data.finance} />
           </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>

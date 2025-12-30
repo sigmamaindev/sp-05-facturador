@@ -1,5 +1,8 @@
 import { useState } from "react";
 
+import { PAYMENT_METHOD_OPTIONS } from "@/constants/paymentMethods";
+import type { PaymentMethodCode } from "@/constants/paymentMethods";
+
 import type { Customer } from "@/types/customer.types";
 import type { InvoiceProduct, InvoiceTotals } from "@/types/invoice.type";
 
@@ -26,19 +29,13 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
-const paymentOptions = [
-  { value: "01", label: "Efectivo" },
-  { value: "19", label: "Tarjeta de crédito" },
-  { value: "20", label: "Tarjeta de débito" },
-];
-
 interface InvoiceCreatePaymentProps {
   customer: Customer | null;
   products: InvoiceProduct[];
   totals: InvoiceTotals;
-  paymentMethod: string;
+  paymentMethod: PaymentMethodCode;
   paymentTermDays: number;
-  onPaymentMethodChange: (value: string) => void;
+  onPaymentMethodChange: (value: PaymentMethodCode) => void;
   onPaymentTermChange: (value: number) => void;
   onConfirmPayment: () => void;
   loading: boolean;
@@ -68,13 +65,15 @@ export default function InvoiceCreatePayment({
           </CardHeader>
           <CardContent>
             <div className="max-h-[400px] overflow-auto rounded-md border">
-              <div className="min-w-[500px]">
+              <div className="min-w-[750px]">
                 <table className="w-full border-collapse">
                   <thead className="sticky top-0 z-10 bg-background">
                     <tr className="border-b text-left">
                       <th className="py-2 px-2">Código</th>
                       <th className="py-2 px-2">Nombre</th>
                       <th className="py-2 px-2">Cant.</th>
+                      <th className="py-2 px-2 text-right">P. Neto</th>
+                      <th className="py-2 px-2 text-right">P. Bruto</th>
                       <th className="py-2 px-2 text-right">Base IVA</th>
                       <th className="py-2 px-2 text-right">IVA</th>
                       <th className="py-2 px-2 text-right">Total</th>
@@ -85,7 +84,7 @@ export default function InvoiceCreatePayment({
                     {products.length === 0 ? (
                       <tr>
                         <td
-                          colSpan={6}
+                          colSpan={8}
                           className="py-4 text-center text-muted-foreground"
                         >
                           No hay productos agregados
@@ -103,6 +102,12 @@ export default function InvoiceCreatePayment({
                           <td className="py-2 px-2">{product.name}</td>
                           <td className="py-2 px-2 whitespace-nowrap">
                             {product.quantity}
+                          </td>
+                          <td className="py-2 px-2 text-right whitespace-nowrap">
+                            {Number(product.netWeight ?? 0).toFixed(2)}
+                          </td>
+                          <td className="py-2 px-2 text-right whitespace-nowrap">
+                            {Number(product.grossWeight ?? 0).toFixed(2)}
                           </td>
                           <td className="py-2 px-2 text-right whitespace-nowrap">
                             ${product.subtotal.toFixed(2)}
@@ -141,7 +146,7 @@ export default function InvoiceCreatePayment({
         </Card>
         <Card>
           <CardHeader>
-            <CardTitle>Confirmar pago</CardTitle>
+            <CardTitle>CONFIRMAR PAGO</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-2">
@@ -154,7 +159,7 @@ export default function InvoiceCreatePayment({
                   <SelectValue placeholder="Seleccionar método" />
                 </SelectTrigger>
                 <SelectContent>
-                  {paymentOptions.map((option) => (
+                  {PAYMENT_METHOD_OPTIONS.map((option) => (
                     <SelectItem key={option.value} value={option.value}>
                       {option.label}
                     </SelectItem>

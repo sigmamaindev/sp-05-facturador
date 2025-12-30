@@ -34,6 +34,8 @@ interface PurchaseCreateFormProps {
   handleSelectSupplier: (supplier: PurchaseSupplier) => void;
   handleSelectProduct: (product: Product) => void;
   handleQuantityChange: (productId: number, qty: number) => void;
+  handleUnitCostChange: (productId: number, unitCost: number) => void;
+  handleDiscountChange: (productId: number, discount: number) => void;
   handleRemoveProduct: (productId: number) => void;
 }
 
@@ -49,6 +51,8 @@ export default function PurchaseCreateForm({
   handleSelectSupplier,
   handleSelectProduct,
   handleQuantityChange,
+  handleUnitCostChange,
+  handleDiscountChange,
   handleRemoveProduct,
 }: PurchaseCreateFormProps) {
   const formatDateTimeLocal = (date?: Date) => {
@@ -82,12 +86,16 @@ export default function PurchaseCreateForm({
                     </th>
                     <th className="text-left py-2 px-2 font-semibold">Cant.</th>
                     <th className="text-right py-2 px-2 font-semibold">
-                      Costo Unitario
+                      Costo Unit.
                     </th>
+                    <th className="text-right py-2 px-2 font-semibold">Desc.</th>
                     <th className="text-right py-2 px-2 font-semibold">
                       Base IVA
                     </th>
                     <th className="text-right py-2 px-2 font-semibold">IVA</th>
+                    <th className="text-right py-2 px-2 font-semibold">
+                      Total
+                    </th>
                     <th className="text-center py-2 px-2 font-semibold">
                       Acciones
                     </th>
@@ -120,14 +128,44 @@ export default function PurchaseCreateForm({
                             className="w-16 text-center"
                           />
                         </td>
-                        <td className="py-2 px-2 text-right">
-                          ${p.unitCost.toFixed(2)}
+                        <td className="py-2 px-2">
+                          <Input
+                            type="number"
+                            step="0.01"
+                            min={0}
+                            value={p.unitCost}
+                            onChange={(e) =>
+                              handleUnitCostChange(
+                                p.id,
+                                Number(e.target.value)
+                              )
+                            }
+                            className="w-28 text-right"
+                          />
+                        </td>
+                        <td className="py-2 px-2">
+                          <Input
+                            type="number"
+                            step="0.01"
+                            min={0}
+                            value={p.discount}
+                            onChange={(e) =>
+                              handleDiscountChange(
+                                p.id,
+                                Number(e.target.value)
+                              )
+                            }
+                            className="w-24 text-right"
+                          />
                         </td>
                         <td className="py-2 px-2 text-right">
                           ${p.subtotal.toFixed(2)}
                         </td>
                         <td className="py-2 px-2 text-right">
                           ${p.taxValue.toFixed(2)}
+                        </td>
+                        <td className="py-2 px-2 text-right">
+                          ${(p.subtotal + p.taxValue).toFixed(2)}
                         </td>
                         <td className="py-2 px-2 text-center">
                           <Button
@@ -197,6 +235,10 @@ export default function PurchaseCreateForm({
               <div className="flex justify-between">
                 <span>Subtotal</span>
                 <span>${totals.subtotal.toFixed(2)}</span>
+              </div>
+              <div className="flex justify-between">
+                <span>Descuento</span>
+                <span>${totals.discount.toFixed(2)}</span>
               </div>
               <div className="flex justify-between">
                 <span>IVA</span>

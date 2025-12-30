@@ -19,6 +19,7 @@ import EmissionPointListView from "@/views/emissionPoint/EmissionPointListView";
 import EmissionPointDetailView from "@/views/emissionPoint/EmissionPointDetailView";
 import EmissionPointCreateView from "@/views/emissionPoint/EmissionPointCreateView";
 import EmissionPointUpdateView from "@/views/emissionPoint/EmissionPointUpdateView";
+import CertificateListView from "@/views/certificate/CertificateListView";
 import UserListView from "@/views/user/UserListView";
 import UserDetailView from "@/views/user/UserDetailView";
 import UserCreateView from "@/views/user/UserCreateView";
@@ -98,6 +99,7 @@ export default function Router() {
                 path="/puntos-emision/actualizar/:id"
                 element={<EmissionPointUpdateView />}
               />
+              <Route path="/certificados" element={<CertificateListView />} />
               <Route path="/bodegas" element={<WarehouseListView />} />
               <Route path="/bodegas/:id" element={<WarehouseDetailView />} />
               <Route path="/bodegas/crear" element={<WarehouseCreateView />} />

@@ -1,10 +1,10 @@
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
-import type { AccountsReceivableDetail } from "@/types/accountsReceivable.types";
+import type { AccountsReceivable } from "@/types/accountsReceivable.types";
 
 interface AccountsReceivableDetailInfoProps {
-  accountsReceivable: AccountsReceivableDetail;
+  accountsReceivable: AccountsReceivable;
 }
 
 function formatDateTime(value: string | null) {
@@ -68,7 +68,7 @@ function displayValue(value: string | null | undefined) {
 export default function AccountsReceivableDetailInfo({
   accountsReceivable,
 }: AccountsReceivableDetailInfoProps) {
-  const code = `${accountsReceivable.establishmentCode}-${accountsReceivable.emissionPointCode}-${accountsReceivable.sequential}`;
+  const code = `${accountsReceivable.invoice.establishmentCode}-${accountsReceivable.invoice.emissionPointCode}-${accountsReceivable.invoice.sequential}`;
 
   const due = new Date(accountsReceivable.dueDate);
   const dueDays = Number.isNaN(due.getTime()) ? null : daysUntil(due);
@@ -76,7 +76,9 @@ export default function AccountsReceivableDetailInfo({
     dueDays === null
       ? "—"
       : dueDays < 0
-      ? `Vencida (${Math.abs(dueDays)} día${Math.abs(dueDays) === 1 ? "" : "s"})`
+      ? `Vencida (${Math.abs(dueDays)} día${
+          Math.abs(dueDays) === 1 ? "" : "s"
+        })`
       : dueDays === 0
       ? "Vence hoy"
       : `Por vencer: ${dueDays} día${dueDays === 1 ? "" : "s"}`;
@@ -132,7 +134,9 @@ export default function AccountsReceivableDetailInfo({
                             {formatDateTime(t.createdAt)}
                           </td>
                           <td className="py-2 px-2 whitespace-nowrap">
-                            <Badge variant="outline">{t.arTransactionType}</Badge>
+                            <Badge variant="outline">
+                              {t.arTransactionType}
+                            </Badge>
                           </td>
                           <td className="py-2 px-2 text-right whitespace-nowrap">
                             ${t.amount.toFixed(2)}
@@ -140,7 +144,9 @@ export default function AccountsReceivableDetailInfo({
                           <td className="py-2 px-2 whitespace-nowrap">
                             {displayValue(t.paymentMethod)}
                           </td>
-                          <td className="py-2 px-2">{displayValue(t.reference)}</td>
+                          <td className="py-2 px-2">
+                            {displayValue(t.reference)}
+                          </td>
                           <td className="py-2 px-2">{displayValue(t.notes)}</td>
                         </tr>
                       ))
@@ -172,7 +178,7 @@ export default function AccountsReceivableDetailInfo({
             <div className="flex justify-between text-sm">
               <span className="text-muted-foreground">Emisión:</span>
               <span className="font-medium">
-                {formatDate(accountsReceivable.invoiceDate)}
+                {formatDate(accountsReceivable.invoice.invoiceDate)}
               </span>
             </div>
             <div className="flex flex-col text-sm">
@@ -187,8 +193,8 @@ export default function AccountsReceivableDetailInfo({
             <div className="flex justify-between text-sm">
               <span className="text-muted-foreground">Plazo:</span>
               <span className="font-medium">
-                {accountsReceivable.paymentTermDays} día
-                {accountsReceivable.paymentTermDays === 1 ? "" : "s"}
+                {accountsReceivable.invoice.paymentTermDays} día
+                {accountsReceivable.invoice.paymentTermDays === 1 ? "" : "s"}
               </span>
             </div>
             <div className="flex justify-between text-sm">
@@ -213,37 +219,37 @@ export default function AccountsReceivableDetailInfo({
             <div className="flex justify-between gap-2">
               <span className="text-muted-foreground">Clave acceso:</span>
               <span className="font-medium text-right break-all">
-                {displayValue(accountsReceivable.accessKey)}
+                {displayValue(accountsReceivable.invoice.accessKey)}
               </span>
             </div>
             <div className="flex justify-between gap-2">
               <span className="text-muted-foreground">N° autorización:</span>
               <span className="font-medium text-right break-all">
-                {displayValue(accountsReceivable.authorizationNumber)}
+                {displayValue(accountsReceivable.invoice.authorizationNumber)}
               </span>
             </div>
             <div className="flex justify-between gap-2">
               <span className="text-muted-foreground">F. autorización:</span>
               <span className="font-medium text-right">
-                {formatDateTime(accountsReceivable.authorizationDate)}
+                {formatDateTime(accountsReceivable.invoice.authorizationDate)}
               </span>
             </div>
             <div className="flex justify-between gap-2">
               <span className="text-muted-foreground">Ambiente:</span>
               <span className="font-medium text-right">
-                {displayValue(accountsReceivable.environment)}
+                {displayValue(accountsReceivable.invoice.environment)}
               </span>
             </div>
             <div className="flex justify-between gap-2">
               <span className="text-muted-foreground">Tipo comprobante:</span>
               <span className="font-medium text-right">
-                {displayValue(accountsReceivable.receiptType)}
+                {displayValue(accountsReceivable.invoice.receiptType)}
               </span>
             </div>
             <div className="flex justify-between gap-2">
               <span className="text-muted-foreground">Electrónica:</span>
               <span className="font-medium text-right">
-                {accountsReceivable.isElectronic ? "Sí" : "No"}
+                {accountsReceivable.invoice.isElectronic ? "Sí" : "No"}
               </span>
             </div>
           </CardContent>
@@ -252,4 +258,3 @@ export default function AccountsReceivableDetailInfo({
     </div>
   );
 }
-

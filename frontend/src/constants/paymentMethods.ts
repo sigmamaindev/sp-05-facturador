@@ -11,3 +11,21 @@ export const PaymentMethodCode = {
 
 export type PaymentMethodCode =
   (typeof PaymentMethodCode)[keyof typeof PaymentMethodCode];
+
+export const PAYMENT_METHOD_LABEL: Record<PaymentMethodCode, string> = {
+  "01": "Sin utilización del sistema financiero",
+  "15": "Compensación de deudas",
+  "16": "Tarjeta de débito",
+  "17": "Dinero electrónico",
+  "18": "Tarjeta prepago",
+  "19": "Tarjeta de crédito",
+  "20": "Otros con utilización del sistema financiero",
+  "21": "Endoso de títulos",
+} as const;
+
+export const PAYMENT_METHOD_OPTIONS = (
+  Object.values(PaymentMethodCode) as PaymentMethodCode[]
+).map((value) => ({
+  value,
+  label: PAYMENT_METHOD_LABEL[value],
+}));

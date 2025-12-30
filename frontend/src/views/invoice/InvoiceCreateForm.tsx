@@ -3,8 +3,7 @@ import { Trash2Icon } from "lucide-react";
 
 import type { InvoiceProduct, InvoiceTotals } from "@/types/invoice.type";
 import type { Customer } from "@/types/customer.types";
-import type { Product } from "@/types/product.types";
-import type { UnitMeasure } from "@/types/unitMeasure.types";
+import type { Product, ProductPresentation } from "@/types/product.types";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -12,7 +11,7 @@ import { Input } from "@/components/ui/input";
 
 import InvoiceCustomerModal from "./InvoiceCustomerModal";
 import InvoiceProductModal from "./InvoiceProductModal";
-import InvoiceUnitMeasureModal from "./InvoiceUnitMeasureModal";
+import InvoiceProductPresentationModal from "./InvoiceProductPresentationModal";
 
 interface InvoiceCreateFormProps {
   customer: Customer | null;
@@ -24,10 +23,16 @@ interface InvoiceCreateFormProps {
   setOpenProductModal: React.Dispatch<React.SetStateAction<boolean>>;
   handleSelectCustomer: (customer: Customer) => void;
   handleSelectProduct: (product: Product) => void;
-  openUnitMeasureModal: boolean;
-  onOpenUnitMeasureModal: (productId: number) => void;
-  onCloseUnitMeasureModal: () => void;
-  handleSelectUnitMeasure: (unitMeasure: UnitMeasure) => void;
+  openPresentationModal: boolean;
+  presentationProduct: InvoiceProduct | null;
+  onOpenPresentationModal: (productId: number) => void;
+  onClosePresentationModal: () => void;
+  handleSelectPresentation: (presentation: ProductPresentation) => void;
+  handleWeightChange: (
+    productId: number,
+    field: "netWeight" | "grossWeight",
+    value: number
+  ) => void;
   handleQuantityChange: (productId: number, qty: number) => void;
   handleRemoveProduct: (productId: number) => void;
   onSaveDraft: () => void;
@@ -46,10 +51,12 @@ export default function InvoiceCreateForm({
   setOpenProductModal,
   handleSelectCustomer,
   handleSelectProduct,
-  openUnitMeasureModal,
-  onOpenUnitMeasureModal,
-  onCloseUnitMeasureModal,
-  handleSelectUnitMeasure,
+  openPresentationModal,
+  presentationProduct,
+  onOpenPresentationModal,
+  onClosePresentationModal,
+  handleSelectPresentation,
+  handleWeightChange,
   handleQuantityChange,
   handleRemoveProduct,
   onSaveDraft,
@@ -78,7 +85,7 @@ export default function InvoiceCreateForm({
           </CardHeader>
           <CardContent>
             <div className="max-h-[400px] overflow-auto rounded-md border">
-              <div className="min-w-[500px]">
+              <div className="min-w-[750px]">
                 <table className="w-full border-collapse">
                   <thead className="sticky top-0 z-10 bg-background">
                     <tr className="border-b">
@@ -91,12 +98,18 @@ export default function InvoiceCreateForm({
                       <th className="text-left py-2 px-2 font-semibold">
                         Cant. / U.M.
                       </th>
-                      <th className="text-right py-2 px-2 font-semibold">
-                        P. Unitario
-                      </th>
-                      <th className="text-right py-2 px-2 font-semibold">
-                        Desc.
-                      </th>
+	                      <th className="text-right py-2 px-2 font-semibold">
+	                        P. Unitario
+	                      </th>
+	                      <th className="text-right py-2 px-2 font-semibold">
+	                        P. Neto
+	                      </th>
+	                      <th className="text-right py-2 px-2 font-semibold">
+	                        P. Bruto
+	                      </th>
+	                      <th className="text-right py-2 px-2 font-semibold">
+	                        Desc.
+	                      </th>
                       <th className="text-right py-2 px-2 font-semibold">
                         Base IVA
                       </th>
@@ -110,15 +123,15 @@ export default function InvoiceCreateForm({
                   </thead>
 
                   <tbody>
-                    {products.length === 0 ? (
-                      <tr>
-                        <td
-                          colSpan={8}
-                          className="text-center py-4 text-muted-foreground"
-                        >
-                          No hay productos agregados
-                        </td>
-                      </tr>
+	                    {products.length === 0 ? (
+	                      <tr>
+	                        <td
+	                          colSpan={10}
+	                          className="text-center py-4 text-muted-foreground"
+	                        >
+	                          No hay productos agregados
+	                        </td>
+	                      </tr>
                     ) : (
                       products.map((p) => (
                         <tr key={p.id} className="border-b last:border-b-0">
@@ -147,7 +160,7 @@ export default function InvoiceCreateForm({
                                 type="button"
                                 variant="outline"
                                 size="sm"
-                                onClick={() => onOpenUnitMeasureModal(p.id)}
+                                onClick={() => onOpenPresentationModal(p.id)}
                                 className="h-8 px-2 text-xs"
                               >
                                 {p.unitMeasure?.code ?? "UND"}
@@ -161,12 +174,44 @@ export default function InvoiceCreateForm({
                             )}
                           </td>
 
-                          <td className="py-2 px-2 text-right whitespace-nowrap">
-                            ${p.price.toFixed(2)}
-                          </td>
-                          <td className="py-2 px-2 text-right whitespace-nowrap">
-                            ${p.discount.toFixed(2)}
-                          </td>
+	                          <td className="py-2 px-2 text-right whitespace-nowrap">
+	                            ${p.price.toFixed(2)}
+	                          </td>
+	                          <td className="py-2 px-2 text-right whitespace-nowrap">
+	                            <Input
+	                              type="number"
+	                              step="0.01"
+	                              min={0}
+	                              value={p.netWeight ?? 0}
+	                              onChange={(e) =>
+	                                handleWeightChange(
+	                                  p.id,
+	                                  "netWeight",
+	                                  Number(e.target.value)
+	                                )
+	                              }
+	                              className="h-8 w-24 px-2 text-right text-sm"
+	                            />
+	                          </td>
+	                          <td className="py-2 px-2 text-right whitespace-nowrap">
+	                            <Input
+	                              type="number"
+	                              step="0.01"
+	                              min={0}
+	                              value={p.grossWeight ?? 0}
+	                              onChange={(e) =>
+	                                handleWeightChange(
+	                                  p.id,
+	                                  "grossWeight",
+	                                  Number(e.target.value)
+	                                )
+	                              }
+	                              className="h-8 w-24 px-2 text-right text-sm"
+	                            />
+	                          </td>
+	                          <td className="py-2 px-2 text-right whitespace-nowrap">
+	                            ${p.discount.toFixed(2)}
+	                          </td>
                           <td className="py-2 px-2 text-right whitespace-nowrap">
                             ${p.subtotal.toFixed(2)}
                           </td>
@@ -280,10 +325,11 @@ export default function InvoiceCreateForm({
           onClose={() => setOpenProductModal(false)}
           onSelect={handleSelectProduct}
         />
-        <InvoiceUnitMeasureModal
-          open={openUnitMeasureModal}
-          onClose={onCloseUnitMeasureModal}
-          onSelect={handleSelectUnitMeasure}
+        <InvoiceProductPresentationModal
+          open={openPresentationModal}
+          onClose={onClosePresentationModal}
+          product={presentationProduct}
+          onSelect={handleSelectPresentation}
         />
       </div>
     </div>

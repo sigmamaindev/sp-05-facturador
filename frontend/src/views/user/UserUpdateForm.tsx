@@ -1,5 +1,6 @@
-import { useState } from "react";
-import { Controller, useForm } from "react-hook-form";
+import { useEffect, useState } from "react";
+import { Controller, useForm, useWatch } from "react-hook-form";
+import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 import { Loader2 } from "lucide-react";
 
@@ -18,12 +19,12 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
+import { getEmissionPoints } from "@/api/emissionPoint";
 
 interface UserUpdateFormProps {
   user: User;
   roles: Role[];
   establishments: Establishment[];
-  emissionPoints: EmissionPoint[];
   token: string | null;
 }
 
@@ -31,10 +32,12 @@ export default function UserUpdateForm({
   user,
   roles,
   establishments,
-  emissionPoints,
   token,
 }: UserUpdateFormProps) {
   const [savingUser, setSavingUser] = useState(false);
+  const [emissionPoints, setEmissionPoints] = useState<EmissionPoint[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const navigate = useNavigate();
 
@@ -42,6 +45,7 @@ export default function UserUpdateForm({
     register,
     control,
     handleSubmit,
+    setValue,
     formState: { errors },
   } = useForm<UpdateUserForm>({
     defaultValues: {
@@ -60,19 +64,55 @@ export default function UserUpdateForm({
     },
   });
 
+  const establishmentId = useWatch({ control, name: "establishmentId" });
+  const emissionPointId = useWatch({ control, name: "emissionPointId" });
+
+  const fetchAllData = async () => {
+    if (!establishmentId) {
+      setEmissionPoints([]);
+      setValue("emissionPointId", undefined as any);
+      return;
+    }
+
+    try {
+      setLoading(true);
+
+      const res = await getEmissionPoints(establishmentId, "", 1, 200, token!);
+      const list = res.data ?? [];
+      setEmissionPoints(list);
+
+      if (emissionPointId && !list.some((x) => x.id === emissionPointId)) {
+        setValue("emissionPointId", undefined as any);
+      }
+    } catch (err: any) {
+      setEmissionPoints([]);
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchAllData();
+  }, [establishmentId, token, setValue]);
+
   const onSubmit = async (data: UpdateUserForm) => {
     try {
       setSavingUser(true);
 
-      await updateUser(user.id, data, token!);
+      const response = await updateUser(user.id, data, token!);
+
+      toast.message(response.message);
 
       navigate("/usuarios");
     } catch (err: any) {
-      alert(err.message);
+      toast.error(err.message);
     } finally {
       setSavingUser(false);
     }
   };
+
+  const emissionDisabled = !establishmentId || loading || !!error;
 
   return (
     <form
@@ -246,9 +286,20 @@ export default function UserUpdateForm({
             <Select
               onValueChange={(val) => field.onChange(Number(val))}
               value={field.value ? String(field.value) : ""}
+              disabled={emissionDisabled}
             >
               <SelectTrigger className="w-full">
-                <SelectValue placeholder="Seleccionar punto de emisión" />
+                <SelectValue
+                  placeholder={
+                    !establishmentId
+                      ? "Seleccione un establecimiento primero"
+                      : loading
+                      ? "Cargando puntos de emisión..."
+                      : error
+                      ? "Error cargando puntos de emisión"
+                      : "Seleccionar punto de emisión"
+                  }
+                />
               </SelectTrigger>
               <SelectContent>
                 {emissionPoints.map((p) => (
@@ -258,6 +309,7 @@ export default function UserUpdateForm({
                 ))}
               </SelectContent>
             </Select>
+            {error && <p className="text-red-500 text-sm">{error}</p>}
             {errors.emissionPointId && (
               <p className="text-red-500 text-sm">
                 {errors.emissionPointId.message}

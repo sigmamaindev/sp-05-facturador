@@ -54,6 +54,8 @@ export type InvoiceDetail = {
   warehouseId: number;
   warehouseCode: string;
   warehouseName: string;
+  netWeight?: number;
+  grossWeight?: number;
   taxId: number;
   taxCode: string;
   taxName: string;
@@ -68,6 +70,9 @@ export type InvoiceDetail = {
 };
 
 export interface InvoiceProduct extends Product {
+  price: number;
+  netWeight: number;
+  grossWeight: number;
   quantity: number;
   discount: number;
   subtotal: number;
@@ -94,12 +99,22 @@ export const invoiceDetailSchema = z.object({
   unitMeasureId: z
     .number()
     .int("El ID de la unidad de medida debe ser un entero")
-    .positive("El ID de la unidad de medida debe ser positivo"),
+    .min(0, "El ID de la unidad de medida no puede ser negativo"),
+  netWeight: z
+    .number()
+    .min(0, "El peso neto no puede ser negativo")
+    .optional()
+    .default(0),
+  grossWeight: z
+    .number()
+    .min(0, "El peso bruto no puede ser negativo")
+    .optional()
+    .default(0),
   quantity: z
     .number()
     .positive("La cantidad debe ser mayor a 0")
     .max(1000000, "La cantidad no puede ser mayor a 1,000,000"),
-  unitPrice: z.number().positive("El precio unitario debe ser mayor a 0"),
+  unitPrice: z.number().min(0, "El precio unitario no puede ser negativo"),
   discount: z
     .number()
     .min(0, "El descuento no puede ser negativo")

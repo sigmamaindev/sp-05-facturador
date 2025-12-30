@@ -6,8 +6,110 @@ import type { ApiResponseList, ApiResponseSingle } from "@/types/api.types";
 import type {
   CreateProductForm,
   Product,
+  ProductPresentationInput,
   UpdateProductForm,
 } from "@/types/product.types";
+
+type ProductPresentationPayload = Omit<ProductPresentationInput, "isDefault"> & {
+  isDefault?: boolean;
+};
+
+type CreateProductPayload = Omit<CreateProductForm, "presentations"> & {
+  presentations?: Array<Omit<ProductPresentationPayload, "id" | "isDefault">>;
+};
+
+type UpdateProductPayload = Omit<UpdateProductForm, "presentations"> & {
+  presentations?: ProductPresentationPayload[];
+};
+
+function asBoolean(value: unknown, defaultValue: boolean): boolean {
+  if (typeof value === "boolean") return value;
+  if (typeof value === "string") return value === "true";
+  return defaultValue;
+}
+
+function normalizeProduct(product: Product): Product {
+  const inferredDefaultPresentation =
+    product.defaultPresentation ??
+    product.presentations?.find((p) => p.isDefault) ??
+    null;
+
+  const unitMeasure =
+    product.unitMeasure ?? inferredDefaultPresentation?.unitMeasure;
+  const price = product.price ?? inferredDefaultPresentation?.price01 ?? 0;
+
+  return {
+    ...product,
+    defaultPresentation: inferredDefaultPresentation,
+    unitMeasure,
+    price,
+  };
+}
+
+function toCreateProductPayload(body: CreateProductForm): CreateProductPayload {
+  return {
+    ...body,
+    defaultPresentation: {
+      ...body.defaultPresentation,
+      price01: body.defaultPresentation.price01 ?? 0,
+      price02: body.defaultPresentation.price02 ?? 0,
+      price03: body.defaultPresentation.price03 ?? 0,
+      price04: body.defaultPresentation.price04 ?? 0,
+      netWeight: body.defaultPresentation.netWeight ?? 0,
+      grossWeight: body.defaultPresentation.grossWeight ?? 0,
+      isActive: asBoolean(body.defaultPresentation.isActive as unknown, true),
+    },
+    presentations: body.presentations?.map((p) => {
+      const {
+        unitMeasureId,
+        price01,
+        price02,
+        price03,
+        price04,
+        netWeight,
+        grossWeight,
+        isActive,
+      } = p;
+      return {
+        unitMeasureId,
+        price01: price01 ?? 0,
+        price02: price02 ?? 0,
+        price03: price03 ?? 0,
+        price04: price04 ?? 0,
+        netWeight: netWeight ?? 0,
+        grossWeight: grossWeight ?? 0,
+        isActive: asBoolean(isActive as unknown, true),
+      };
+    }),
+  };
+}
+
+function toUpdateProductPayload(body: UpdateProductForm): UpdateProductPayload {
+  return {
+    ...body,
+    defaultPresentation: {
+      ...body.defaultPresentation,
+      price01: body.defaultPresentation.price01 ?? 0,
+      price02: body.defaultPresentation.price02 ?? 0,
+      price03: body.defaultPresentation.price03 ?? 0,
+      price04: body.defaultPresentation.price04 ?? 0,
+      netWeight: body.defaultPresentation.netWeight ?? 0,
+      grossWeight: body.defaultPresentation.grossWeight ?? 0,
+      isActive: asBoolean(body.defaultPresentation.isActive as unknown, true),
+    },
+    presentations: body.presentations?.map((p) => ({
+      ...p,
+      price01: p.price01 ?? 0,
+      price02: p.price02 ?? 0,
+      price03: p.price03 ?? 0,
+      price04: p.price04 ?? 0,
+      netWeight: p.netWeight ?? 0,
+      grossWeight: p.grossWeight ?? 0,
+      isActive: asBoolean(p.isActive as unknown, true),
+      isDefault: false,
+    })),
+  };
+}
 
 export async function getProducts(
   keyword: string,
@@ -27,7 +129,10 @@ export async function getProducts(
       },
     });
 
-    return data;
+    return {
+      ...data,
+      data: data.data.map(normalizeProduct),
+    };
   } catch (error) {
     if (isAxiosError(error) && error.response) {
       throw new Error(error.response.data.error ?? "Error en la API");
@@ -43,14 +148,19 @@ export async function createProduct(
   try {
     const url = `/product`;
 
-    const { data } = await api.post<ApiResponseSingle<Product>>(url, body, {
+    const payload = toCreateProductPayload(body);
+
+    const { data } = await api.post<ApiResponseSingle<Product>>(url, payload, {
       headers: {
         Authorization: `Bearer ${token}`,
         "Content-Type": "application/json",
       },
     });
 
-    return data;
+    return {
+      ...data,
+      data: data.data ? normalizeProduct(data.data) : null,
+    };
   } catch (error) {
     if (isAxiosError(error) && error.response) {
       throw new Error(error.response.data.error ?? "Error en la API");
@@ -72,7 +182,10 @@ export async function getProductById(
       },
     });
 
-    return data;
+    return {
+      ...data,
+      data: data.data ? normalizeProduct(data.data) : null,
+    };
   } catch (error) {
     if (isAxiosError(error) && error.response) {
       throw new Error(error.response.data.error ?? "Error en la API");
@@ -89,14 +202,19 @@ export async function updateProduct(
   try {
     const url = `/product/${id}`;
 
-    const { data } = await api.put<ApiResponseSingle<Product>>(url, body, {
+    const payload = toUpdateProductPayload(body);
+
+    const { data } = await api.put<ApiResponseSingle<Product>>(url, payload, {
       headers: {
         Authorization: `Bearer ${token}`,
         "Content-Type": "application/json",
       },
     });
 
-    return data;
+    return {
+      ...data,
+      data: data.data ? normalizeProduct(data.data) : null,
+    };
   } catch (error) {
     if (isAxiosError(error) && error.response) {
       throw new Error(error.response.data.error ?? "Error en la API");

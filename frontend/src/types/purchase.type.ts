@@ -5,28 +5,44 @@ import type { Product } from "./product.types";
 export type Purchase = {
   id: number;
   businessId: number;
-  establishmentId: number;
-  warehouseId: number;
+  userId?: number;
+  establishmentId?: number;
+  establishmentCode?: string;
+  emissionPointCode?: string;
+  emissionTypeCode?: string;
+  environment?: string;
+  warehouseId?: number;
   supplierId: number;
   purchaseDate: Date;
-   documentNumber: string;
-   reference: string;
+  issueDate?: Date;
+  sequential?: string;
+  documentNumber: string;
+  accessKey?: string;
+  receiptType?: string;
+  reference: string;
+  authorizationNumber?: string | null;
+  authorizationDate?: Date | null;
   subtotalWithoutTaxes: number;
   subtotalWithTaxes: number;
   discountTotal: number;
   taxTotal: number;
   totalPurchase: number;
   status: string;
+  isElectronic?: boolean;
   details: PurchaseDetail[];
 };
 
 export type PurchaseDetail = {
   productId: number;
   warehouseId: number;
-  taxId: number | null;
   quantity: number;
   unitCost: number;
+  discount?: number;
   subtotal: number;
+  unitMeasureId?: number;
+  netWeight?: number;
+  grossWeight?: number;
+  taxId: number | null;
   taxRate: number;
   taxValue: number;
   total: number;
@@ -35,12 +51,14 @@ export type PurchaseDetail = {
 export interface PurchaseProduct extends Product {
   quantity: number;
   unitCost: number;
+  discount: number;
   subtotal: number;
   taxValue: number;
 }
 
 export interface PurchaseTotals {
   subtotal: number;
+  discount: number;
   tax: number;
   total: number;
 }
@@ -62,17 +80,57 @@ export const purchaseDetailSchema = z.object({
     .positive("La cantidad debe ser mayor a 0")
     .max(1000000, "La cantidad no puede ser mayor a 1,000,000"),
   unitCost: z.number().positive("El costo unitario debe ser mayor a 0"),
+  discount: z
+    .number()
+    .min(0, "El descuento no puede ser negativo")
+    .max(9999999, "Descuento demasiado grande")
+    .optional()
+    .default(0),
   warehouseId: z.number().int().positive(),
+  unitMeasureId: z.number().int().positive().optional(),
   taxId: z.number().int().min(0).nullable(),
 });
 
 export const createPurchaseSchema = z.object({
+  receiptType: z.string().min(1, "Debe seleccionar un tipo de documento"),
+  isElectronic: z.boolean(),
+  environment: z.string().min(1, "Debe seleccionar un ambiente"),
+  emissionTypeCode: z.string().min(1, "Debe seleccionar un tipo de emisión"),
   supplierId: z.number().int().positive("Seleccione un proveedor"),
   purchaseDate: z.date(),
-  documentNumber: z
+  establishmentCode: z
     .string()
-    .min(1, "Ingrese un número de documento")
-    .max(50, "El número de documento es demasiado largo"),
+    .min(3, "El establecimiento debe tener 3 dígitos")
+    .max(3, "El establecimiento debe tener 3 dígitos"),
+  emissionPointCode: z
+    .string()
+    .min(3, "El punto de emisión debe tener 3 dígitos")
+    .max(3, "El punto de emisión debe tener 3 dígitos"),
+  sequential: z
+    .string()
+    .min(1, "Ingrese el secuencial")
+    .max(20, "El secuencial es demasiado largo"),
+  documentNumber: z.string().min(1).max(50),
+  accessKey: z.string().max(49, "La clave de acceso es demasiado larga").optional(),
+  authorizationNumber: z
+    .string()
+    .max(100, "El número de autorización es demasiado largo")
+    .optional()
+    .default(""),
+  authorizationDate: z.date().optional(),
+  subtotalWithoutTaxes: z
+    .number()
+    .min(0, "El subtotal sin impuestos no puede ser negativo"),
+  subtotalWithTaxes: z
+    .number()
+    .min(0, "El subtotal con impuestos no puede ser negativo"),
+  discountTotal: z
+    .number()
+    .min(0, "El total de descuentos no puede ser negativo"),
+  taxTotal: z.number().min(0, "El total de impuestos no puede ser negativo"),
+  totalPurchase: z
+    .number()
+    .min(0, "El total de la compra no puede ser negativo"),
   reference: z
     .string()
     .max(100, "La referencia es demasiado larga")
@@ -84,3 +142,54 @@ export const createPurchaseSchema = z.object({
 });
 
 export type CreatePurchaseForm = z.infer<typeof createPurchaseSchema>;
+
+export type CreatePurchasePayload = {
+  businessId: number;
+  userId: number;
+  environment: string;
+  emissionTypeCode: string;
+  businessName: string;
+  name: string;
+  document: string;
+  accessKey: string;
+  receiptType: string;
+  establishmentCode: string;
+  emissionPointCode: string;
+  sequential: string;
+  mainAddress: string;
+  issueDate: Date;
+  establishmentAddress: string | null;
+  specialTaxpayer: string | null;
+  mandatoryAccounting: string;
+  typeDocumentSubjectDetained: string;
+  typeSubjectDetained: string;
+  relatedParty: string;
+  businessNameSubjectDetained: string;
+  documentSubjectDetained: string;
+  fiscalPeriod: string;
+  supplierId: number;
+  status: string;
+  isElectronic: boolean;
+  authorizationNumber: string;
+  authorizationDate: Date | null;
+  subtotalWithoutTaxes?: number;
+  subtotalWithTaxes?: number;
+  discountTotal?: number;
+  taxTotal?: number;
+  totalPurchase?: number;
+  details: Array<{
+    productId: number;
+    warehouseId: number;
+    unitMeasureId: number;
+    taxId: number;
+    taxRate: number;
+    taxValue: number;
+    quantity: number;
+    netWeight: number;
+    grossWeight: number;
+    unitCost: number;
+    discount: number;
+    subtotal: number;
+    total: number;
+  }>;
+};
