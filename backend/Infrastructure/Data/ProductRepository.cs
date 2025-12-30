@@ -126,6 +126,22 @@ public class ProductRepository(StoreContext context, IHttpContextAccessor httpCo
 
             response.Success = true;
             response.Message = "Producto creado correctamente";
+
+            var tax = await context.Taxes
+                .AsNoTracking()
+                .Where(t => t.Id == newProduct.TaxId && t.BusinessId == businessId)
+                .Select(t => new TaxResDto
+                {
+                    Id = t.Id,
+                    Code = t.Code,
+                    CodePercentage = t.CodePercentage,
+                    Name = t.Name,
+                    Group = t.Group,
+                    Rate = t.Rate,
+                    IsActive = t.IsActive
+                })
+                .FirstOrDefaultAsync();
+
             response.Data = new ProductResDto
             {
                 Id = newProduct.Id,
@@ -133,6 +149,8 @@ public class ProductRepository(StoreContext context, IHttpContextAccessor httpCo
                 Name = newProduct.Name,
                 Description = newProduct.Description,
                 Type = newProduct.Type,
+                TaxId = newProduct.TaxId,
+                Tax = tax,
                 IsActive = newProduct.IsActive
             };
         }
@@ -165,6 +183,7 @@ public class ProductRepository(StoreContext context, IHttpContextAccessor httpCo
 
             var product = await context.Products
             .AsNoTracking()
+            .Include(p => p.Tax)
             .Include(p => p.ProductPresentations)
                 .ThenInclude(pp => pp.UnitMeasure)
             .Include(p => p.ProductWarehouses)
@@ -177,6 +196,17 @@ public class ProductRepository(StoreContext context, IHttpContextAccessor httpCo
                 Name = p.Name,
                 Description = p.Description,
                 Type = p.Type,
+                TaxId = p.TaxId,
+                Tax = p.Tax == null ? null : new TaxResDto
+                {
+                    Id = p.Tax.Id,
+                    Code = p.Tax.Code,
+                    CodePercentage = p.Tax.CodePercentage,
+                    Name = p.Tax.Name,
+                    Group = p.Tax.Group,
+                    Rate = p.Tax.Rate,
+                    IsActive = p.Tax.IsActive
+                },
                 IsActive = p.IsActive,
 
                 DefaultPresentation = p.ProductPresentations
@@ -312,6 +342,17 @@ public class ProductRepository(StoreContext context, IHttpContextAccessor httpCo
                     Name = p.Name,
                     Description = p.Description,
                     Type = p.Type,
+                    TaxId = p.TaxId,
+                    Tax = p.Tax == null ? null : new TaxResDto
+                    {
+                        Id = p.Tax.Id,
+                        Code = p.Tax.Code,
+                        CodePercentage = p.Tax.CodePercentage,
+                        Name = p.Tax.Name,
+                        Group = p.Tax.Group,
+                        Rate = p.Tax.Rate,
+                        IsActive = p.Tax.IsActive
+                    },
                     IsActive = p.IsActive,
 
                     DefaultPresentation = p.ProductPresentations

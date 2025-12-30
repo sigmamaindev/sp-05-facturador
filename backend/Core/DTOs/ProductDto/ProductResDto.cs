@@ -11,6 +11,8 @@ public class ProductResDto
     public string Name { get; set; } = string.Empty;
     public string Description { get; set; } = string.Empty;
     public string Type { get; set; } = string.Empty;
+    public int TaxId { get; set; }
+    public TaxResDto? Tax { get; set; }
     public bool IsActive { get; set; }
     public ProductPresentationResDto? DefaultPresentation { get; set; }
     public List<ProductPresentationResDto> Presentations { get; set; } = [];
