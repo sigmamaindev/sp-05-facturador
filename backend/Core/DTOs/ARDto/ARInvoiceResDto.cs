@@ -1,6 +1,6 @@
 namespace Core.DTOs.ARDto;
 
-public class ARInvoiceSimpleResDto
+public class ARInvoiceResDto
 {
     public int Id { get; set; }
     public string EstablishmentCode { get; set; } = string.Empty;

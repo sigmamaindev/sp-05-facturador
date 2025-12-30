@@ -394,8 +394,6 @@ public class InvoiceRepository(
                 PaymentMethod.NFS,
                 StringComparison.OrdinalIgnoreCase);
 
-            using var trx = await context.Database.BeginTransactionAsync();
-
             existingInvoice.PaymentMethod = invoicePaymentUpdateReqDto.PaymentMethod;
             existingInvoice.PaymentTermDays = invoicePaymentUpdateReqDto.PaymentTermDays;
             existingInvoice.Status = InvoiceStatus.PENDING;
@@ -417,8 +415,6 @@ public class InvoiceRepository(
             }
 
             await context.SaveChangesAsync();
-
-            await trx.CommitAsync();
 
             response.Success = true;
             response.Message = "Pago registrado en factura";

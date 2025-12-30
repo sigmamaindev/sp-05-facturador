@@ -4,9 +4,6 @@ public class PurchaseCreateReqDto
 {
     public string Environment { get; set; } = string.Empty;
     public string EmissionTypeCode { get; set; } = string.Empty;
-    public string BusinessName { get; set; } = string.Empty;
-    public string Name { get; set; } = string.Empty;
-    public string Document { get; set; } = string.Empty;
     public string AccessKey { get; set; } = string.Empty;
     public string ReceiptType { get; set; } = string.Empty;
     public string EstablishmentCode { get; set; } = string.Empty;

@@ -356,7 +356,7 @@ namespace Infrastructure.Migrations
                     Id = table.Column<int>(type: "integer", nullable: false)
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
                     EmpresaId = table.Column<int>(type: "integer", nullable: false),
-                    UserId = table.Column<int>(type: "integer", nullable: false),
+                    UsuarioId = table.Column<int>(type: "integer", nullable: false),
                     Ambiente = table.Column<string>(type: "text", nullable: false),
                     TipoEmision = table.Column<string>(type: "text", nullable: false),
                     RazonSocial = table.Column<string>(type: "text", nullable: false),
@@ -368,7 +368,7 @@ namespace Infrastructure.Migrations
                     PuntoEmision = table.Column<string>(type: "text", nullable: false),
                     Secuencial = table.Column<string>(type: "text", nullable: false),
                     DireccionMatriz = table.Column<string>(type: "text", nullable: false),
-                    FechaEmision = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    FechaEmision = table.Column<DateTime>(type: "timestamp without time zone", nullable: false),
                     DireccionEstablecimiento = table.Column<string>(type: "text", nullable: true),
                     ContribuyenteEspecial = table.Column<string>(type: "text", nullable: true),
                     ObligadoContabilidad = table.Column<string>(type: "text", nullable: true),
@@ -382,7 +382,7 @@ namespace Infrastructure.Migrations
                     Estado = table.Column<string>(type: "text", nullable: false),
                     Electronico = table.Column<bool>(type: "boolean", nullable: false),
                     NumeroAutorizacion = table.Column<string>(type: "text", nullable: true),
-                    FechaAutorizacion = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    FechaAutorizacion = table.Column<DateTime>(type: "timestamp without time zone", nullable: true),
                     SubtotalBase = table.Column<decimal>(type: "numeric", nullable: false),
                     Subtotal = table.Column<decimal>(type: "numeric", nullable: false),
                     TotalDescuento = table.Column<decimal>(type: "numeric", nullable: false),
@@ -405,8 +405,8 @@ namespace Infrastructure.Migrations
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
-                        name: "FK_Compra_Usuario_UserId",
-                        column: x => x.UserId,
+                        name: "FK_Compra_Usuario_UsuarioId",
+                        column: x => x.UsuarioId,
                         principalTable: "Usuario",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
@@ -421,15 +421,11 @@ namespace Infrastructure.Migrations
                     Sku = table.Column<string>(type: "text", nullable: false),
                     Nombre = table.Column<string>(type: "text", nullable: false),
                     Descripcion = table.Column<string>(type: "text", nullable: false),
-                    Precio = table.Column<decimal>(type: "numeric", nullable: false),
-                    ConIva = table.Column<bool>(type: "boolean", nullable: false),
                     Activo = table.Column<bool>(type: "boolean", nullable: false),
                     EmpresaId = table.Column<int>(type: "integer", nullable: false),
-                    UnidadMedidaId = table.Column<int>(type: "integer", nullable: false),
                     ImpuestoId = table.Column<int>(type: "integer", nullable: false),
                     Tipo = table.Column<string>(type: "text", nullable: false),
-                    PesoNeto = table.Column<decimal>(type: "numeric", nullable: false),
-                    PesoBruto = table.Column<decimal>(type: "numeric", nullable: false)
+                    UnitMeasureId = table.Column<int>(type: "integer", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -447,11 +443,10 @@ namespace Infrastructure.Migrations
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
-                        name: "FK_Producto_UnidadMedida_UnidadMedidaId",
-                        column: x => x.UnidadMedidaId,
+                        name: "FK_Producto_UnidadMedida_UnitMeasureId",
+                        column: x => x.UnitMeasureId,
                         principalTable: "UnidadMedida",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
+                        principalColumn: "Id");
                 });
 
             migrationBuilder.CreateTable(
@@ -674,6 +669,40 @@ namespace Infrastructure.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "ProductoPresentacion",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "integer", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    ProductoId = table.Column<int>(type: "integer", nullable: false),
+                    UnidadMedidaId = table.Column<int>(type: "integer", nullable: false),
+                    Precio01 = table.Column<decimal>(type: "numeric", nullable: false),
+                    Precio02 = table.Column<decimal>(type: "numeric", nullable: false),
+                    Precio03 = table.Column<decimal>(type: "numeric", nullable: false),
+                    Precio04 = table.Column<decimal>(type: "numeric", nullable: false),
+                    PesoNeto = table.Column<decimal>(type: "numeric", nullable: false),
+                    PesoBruto = table.Column<decimal>(type: "numeric", nullable: false),
+                    EsDefault = table.Column<bool>(type: "boolean", nullable: false),
+                    Activo = table.Column<bool>(type: "boolean", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_ProductoPresentacion", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_ProductoPresentacion_Producto_ProductoId",
+                        column: x => x.ProductoId,
+                        principalTable: "Producto",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_ProductoPresentacion_UnidadMedida_UnidadMedidaId",
+                        column: x => x.UnidadMedidaId,
+                        principalTable: "UnidadMedida",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "CuentaPorCobrar",
                 columns: table => new
                 {
@@ -720,7 +749,8 @@ namespace Infrastructure.Migrations
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
                     FacturaId = table.Column<int>(type: "integer", nullable: false),
                     ProductoId = table.Column<int>(type: "integer", nullable: false),
-                    BodegaId = table.Column<int>(type: "integer", nullable: false),
+                    ProductoPresentacionId = table.Column<int>(type: "integer", nullable: false),
+                    BodegaId = table.Column<int>(type: "integer", nullable: true),
                     UnidadMedidaId = table.Column<int>(type: "integer", nullable: false),
                     ImpuestoId = table.Column<int>(type: "integer", nullable: false),
                     TasaImpuesto = table.Column<decimal>(type: "numeric", nullable: false),
@@ -729,6 +759,7 @@ namespace Infrastructure.Migrations
                     PesoNeto = table.Column<decimal>(type: "numeric", nullable: false),
                     PesoBruto = table.Column<decimal>(type: "numeric", nullable: false),
                     PrecioUnitario = table.Column<decimal>(type: "numeric", nullable: false),
+                    NivelPrecio = table.Column<int>(type: "integer", nullable: false),
                     Descuento = table.Column<decimal>(type: "numeric", nullable: false),
                     Subtotal = table.Column<decimal>(type: "numeric", nullable: false),
                     Total = table.Column<decimal>(type: "numeric", nullable: false)
@@ -740,8 +771,7 @@ namespace Infrastructure.Migrations
                         name: "FK_FacturaDetalle_Bodega_BodegaId",
                         column: x => x.BodegaId,
                         principalTable: "Bodega",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
+                        principalColumn: "Id");
                     table.ForeignKey(
                         name: "FK_FacturaDetalle_Factura_FacturaId",
                         column: x => x.FacturaId,
@@ -754,6 +784,12 @@ namespace Infrastructure.Migrations
                         principalTable: "Impuesto",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_FacturaDetalle_ProductoPresentacion_ProductoPresentacionId",
+                        column: x => x.ProductoPresentacionId,
+                        principalTable: "ProductoPresentacion",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
                         name: "FK_FacturaDetalle_Producto_ProductoId",
                         column: x => x.ProductoId,
@@ -822,9 +858,9 @@ namespace Infrastructure.Migrations
                 column: "ProveedorId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_Compra_UserId",
+                name: "IX_Compra_UsuarioId",
                 table: "Compra",
-                column: "UserId");
+                column: "UsuarioId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_CompraDetalle_BodegaId",
@@ -924,6 +960,11 @@ namespace Infrastructure.Migrations
                 column: "ProductoId");
 
             migrationBuilder.CreateIndex(
+                name: "IX_FacturaDetalle_ProductoPresentacionId",
+                table: "FacturaDetalle",
+                column: "ProductoPresentacionId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_FacturaDetalle_UnidadMedidaId",
                 table: "FacturaDetalle",
                 column: "UnidadMedidaId");
@@ -959,9 +1000,9 @@ namespace Infrastructure.Migrations
                 column: "ImpuestoId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_Producto_UnidadMedidaId",
+                name: "IX_Producto_UnitMeasureId",
                 table: "Producto",
-                column: "UnidadMedidaId");
+                column: "UnitMeasureId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_ProductoBodega_BodegaId",
@@ -972,6 +1013,24 @@ namespace Infrastructure.Migrations
                 name: "IX_ProductoBodega_ProductoId",
                 table: "ProductoBodega",
                 column: "ProductoId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_ProductoPresentacion_ProductoId_EsDefault",
+                table: "ProductoPresentacion",
+                columns: new[] { "ProductoId", "EsDefault" },
+                unique: true,
+                filter: "\"EsDefault\" = true");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_ProductoPresentacion_ProductoId_UnidadMedidaId",
+                table: "ProductoPresentacion",
+                columns: new[] { "ProductoId", "UnidadMedidaId" },
+                unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "IX_ProductoPresentacion_UnidadMedidaId",
+                table: "ProductoPresentacion",
+                column: "UnidadMedidaId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Proveedor_EmpresaId",
@@ -1069,10 +1128,10 @@ namespace Infrastructure.Migrations
                 name: "CuentaPorCobrar");
 
             migrationBuilder.DropTable(
-                name: "Bodega");
+                name: "ProductoPresentacion");
 
             migrationBuilder.DropTable(
-                name: "Producto");
+                name: "Bodega");
 
             migrationBuilder.DropTable(
                 name: "Rol");
@@ -1084,10 +1143,7 @@ namespace Infrastructure.Migrations
                 name: "Factura");
 
             migrationBuilder.DropTable(
-                name: "Impuesto");
-
-            migrationBuilder.DropTable(
-                name: "UnidadMedida");
+                name: "Producto");
 
             migrationBuilder.DropTable(
                 name: "Cliente");
@@ -1097,6 +1153,12 @@ namespace Infrastructure.Migrations
 
             migrationBuilder.DropTable(
                 name: "Usuario");
+
+            migrationBuilder.DropTable(
+                name: "Impuesto");
+
+            migrationBuilder.DropTable(
+                name: "UnidadMedida");
 
             migrationBuilder.DropTable(
                 name: "Establecimiento");

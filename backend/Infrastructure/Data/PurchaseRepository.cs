@@ -36,6 +36,7 @@ public class PurchaseRepository(
 
             var newPurchase = edition.BuildPurchase(
                 purchaseCreateReqDto,
+                user,
                 business,
                 supplier,
                 ecTime);
@@ -51,8 +52,6 @@ public class PurchaseRepository(
             newPurchase.TotalPurchase = totals.SubtotalWithTaxes;
 
             context.Purchases.Add(newPurchase);
-
-            await context.SaveChangesAsync();
 
             await kardex.IncreaseStockForPurchaseAsync(newPurchase);
 

@@ -5,7 +5,7 @@ using Core.DTOs.CustomerDto;
 public class ARSimpleResDto
 {
     public int Id { get; set; }
-    public ARInvoiceSimpleResDto? Invoice { get; set; }
+    public ARInvoiceResDto? Invoice { get; set; }
     public CustomerResDto? Customer { get; set; }
     public DateTime IssueDate { get; set; }
     public DateTime DueDate { get; set; }

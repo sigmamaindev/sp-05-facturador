@@ -7,63 +7,56 @@ using Core.Interfaces.Services.IInvoiceService;
 
 namespace Infrastructure.Services.InvoiceService;
 
-public class InvoiceEditionService(StoreContext context, IInvoiceStockService stock) : IInvoiceEditionService
+public class InvoiceEditionService(StoreContext context) : IInvoiceEditionService
 {
     public async Task AddInvoiceDetailsAsync(Invoice invoice, IEnumerable<InvoiceDetailCreateReqDto> details)
     {
-        foreach (var detail in details)
+        if (invoice.BusinessId <= 0)
         {
-            var product = await context.Products
-            .Include(p => p.Tax)
-            .FirstOrDefaultAsync(p => p.Id == detail.ProductId)
-            ?? throw new InvalidOperationException($"Producto {detail.ProductId} no encontrado");
+            throw new InvalidOperationException("Factura inválida");
+        }
 
-            var warehouse = await context.Warehouses
-            .FirstOrDefaultAsync(w => w.Id == detail.WarehouseId)
-            ?? throw new InvalidOperationException($"Bodega {detail.WarehouseId} no encontrada");
+        var inputs = details
+            .Select(d => new InvoiceLineInput(
+                d.ProductId,
+                d.UnitMeasureId,
+                d.WarehouseId,
+                d.Quantity,
+                d.NetWeight,
+                d.GrossWeight,
+                d.UnitPrice,
+                d.Discount))
+            .ToList();
 
-            var unitMeasureId = detail.UnitMeasureId > 0
-                ? detail.UnitMeasureId
-                : product.UnitMeasureId;
+        if (inputs.Count == 0)
+        {
+            return;
+        }
 
-            var unitMeasure = await context.UnitMeasures
-            .FirstOrDefaultAsync(
-                um =>
-                um.Id == unitMeasureId &&
-                um.BusinessId == invoice.BusinessId)
-            ?? throw new InvalidOperationException($"Unidad de medida {unitMeasureId} no encontrada para el negocio actual");
+        var resolvedLines = await ResolveLinesAsync(invoice.BusinessId, inputs);
 
-            await stock.ReserveStockAsync(
-                detail.ProductId,
-                detail.WarehouseId,
-                detail.Quantity
-            );
-
-            var netWeight = detail.Quantity;
-            var grossWeight = netWeight;
-
-            var subtotal = detail.Quantity * product.Price;
-            var taxableBase = subtotal - detail.Discount;
-            var taxRate = product.Tax?.Rate ?? 0;
-            var taxValue = taxableBase * (taxRate / 100);
-            var total = taxableBase + taxValue;
-
+        foreach (var resolved in resolvedLines)
+        {
             invoice.InvoiceDetails.Add(new InvoiceDetail
             {
                 InvoiceId = invoice.Id,
-                ProductId = product.Id,
-                WarehouseId = warehouse.Id,
-                UnitMeasureId = unitMeasure.Id,
-                NetWeight = netWeight,
-                GrossWeight = grossWeight,
-                Quantity = detail.Quantity,
-                UnitPrice = product.Price,
-                Discount = detail.Discount,
-                Subtotal = taxableBase,
-                TaxId = product.TaxId,
-                TaxRate = taxRate,
-                TaxValue = taxValue,
-                Total = total
+                ProductId = resolved.Product.Id,
+                Product = resolved.Product,
+                ProductPresentationId = resolved.Presentation.Id,
+                ProductPresentation = resolved.Presentation,
+                WarehouseId = resolved.Warehouse.Id,
+                Warehouse = resolved.Warehouse,
+                UnitMeasureId = resolved.UnitMeasure.Id,
+                UnitMeasure = resolved.UnitMeasure,
+                Quantity = resolved.Quantity,
+                NetWeight = resolved.NetWeight,
+                GrossWeight = resolved.GrossWeight,
+                UnitPrice = resolved.UnitPrice,
+                PriceLevel = resolved.PriceLevel,
+                Discount = resolved.Discount,
+                TaxId = resolved.Tax.Id,
+                Tax = resolved.Tax,
+                TaxRate = resolved.Tax.Rate
             });
         }
     }
@@ -106,7 +99,9 @@ public class InvoiceEditionService(StoreContext context, IInvoiceStockService st
         .Include(i => i.User)
         .Include(i => i.InvoiceDetails)
         .ThenInclude(d => d.Product)
-        .ThenInclude(p => p!.UnitMeasure)
+        .Include(i => i.InvoiceDetails)
+        .ThenInclude(d => d.ProductPresentation)
+        .ThenInclude(pp => pp!.UnitMeasure)
         .Include(i => i.InvoiceDetails)
         .ThenInclude(d => d.UnitMeasure)
         .Include(i => i.InvoiceDetails)
@@ -124,136 +119,343 @@ public class InvoiceEditionService(StoreContext context, IInvoiceStockService st
 
     public async Task UpsertInvoiceAsync(Invoice invoice, InvoiceUpdateReqDto dto, IEnumerable<InvoiceDetailUpdateReqDto> details)
     {
-        var incomingKeys = dto.Details
-            .Select(d => (d.ProductId, d.WarehouseId))
+        if (invoice.BusinessId <= 0)
+        {
+            throw new InvalidOperationException("Factura inválida");
+        }
+
+        var inputs = details
+            .Select(d => new InvoiceLineInput(
+                d.ProductId,
+                d.UnitMeasureId,
+                d.WarehouseId,
+                d.Quantity,
+                d.NetWeight,
+                d.GrossWeight,
+                d.UnitPrice,
+                d.Discount))
+            .ToList();
+
+        var resolvedLines = await ResolveLinesAsync(invoice.BusinessId, inputs);
+
+        var incomingKeys = resolvedLines
+            .Select(r => (r.Product.Id, r.Warehouse.Id, r.UnitMeasure.Id))
             .ToHashSet();
 
         foreach (var oldDetail in invoice.InvoiceDetails.ToList())
         {
-            var key = (oldDetail.ProductId, oldDetail.WarehouseId);
+            var oldKey = (oldDetail.ProductId, oldDetail.WarehouseId ?? 0, oldDetail.UnitMeasureId);
 
-            if (!incomingKeys.Contains(key))
+            if (!incomingKeys.Contains(oldKey))
             {
-                await stock.ReturnStockAsync(oldDetail.ProductId, oldDetail.WarehouseId, oldDetail.Quantity);
-
                 context.InvoiceDetails.Remove(oldDetail);
-
                 invoice.InvoiceDetails.Remove(oldDetail);
             }
         }
 
-        foreach (var detail in details)
+        foreach (var resolved in resolvedLines)
         {
-            var existingDetail = invoice.InvoiceDetails
-            .FirstOrDefault(
+            var existingDetail = invoice.InvoiceDetails.FirstOrDefault(
                 d =>
-                d.ProductId == detail.ProductId &&
-                d.WarehouseId == detail.WarehouseId);
-
-            var product = await context.Products
-            .Include(p => p.Tax)
-            .FirstOrDefaultAsync(
-                p =>
-                p.Id == detail.ProductId) ??
-            throw new Exception($"Producto {detail.ProductId} no encontrado");
-
-            var unitMeasureId = detail.UnitMeasureId > 0
-                ? detail.UnitMeasureId
-                : product.UnitMeasureId;
-
-            var unitMeasure = await context.UnitMeasures
-            .FirstOrDefaultAsync(
-                um =>
-                um.Id == unitMeasureId &&
-                um.BusinessId == invoice.BusinessId)
-            ?? throw new InvalidOperationException($"Unidad de medida {unitMeasureId} no encontrada para el negocio actual");
+                    d.ProductId == resolved.Product.Id &&
+                    d.WarehouseId == resolved.Warehouse.Id &&
+                    d.UnitMeasureId == resolved.UnitMeasure.Id);
 
             if (existingDetail != null)
             {
-                var diff = detail.Quantity - existingDetail.Quantity;
-
-                if (diff > 0)
-                {
-                    await stock.ReserveStockAsync(detail.ProductId, detail.WarehouseId, diff);
-                }
-                else if (diff < 0)
-                {
-                    await stock.ReturnStockAsync(detail.ProductId, detail.WarehouseId, -diff);
-                }
-
-                existingDetail.Quantity = detail.Quantity;
-                existingDetail.Discount = detail.Discount;
-                existingDetail.UnitMeasureId = unitMeasure.Id;
-                existingDetail.UnitMeasure = unitMeasure;
-
-                var netWeight = existingDetail.Quantity;
-                var grossWeight = netWeight;
-
-                var subtotal = existingDetail.Quantity * product.Price;
-                var taxableBase = subtotal - existingDetail.Discount;
-                var taxRate = product.Tax?.Rate ?? 0;
-                var taxValue = taxableBase * (taxRate / 100);
-                var total = taxableBase + taxValue;
-
-                existingDetail.NetWeight = netWeight;
-                existingDetail.GrossWeight = grossWeight;
-                existingDetail.UnitPrice = product.Price;
-                existingDetail.Subtotal = taxableBase;
-                existingDetail.TaxValue = taxValue;
-                existingDetail.Total = total;
+                existingDetail.ProductId = resolved.Product.Id;
+                existingDetail.Product = resolved.Product;
+                existingDetail.ProductPresentationId = resolved.Presentation.Id;
+                existingDetail.ProductPresentation = resolved.Presentation;
+                existingDetail.WarehouseId = resolved.Warehouse.Id;
+                existingDetail.Warehouse = resolved.Warehouse;
+                existingDetail.UnitMeasureId = resolved.UnitMeasure.Id;
+                existingDetail.UnitMeasure = resolved.UnitMeasure;
+                existingDetail.Quantity = resolved.Quantity;
+                existingDetail.NetWeight = resolved.NetWeight;
+                existingDetail.GrossWeight = resolved.GrossWeight;
+                existingDetail.UnitPrice = resolved.UnitPrice;
+                existingDetail.PriceLevel = resolved.PriceLevel;
+                existingDetail.Discount = resolved.Discount;
+                existingDetail.TaxId = resolved.Tax.Id;
+                existingDetail.Tax = resolved.Tax;
+                existingDetail.TaxRate = resolved.Tax.Rate;
             }
             else
             {
-                var warehouse = await context.Warehouses
-                .FirstOrDefaultAsync(w => w.Id == detail.WarehouseId);
-
-                var stockRecord = await context.ProductWarehouses
-                .FirstOrDefaultAsync(
-                    pw =>
-                    pw.ProductId == detail.ProductId &&
-                    pw.WarehouseId == detail.WarehouseId);
-
-
-                if (stockRecord == null || stockRecord.Stock < detail.Quantity)
-                {
-                    throw new InvalidOperationException($"Stock insuficiente para {product.Name} en bodega {warehouse!.Code}");
-                }
-
-                await stock.ReserveStockAsync(detail.ProductId, detail.WarehouseId, detail.Quantity);
-
-                var netWeight = detail.Quantity;
-                var grossWeight = netWeight;
-
-                var subtotal = detail.Quantity * product.Price;
-                var taxableBase = subtotal - detail.Discount;
-                var taxRate = product.Tax?.Rate ?? 0;
-                var taxValue = taxableBase * (taxRate / 100);
-                var total = taxableBase + taxValue;
-
-                var newDetail = new InvoiceDetail
+                invoice.InvoiceDetails.Add(new InvoiceDetail
                 {
                     InvoiceId = invoice.Id,
-                    ProductId = detail.ProductId,
-                    WarehouseId = detail.WarehouseId,
-                    UnitMeasureId = unitMeasure.Id,
-                    UnitMeasure = unitMeasure,
-                    Quantity = detail.Quantity,
-                    NetWeight = netWeight,
-                    GrossWeight = grossWeight,
-                    UnitPrice = product.Price,
-                    Discount = detail.Discount,
-                    Subtotal = taxableBase,
-                    TaxId = product.TaxId,
-                    TaxRate = taxRate,
-                    TaxValue = taxValue,
-                    Total = total,
-                    Product = product,
-                    Warehouse = warehouse,
-                    Tax = product.Tax
-                };
-
-                invoice.InvoiceDetails.Add(newDetail);
+                    ProductId = resolved.Product.Id,
+                    Product = resolved.Product,
+                    ProductPresentationId = resolved.Presentation.Id,
+                    ProductPresentation = resolved.Presentation,
+                    WarehouseId = resolved.Warehouse.Id,
+                    Warehouse = resolved.Warehouse,
+                    UnitMeasureId = resolved.UnitMeasure.Id,
+                    UnitMeasure = resolved.UnitMeasure,
+                    Quantity = resolved.Quantity,
+                    NetWeight = resolved.NetWeight,
+                    GrossWeight = resolved.GrossWeight,
+                    UnitPrice = resolved.UnitPrice,
+                    PriceLevel = resolved.PriceLevel,
+                    Discount = resolved.Discount,
+                    TaxId = resolved.Tax.Id,
+                    Tax = resolved.Tax,
+                    TaxRate = resolved.Tax.Rate
+                });
             }
         }
+    }
+
+    private sealed record InvoiceLineInput(
+        int ProductId,
+        int UnitMeasureId,
+        int WarehouseId,
+        decimal Quantity,
+        decimal NetWeight,
+        decimal GrossWeight,
+        decimal UnitPrice,
+        decimal Discount);
+
+    private sealed record ResolvedInvoiceLine(
+        Product Product,
+        ProductPresentation Presentation,
+        UnitMeasure UnitMeasure,
+        Warehouse Warehouse,
+        Tax Tax,
+        decimal Quantity,
+        decimal UnitPrice,
+        int PriceLevel,
+        decimal Discount,
+        decimal NetWeight,
+        decimal GrossWeight);
+
+    private async Task<List<ResolvedInvoiceLine>> ResolveLinesAsync(int businessId, IReadOnlyList<InvoiceLineInput> inputs)
+    {
+        if (inputs.Count == 0)
+        {
+            return [];
+        }
+
+        var productIds = inputs.Select(i => i.ProductId).Distinct().ToList();
+        var warehouseIds = inputs.Select(i => i.WarehouseId).Distinct().ToList();
+        var unitMeasureIds = inputs.Where(i => i.UnitMeasureId > 0).Select(i => i.UnitMeasureId).Distinct().ToList();
+
+        var products = await context.Products
+            .Include(p => p.Tax)
+            .Where(p => productIds.Contains(p.Id) && p.BusinessId == businessId && p.IsActive)
+            .ToListAsync();
+
+        var productById = products.ToDictionary(p => p.Id);
+
+        foreach (var productId in productIds)
+        {
+            if (!productById.ContainsKey(productId))
+            {
+                throw new InvalidOperationException($"Producto {productId} no encontrado");
+            }
+        }
+
+        var warehouses = await context.Warehouses
+            .Where(w => warehouseIds.Contains(w.Id) && w.BusinessId == businessId && w.IsActive)
+            .ToListAsync();
+
+        var warehouseById = warehouses.ToDictionary(w => w.Id);
+
+        foreach (var warehouseId in warehouseIds)
+        {
+            if (!warehouseById.ContainsKey(warehouseId))
+            {
+                throw new InvalidOperationException($"Bodega {warehouseId} no encontrada");
+            }
+        }
+
+        var presentations = await context.Set<ProductPresentation>()
+            .Include(pp => pp.UnitMeasure)
+            .Where(pp =>
+                productIds.Contains(pp.ProductId) &&
+                pp.IsActive &&
+                (pp.IsDefault || unitMeasureIds.Contains(pp.UnitMeasureId)))
+            .ToListAsync();
+
+        var presentationByKey = presentations.ToDictionary(pp => (pp.ProductId, pp.UnitMeasureId));
+        var defaultPresentationByProduct = presentations
+            .Where(pp => pp.IsDefault)
+            .ToDictionary(pp => pp.ProductId);
+
+        var goodsLinePairs = new HashSet<(int ProductId, int WarehouseId)>();
+        foreach (var input in inputs)
+        {
+            if (input.Quantity <= 0)
+            {
+                throw new InvalidOperationException($"Cantidad inválida para el producto {input.ProductId}");
+            }
+
+            if (input.WarehouseId <= 0)
+            {
+                throw new InvalidOperationException($"Bodega inválida para el producto {input.ProductId}");
+            }
+
+            if (input.NetWeight < 0 || input.GrossWeight < 0)
+            {
+                throw new InvalidOperationException($"Pesos inválidos para el producto {input.ProductId}");
+            }
+
+            if (input.NetWeight > 0 && input.GrossWeight > 0 && input.GrossWeight < input.NetWeight)
+            {
+                throw new InvalidOperationException($"El peso bruto no puede ser menor al peso neto para el producto {input.ProductId}");
+            }
+
+            var product = productById[input.ProductId];
+            if (product.Type != ProductTypes.SERVICE)
+            {
+                goodsLinePairs.Add((product.Id, input.WarehouseId));
+            }
+        }
+
+        var goodsProductIds = goodsLinePairs.Select(p => p.ProductId).Distinct().ToList();
+        var goodsWarehouseIds = goodsLinePairs.Select(p => p.WarehouseId).Distinct().ToList();
+
+        var stocks = goodsLinePairs.Count == 0
+            ? []
+            : await context.ProductWarehouses
+                .Where(pw => goodsProductIds.Contains(pw.ProductId) && goodsWarehouseIds.Contains(pw.WarehouseId))
+                .ToListAsync();
+
+        var stockByKey = stocks.ToDictionary(pw => (pw.ProductId, pw.WarehouseId));
+
+        var resolved = new List<ResolvedInvoiceLine>(inputs.Count);
+
+        foreach (var input in inputs)
+        {
+            var product = productById[input.ProductId];
+            var warehouse = warehouseById[input.WarehouseId];
+
+            var presentation = ResolvePresentation(
+                product,
+                input.UnitMeasureId,
+                presentationByKey,
+                defaultPresentationByProduct);
+
+            var unitMeasure = presentation.UnitMeasure
+                ?? throw new InvalidOperationException($"Unidad de medida {presentation.UnitMeasureId} no encontrada para el producto {product.Name}");
+
+            if (unitMeasure.BusinessId != businessId || !unitMeasure.IsActive)
+            {
+                throw new InvalidOperationException($"Unidad de medida {unitMeasure.Id} inválida para el negocio actual");
+            }
+
+            if (unitMeasure.FactorBase <= 0)
+            {
+                throw new InvalidOperationException($"Factor de unidad inválido para el producto {product.Name}");
+            }
+
+            var tax = product.Tax
+                ?? throw new InvalidOperationException($"Impuesto {product.TaxId} no encontrado para el producto {product.Name}");
+
+            if (tax.BusinessId != businessId || !tax.IsActive)
+            {
+                throw new InvalidOperationException($"Impuesto {tax.Id} inválido para el negocio actual");
+            }
+
+            if (product.Type != ProductTypes.SERVICE)
+            {
+                if (!stockByKey.TryGetValue((product.Id, warehouse.Id), out var stock))
+                {
+                    throw new InvalidOperationException($"El producto {product.Name} no tiene stock configurado en la bodega seleccionada");
+                }
+
+                var quantityBase = input.Quantity * unitMeasure.FactorBase;
+
+                if (stock.Stock < quantityBase)
+                {
+                    throw new InvalidOperationException($"Stock insuficiente para el producto {product.Name}.");
+                }
+            }
+
+            var (unitPrice, priceLevel) = ResolvePrice(presentation, input.UnitPrice);
+
+            var netWeight = input.NetWeight;
+            var grossWeight = input.GrossWeight;
+
+            if (netWeight <= 0 && grossWeight > 0)
+            {
+                netWeight = grossWeight;
+            }
+            else if (grossWeight <= 0 && netWeight > 0)
+            {
+                grossWeight = netWeight;
+            }
+            else if (netWeight <= 0 && grossWeight <= 0)
+            {
+                netWeight = input.Quantity * presentation.NetWeight;
+                grossWeight = input.Quantity * presentation.GrossWeight;
+            }
+
+            resolved.Add(new ResolvedInvoiceLine(
+                product,
+                presentation,
+                unitMeasure,
+                warehouse,
+                tax,
+                input.Quantity,
+                unitPrice,
+                priceLevel,
+                input.Discount,
+                netWeight,
+                grossWeight));
+        }
+
+        var duplicateKeys = resolved
+            .GroupBy(r => (r.Product.Id, r.Warehouse.Id, r.UnitMeasure.Id))
+            .Where(g => g.Count() > 1)
+            .Select(g => g.Key)
+            .FirstOrDefault();
+
+        if (duplicateKeys != default)
+        {
+            throw new InvalidOperationException("Detalle duplicado para el mismo producto/bodega/unidad de medida");
+        }
+
+        return resolved;
+    }
+
+    private static ProductPresentation ResolvePresentation(
+        Product product,
+        int unitMeasureId,
+        IReadOnlyDictionary<(int ProductId, int UnitMeasureId), ProductPresentation> presentationByKey,
+        IReadOnlyDictionary<int, ProductPresentation> defaultPresentationByProduct)
+    {
+        if (unitMeasureId > 0)
+        {
+            if (!presentationByKey.TryGetValue((product.Id, unitMeasureId), out var presentation))
+            {
+                throw new InvalidOperationException($"El producto {product.Name} no tiene la presentación configurada para la unidad de medida {unitMeasureId}");
+            }
+
+            return presentation;
+        }
+
+        if (!defaultPresentationByProduct.TryGetValue(product.Id, out var defaultPresentation))
+        {
+            throw new InvalidOperationException($"El producto {product.Name} no tiene una presentación default activa");
+        }
+
+        return defaultPresentation;
+    }
+
+    private static (decimal UnitPrice, int PriceLevel) ResolvePrice(ProductPresentation presentation, decimal requestedUnitPrice)
+    {
+        if (requestedUnitPrice > 0)
+        {
+            if (requestedUnitPrice == presentation.Price01) return (requestedUnitPrice, 1);
+            if (requestedUnitPrice == presentation.Price02) return (requestedUnitPrice, 2);
+            if (requestedUnitPrice == presentation.Price03) return (requestedUnitPrice, 3);
+            if (requestedUnitPrice == presentation.Price04) return (requestedUnitPrice, 4);
+            return (requestedUnitPrice, 0);
+        }
+
+        return (presentation.Price01, 1);
     }
 }

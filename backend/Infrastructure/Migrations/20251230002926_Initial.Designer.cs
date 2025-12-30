@@ -12,7 +12,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Infrastructure.Migrations
 {
     [DbContext(typeof(StoreContext))]
-    [Migration("20251227155659_Initial")]
+    [Migration("20251230002926_Initial")]
     partial class Initial
     {
         /// <inheritdoc />
@@ -526,9 +526,17 @@ namespace Infrastructure.Migrations
                         .HasColumnType("numeric")
                         .HasColumnName("PesoNeto");
 
+                    b.Property<int>("PriceLevel")
+                        .HasColumnType("integer")
+                        .HasColumnName("NivelPrecio");
+
                     b.Property<int>("ProductId")
                         .HasColumnType("integer")
                         .HasColumnName("ProductoId");
+
+                    b.Property<int>("ProductPresentationId")
+                        .HasColumnType("integer")
+                        .HasColumnName("ProductoPresentacionId");
 
                     b.Property<decimal>("Quantity")
                         .HasColumnType("numeric")
@@ -562,7 +570,7 @@ namespace Infrastructure.Migrations
                         .HasColumnType("numeric")
                         .HasColumnName("PrecioUnitario");
 
-                    b.Property<int>("WarehouseId")
+                    b.Property<int?>("WarehouseId")
                         .HasColumnType("integer")
                         .HasColumnName("BodegaId");
 
@@ -571,6 +579,8 @@ namespace Infrastructure.Migrations
                     b.HasIndex("InvoiceId");
 
                     b.HasIndex("ProductId");
+
+                    b.HasIndex("ProductPresentationId");
 
                     b.HasIndex("TaxId");
 
@@ -659,30 +669,14 @@ namespace Infrastructure.Migrations
                         .HasColumnType("text")
                         .HasColumnName("Descripcion");
 
-                    b.Property<decimal>("GrossWeight")
-                        .HasColumnType("numeric")
-                        .HasColumnName("PesoBruto");
-
                     b.Property<bool>("IsActive")
                         .HasColumnType("boolean")
                         .HasColumnName("Activo");
-
-                    b.Property<bool>("Iva")
-                        .HasColumnType("boolean")
-                        .HasColumnName("ConIva");
 
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasColumnType("text")
                         .HasColumnName("Nombre");
-
-                    b.Property<decimal>("NetWeight")
-                        .HasColumnType("numeric")
-                        .HasColumnName("PesoNeto");
-
-                    b.Property<decimal>("Price")
-                        .HasColumnType("numeric")
-                        .HasColumnName("Precio");
 
                     b.Property<string>("Sku")
                         .IsRequired()
@@ -698,9 +692,8 @@ namespace Infrastructure.Migrations
                         .HasColumnType("text")
                         .HasColumnName("Tipo");
 
-                    b.Property<int>("UnitMeasureId")
-                        .HasColumnType("integer")
-                        .HasColumnName("UnidadMedidaId");
+                    b.Property<int?>("UnitMeasureId")
+                        .HasColumnType("integer");
 
                     b.HasKey("Id");
 
@@ -711,6 +704,68 @@ namespace Infrastructure.Migrations
                     b.HasIndex("UnitMeasureId");
 
                     b.ToTable("Producto", (string)null);
+                });
+
+            modelBuilder.Entity("Core.Entities.ProductPresentation", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<decimal>("GrossWeight")
+                        .HasColumnType("numeric")
+                        .HasColumnName("PesoBruto");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean")
+                        .HasColumnName("Activo");
+
+                    b.Property<bool>("IsDefault")
+                        .HasColumnType("boolean")
+                        .HasColumnName("EsDefault");
+
+                    b.Property<decimal>("NetWeight")
+                        .HasColumnType("numeric")
+                        .HasColumnName("PesoNeto");
+
+                    b.Property<decimal>("Price01")
+                        .HasColumnType("numeric")
+                        .HasColumnName("Precio01");
+
+                    b.Property<decimal>("Price02")
+                        .HasColumnType("numeric")
+                        .HasColumnName("Precio02");
+
+                    b.Property<decimal>("Price03")
+                        .HasColumnType("numeric")
+                        .HasColumnName("Precio03");
+
+                    b.Property<decimal>("Price04")
+                        .HasColumnType("numeric")
+                        .HasColumnName("Precio04");
+
+                    b.Property<int>("ProductId")
+                        .HasColumnType("integer")
+                        .HasColumnName("ProductoId");
+
+                    b.Property<int>("UnitMeasureId")
+                        .HasColumnType("integer")
+                        .HasColumnName("UnidadMedidaId");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UnitMeasureId");
+
+                    b.HasIndex("ProductId", "IsDefault")
+                        .IsUnique()
+                        .HasFilter("\"EsDefault\" = true");
+
+                    b.HasIndex("ProductId", "UnitMeasureId")
+                        .IsUnique();
+
+                    b.ToTable("ProductoPresentacion", (string)null);
                 });
 
             modelBuilder.Entity("Core.Entities.ProductWarehouse", b =>
@@ -764,7 +819,7 @@ namespace Infrastructure.Migrations
                         .HasColumnName("ClaveAcceso");
 
                     b.Property<DateTime?>("AuthorizationDate")
-                        .HasColumnType("timestamp with time zone")
+                        .HasColumnType("timestamp without time zone")
                         .HasColumnName("FechaAutorizacion");
 
                     b.Property<string>("AuthorizationNumber")
@@ -830,7 +885,7 @@ namespace Infrastructure.Migrations
                         .HasColumnName("Electronico");
 
                     b.Property<DateTime>("IssueDate")
-                        .HasColumnType("timestamp with time zone")
+                        .HasColumnType("timestamp without time zone")
                         .HasColumnName("FechaEmision");
 
                     b.Property<string>("MainAddress")
@@ -901,7 +956,8 @@ namespace Infrastructure.Migrations
                         .HasColumnName("TipoSujetoRetenido");
 
                     b.Property<int>("UserId")
-                        .HasColumnType("integer");
+                        .HasColumnType("integer")
+                        .HasColumnName("UsuarioId");
 
                     b.HasKey("Id");
 
@@ -1508,6 +1564,12 @@ namespace Infrastructure.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("Core.Entities.ProductPresentation", "ProductPresentation")
+                        .WithMany("InvoiceDetails")
+                        .HasForeignKey("ProductPresentationId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
                     b.HasOne("Core.Entities.Tax", "Tax")
                         .WithMany("InvoiceDetails")
                         .HasForeignKey("TaxId")
@@ -1522,13 +1584,13 @@ namespace Infrastructure.Migrations
 
                     b.HasOne("Core.Entities.Warehouse", "Warehouse")
                         .WithMany("InvoiceDetails")
-                        .HasForeignKey("WarehouseId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .HasForeignKey("WarehouseId");
 
                     b.Navigation("Invoice");
 
                     b.Navigation("Product");
+
+                    b.Navigation("ProductPresentation");
 
                     b.Navigation("Tax");
 
@@ -1578,15 +1640,30 @@ namespace Infrastructure.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("Core.Entities.UnitMeasure", "UnitMeasure")
+                    b.HasOne("Core.Entities.UnitMeasure", null)
                         .WithMany("Products")
-                        .HasForeignKey("UnitMeasureId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .HasForeignKey("UnitMeasureId");
 
                     b.Navigation("Business");
 
                     b.Navigation("Tax");
+                });
+
+            modelBuilder.Entity("Core.Entities.ProductPresentation", b =>
+                {
+                    b.HasOne("Core.Entities.Product", "Product")
+                        .WithMany("ProductPresentations")
+                        .HasForeignKey("ProductId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Core.Entities.UnitMeasure", "UnitMeasure")
+                        .WithMany("ProductPresentations")
+                        .HasForeignKey("UnitMeasureId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Product");
 
                     b.Navigation("UnitMeasure");
                 });
@@ -1870,9 +1947,16 @@ namespace Infrastructure.Migrations
 
                     b.Navigation("Kardexes");
 
+                    b.Navigation("ProductPresentations");
+
                     b.Navigation("ProductWarehouses");
 
                     b.Navigation("PurchaseDetails");
+                });
+
+            modelBuilder.Entity("Core.Entities.ProductPresentation", b =>
+                {
+                    b.Navigation("InvoiceDetails");
                 });
 
             modelBuilder.Entity("Core.Entities.Purchase", b =>
@@ -1902,6 +1986,8 @@ namespace Infrastructure.Migrations
             modelBuilder.Entity("Core.Entities.UnitMeasure", b =>
                 {
                     b.Navigation("InvoiceDetails");
+
+                    b.Navigation("ProductPresentations");
 
                     b.Navigation("Products");
                 });

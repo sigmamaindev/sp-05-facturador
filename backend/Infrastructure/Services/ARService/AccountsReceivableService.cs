@@ -59,7 +59,7 @@ public class AccountsReceivableService(StoreContext context) : IAccountsReceivab
                 Status = AccountStatus.OPEN,
             };
 
-            await context.AddAsync(accountReceivable);
+            context.AccountsReceivables.Add(accountReceivable);
 
             await context.SaveChangesAsync();
 
@@ -75,9 +75,7 @@ public class AccountsReceivableService(StoreContext context) : IAccountsReceivab
                 UpdatedAt = DateTime.UtcNow
             };
 
-            await context.AddAsync(charge);
-
-            accountReceivable.Transactions.Add(charge);
+            context.ARTransactions.Add(charge);
         }
         else
         {
@@ -99,7 +97,7 @@ public class AccountsReceivableService(StoreContext context) : IAccountsReceivab
                 UpdatedAt = DateTime.UtcNow
             };
 
-            await context.AddAsync(payment);
+            context.ARTransactions.Add(payment);
 
             accountReceivable.Transactions.Add(payment);
         }
@@ -109,8 +107,8 @@ public class AccountsReceivableService(StoreContext context) : IAccountsReceivab
         .Sum(t => t.Amount);
 
         var totalPayment = accountReceivable.Transactions
-            .Where(t => t.ARTransactionType == ARTransactionType.PAYMENT)
-            .Sum(t => t.Amount);
+        .Where(t => t.ARTransactionType == ARTransactionType.PAYMENT)
+        .Sum(t => t.Amount);
 
         var balance = totalCharge - totalPayment;
 
@@ -122,8 +120,6 @@ public class AccountsReceivableService(StoreContext context) : IAccountsReceivab
         accountReceivable.Status = balance == 0
             ? AccountStatus.PAID
             : (totalPayment > 0 ? AccountStatus.PARTIALLY_PAID : AccountStatus.OPEN);
-
-        await context.SaveChangesAsync();
 
         return accountReceivable;
     }

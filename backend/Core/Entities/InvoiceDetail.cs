@@ -6,7 +6,9 @@ public class InvoiceDetail : BaseEntity
     public Invoice? Invoice { get; set; }
     public int ProductId { get; set; }
     public Product? Product { get; set; }
-    public int WarehouseId { get; set; }
+    public int ProductPresentationId { get; set; }
+    public ProductPresentation? ProductPresentation { get; set; }
+    public int? WarehouseId { get; set; }
     public Warehouse? Warehouse { get; set; }
     public int UnitMeasureId { get; set; }
     public UnitMeasure? UnitMeasure { get; set; }
@@ -18,6 +20,7 @@ public class InvoiceDetail : BaseEntity
     public decimal NetWeight { get; set; }
     public decimal GrossWeight { get; set; }
     public decimal UnitPrice { get; set; }
+    public int PriceLevel { get; set; }
     public decimal Discount { get; set; }
     public decimal Subtotal { get; set; }
     public decimal Total { get; set; }
