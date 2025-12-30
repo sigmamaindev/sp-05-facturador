@@ -30,6 +30,7 @@ import type {
 import InvoiceCreateHeader from "./InvoiceCreateHeader";
 import InvoiceCreateForm from "./InvoiceCreateForm";
 import InvoiceCreatePayment from "./InvoiceCreatePayment";
+import InvoiceAdditionalInfoModal from "./InvoiceAdditionalInfoModal";
 
 const PAYMENT_METHOD_VALUES = Object.values(
   PaymentMethodCode
@@ -64,8 +65,13 @@ export default function InvoiceCreateView() {
     PaymentMethodCode.NFS
   );
   const [paymentTermDays, setPaymentTermDays] = useState(0);
+  const [openAdditionalInfoModal, setOpenAdditionalInfoModal] = useState(false);
+  const [additionalInfoDraft, setAdditionalInfoDraft] = useState<{
+    description: string;
+    additionalInformation: string;
+  }>({ description: "", additionalInformation: "" });
 
-  const { setValue, handleSubmit } = useForm<CreateInvoiceForm>({
+  const { setValue, handleSubmit, getValues } = useForm<CreateInvoiceForm>({
     defaultValues: {
       receiptType: "01",
       isElectronic: true,
@@ -85,6 +91,24 @@ export default function InvoiceCreateView() {
       details: [],
     },
   });
+
+  const handleOpenAdditionalInfoModal = () => {
+    setAdditionalInfoDraft({
+      description: getValues("description") ?? "",
+      additionalInformation: getValues("additionalInformation") ?? "",
+    });
+    setOpenAdditionalInfoModal(true);
+  };
+
+  const handleSaveAdditionalInfo = (values: {
+    description: string;
+    additionalInformation: string;
+  }) => {
+    setValue("description", values.description ?? "");
+    setValue("additionalInformation", values.additionalInformation ?? "");
+    setAdditionalInfoDraft(values);
+    setOpenAdditionalInfoModal(false);
+  };
 
   useEffect(() => {
     const now = new Date();
@@ -373,6 +397,11 @@ export default function InvoiceCreateView() {
             totals={totals}
             openCustomerModal={openCustomerModal}
             setOpenCustomerModal={setOpenCustomerModal}
+            hasAdditionalInfo={
+              additionalInfoDraft.description.trim().length > 0 ||
+              additionalInfoDraft.additionalInformation.trim().length > 0
+            }
+            onOpenAdditionalInfoModal={handleOpenAdditionalInfoModal}
             openProductModal={openProductModal}
             setOpenProductModal={setOpenProductModal}
             handleSelectCustomer={handleSelectCustomer}
@@ -404,6 +433,13 @@ export default function InvoiceCreateView() {
             sequential={draftInvoice?.sequential}
           />
         )}
+        <InvoiceAdditionalInfoModal
+          open={openAdditionalInfoModal}
+          onClose={() => setOpenAdditionalInfoModal(false)}
+          initialDescription={additionalInfoDraft.description}
+          initialAdditionalInformation={additionalInfoDraft.additionalInformation}
+          onSave={handleSaveAdditionalInfo}
+        />
       </CardContent>
     </Card>
   );

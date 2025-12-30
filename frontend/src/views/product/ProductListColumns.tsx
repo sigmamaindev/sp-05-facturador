@@ -29,12 +29,21 @@ export const columns: ColumnDef<Product>[] = [
     ),
   },
   {
-    accessorKey: "price",
+    id: "price01",
     header: "Precio",
+    accessorFn: (product) =>
+      product.defaultPresentation?.price01 ??
+      product.presentations?.find((p) => p.isDefault)?.price01 ??
+      product.price ??
+      0,
     cell: ({ row }) => {
-      const price = (row.original.price ?? 0).toFixed(2);
+      const price01 =
+        row.original.defaultPresentation?.price01 ??
+        row.original.presentations?.find((p) => p.isDefault)?.price01 ??
+        row.original.price ??
+        0;
 
-      return <span>{price}</span>;
+      return <span>{Number(price01).toFixed(2)}</span>;
     },
   },
   {

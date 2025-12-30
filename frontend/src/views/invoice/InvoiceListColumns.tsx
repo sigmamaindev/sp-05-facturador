@@ -137,6 +137,10 @@ export const columns: ColumnDef<Invoice>[] = [
       const isReceived =
         invoice.status?.toUpperCase().includes("RECIBIDO") ?? false;
 
+      const isPending =
+        normalizedStatus.includes("PENDIENTE") ||
+        normalizedStatus.includes("PENDING");
+
       const handlePdfDownload = async () => {
         if (!token) return;
 
@@ -240,7 +244,7 @@ export const columns: ColumnDef<Invoice>[] = [
             </Tooltip>
           ) : null}
 
-          {hasPermission && !isReceived && !isAuthorized ? (
+          {hasPermission && !isReceived && !isAuthorized && !isPending ? (
             <Tooltip>
               <TooltipTrigger asChild>
                 <Link

@@ -34,6 +34,35 @@ interface ProductUpdateFormProps {
   token: string | null;
 }
 
+function asBoolean(value: unknown, defaultValue: boolean): boolean {
+  if (typeof value === "boolean") return value;
+  if (typeof value === "number") {
+    if (value === 1) return true;
+    if (value === 0) return false;
+    return defaultValue;
+  }
+  if (typeof value === "string") {
+    const normalized = value.trim().toLowerCase();
+    if (!normalized) return defaultValue;
+    if (normalized === "true" || normalized === "on" || normalized === "1") {
+      return true;
+    }
+    if (normalized === "false" || normalized === "0") return false;
+    return defaultValue;
+  }
+  return defaultValue;
+}
+
+function toNumberOrUndefined(value: unknown): number | undefined {
+  if (value === "" || value === null || value === undefined) return undefined;
+  const num = typeof value === "number" ? value : Number(value);
+  return Number.isFinite(num) ? num : undefined;
+}
+
+function toNumberOrZero(value: unknown): number {
+  return toNumberOrUndefined(value) ?? 0;
+}
+
 export default function ProductUpdateForm({
   product,
   unitMeasures,
@@ -267,16 +296,16 @@ export default function ProductUpdateForm({
         )}
       />
       <div className="grid gap-2">
-        <Label htmlFor="defaultPrice01">Precio</Label>
+        <Label htmlFor="defaultPrice01">Precio 1</Label>
         <Input
           id="defaultPrice01"
           type="number"
           step="0.01"
           inputMode="decimal"
-          placeholder="Precio"
+          placeholder="Precio 1"
           {...register("defaultPresentation.price01", {
             required: "El precio es obligatorio",
-            valueAsNumber: true,
+            setValueAs: (v) => toNumberOrUndefined(v),
           })}
         />
         {errors.defaultPresentation?.price01 && (
@@ -286,21 +315,46 @@ export default function ProductUpdateForm({
         )}
       </div>
 
-      <input
-        type="hidden"
-        {...register("defaultPresentation.price02", { valueAsNumber: true })}
-        defaultValue={currentDefaultPresentation?.price02 ?? 0}
-      />
-      <input
-        type="hidden"
-        {...register("defaultPresentation.price03", { valueAsNumber: true })}
-        defaultValue={currentDefaultPresentation?.price03 ?? 0}
-      />
-      <input
-        type="hidden"
-        {...register("defaultPresentation.price04", { valueAsNumber: true })}
-        defaultValue={currentDefaultPresentation?.price04 ?? 0}
-      />
+      <div className="grid gap-2">
+        <Label htmlFor="defaultPrice02">Precio 2</Label>
+        <Input
+          id="defaultPrice02"
+          type="number"
+          step="0.01"
+          inputMode="decimal"
+          placeholder="Precio 2"
+          {...register("defaultPresentation.price02", {
+            setValueAs: (v) => toNumberOrZero(v),
+          })}
+        />
+      </div>
+      <div className="grid gap-2">
+        <Label htmlFor="defaultPrice03">Precio 3</Label>
+        <Input
+          id="defaultPrice03"
+          type="number"
+          step="0.01"
+          inputMode="decimal"
+          placeholder="Precio 3"
+          {...register("defaultPresentation.price03", {
+            setValueAs: (v) => toNumberOrZero(v),
+          })}
+        />
+      </div>
+      <div className="grid gap-2">
+        <Label htmlFor="defaultPrice04">Precio 4</Label>
+        <Input
+          id="defaultPrice04"
+          type="number"
+          step="0.01"
+          inputMode="decimal"
+          placeholder="Precio 4"
+          {...register("defaultPresentation.price04", {
+            setValueAs: (v) => toNumberOrZero(v),
+          })}
+        />
+      </div>
+
       <input
         type="hidden"
         {...register("defaultPresentation.netWeight", { valueAsNumber: true })}
@@ -314,7 +368,7 @@ export default function ProductUpdateForm({
       <input
         type="hidden"
         {...register("defaultPresentation.isActive", {
-          setValueAs: (v) => v === "true",
+          setValueAs: (v) => asBoolean(v, true),
         })}
         defaultValue={String(currentDefaultPresentation?.isActive ?? true)}
       />
@@ -385,39 +439,54 @@ export default function ProductUpdateForm({
                 />
 
                 <div className="grid gap-2">
-                  <Label>Precio</Label>
+                  <Label>Precio 1</Label>
                   <Input
                     type="number"
                     step="0.01"
                     inputMode="decimal"
                     {...register(`presentations.${index}.price01`, {
                       required: "El precio es obligatorio",
-                      valueAsNumber: true,
+                      setValueAs: (v) => toNumberOrUndefined(v),
                     })}
                   />
                 </div>
 
-                <input
-                  type="hidden"
-                  {...register(`presentations.${index}.price02`, {
-                    valueAsNumber: true,
-                  })}
-                  defaultValue={field.price02 ?? 0}
-                />
-                <input
-                  type="hidden"
-                  {...register(`presentations.${index}.price03`, {
-                    valueAsNumber: true,
-                  })}
-                  defaultValue={field.price03 ?? 0}
-                />
-                <input
-                  type="hidden"
-                  {...register(`presentations.${index}.price04`, {
-                    valueAsNumber: true,
-                  })}
-                  defaultValue={field.price04 ?? 0}
-                />
+                <div className="grid gap-2">
+                  <Label>Precio 2</Label>
+                  <Input
+                    type="number"
+                    step="0.01"
+                    inputMode="decimal"
+                    defaultValue={field.price02 ?? 0}
+                    {...register(`presentations.${index}.price02`, {
+                      setValueAs: (v) => toNumberOrZero(v),
+                    })}
+                  />
+                </div>
+                <div className="grid gap-2">
+                  <Label>Precio 3</Label>
+                  <Input
+                    type="number"
+                    step="0.01"
+                    inputMode="decimal"
+                    defaultValue={field.price03 ?? 0}
+                    {...register(`presentations.${index}.price03`, {
+                      setValueAs: (v) => toNumberOrZero(v),
+                    })}
+                  />
+                </div>
+                <div className="grid gap-2">
+                  <Label>Precio 4</Label>
+                  <Input
+                    type="number"
+                    step="0.01"
+                    inputMode="decimal"
+                    defaultValue={field.price04 ?? 0}
+                    {...register(`presentations.${index}.price04`, {
+                      setValueAs: (v) => toNumberOrZero(v),
+                    })}
+                  />
+                </div>
                 <input
                   type="hidden"
                   {...register(`presentations.${index}.netWeight`, {
@@ -435,14 +504,14 @@ export default function ProductUpdateForm({
                 <input
                   type="hidden"
                   {...register(`presentations.${index}.isActive`, {
-                    setValueAs: (v) => v === "true",
+                    setValueAs: (v) => asBoolean(v, true),
                   })}
                   defaultValue={String(field.isActive ?? true)}
                 />
                 <input
                   type="hidden"
                   {...register(`presentations.${index}.isDefault`, {
-                    setValueAs: (v) => v === "true",
+                    setValueAs: (v) => asBoolean(v, false),
                   })}
                   defaultValue={String(field.isDefault ?? false)}
                 />

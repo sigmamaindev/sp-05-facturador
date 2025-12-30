@@ -19,6 +19,8 @@ interface InvoiceCreateFormProps {
   totals: InvoiceTotals;
   openCustomerModal: boolean;
   setOpenCustomerModal: React.Dispatch<React.SetStateAction<boolean>>;
+  hasAdditionalInfo: boolean;
+  onOpenAdditionalInfoModal: () => void;
   openProductModal: boolean;
   setOpenProductModal: React.Dispatch<React.SetStateAction<boolean>>;
   handleSelectCustomer: (customer: Customer) => void;
@@ -47,6 +49,8 @@ export default function InvoiceCreateForm({
   totals,
   openCustomerModal,
   setOpenCustomerModal,
+  hasAdditionalInfo,
+  onOpenAdditionalInfoModal,
   openProductModal,
   setOpenProductModal,
   handleSelectCustomer,
@@ -85,7 +89,7 @@ export default function InvoiceCreateForm({
           </CardHeader>
           <CardContent>
             <div className="max-h-[400px] overflow-auto rounded-md border">
-              <div className="min-w-[750px]">
+              <div className="min-w-[500px]">
                 <table className="w-full border-collapse">
                   <thead className="sticky top-0 z-10 bg-background">
                     <tr className="border-b">
@@ -274,6 +278,16 @@ export default function InvoiceCreateForm({
             )}
           </CardContent>
         </Card>
+        <Button
+          type="button"
+          variant="outline"
+          className="w-full"
+          onClick={onOpenAdditionalInfoModal}
+        >
+          {hasAdditionalInfo
+            ? "Editar información adicional"
+            : "Agregar información adicional"}
+        </Button>
         <Card>
           <CardHeader>
             <CardTitle>RESUMEN</CardTitle>
