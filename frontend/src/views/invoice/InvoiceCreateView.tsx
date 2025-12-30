@@ -44,6 +44,8 @@ function isPaymentMethodCode(v: unknown): v is PaymentMethodCodeType {
 }
 
 export default function InvoiceCreateView() {
+  type PriceTier = 1 | 2 | 3 | 4;
+
   const navigate = useNavigate();
 
   const { token, user } = useAuth();
@@ -134,7 +136,9 @@ export default function InvoiceCreateView() {
 
       if (exists) return prev;
 
-      const price = product.price ?? 0;
+      const priceTier: PriceTier = 1;
+      const price =
+        product.defaultPresentation?.price01 ?? product.price ?? 0;
       const discount = 0;
       const base = price - discount;
       const ivaRate = product.tax?.rate ?? 12;
@@ -143,6 +147,8 @@ export default function InvoiceCreateView() {
       const newProduct: InvoiceProduct = {
         ...product,
         price,
+        priceMode: "manual",
+        priceTier,
         netWeight: 0,
         grossWeight: 0,
         quantity: 1,
@@ -155,6 +161,22 @@ export default function InvoiceCreateView() {
     });
   };
 
+	  const getPriceForTier = (
+	    presentation: ProductPresentation,
+	    tier: PriceTier
+	  ) => {
+    switch (tier) {
+      case 1:
+        return Number(presentation.price01 ?? 0);
+      case 2:
+        return Number(presentation.price02 ?? 0);
+      case 3:
+        return Number(presentation.price03 ?? 0);
+      case 4:
+        return Number(presentation.price04 ?? 0);
+	    }
+	  };
+
   const handleOpenPresentationModal = async (productId: number) => {
     setProductIdForPresentation(productId);
     setOpenPresentationModal(true);
@@ -165,17 +187,18 @@ export default function InvoiceCreateView() {
 
     try {
       const fetched = await getProductById(productId, token);
-      if (!fetched.data) return;
+      const fetchedProduct = fetched.data;
+      if (!fetchedProduct) return;
 
       setProducts((prev) =>
         prev.map((p) =>
           p.id === productId
             ? {
-                ...fetched.data,
+                ...fetchedProduct,
                 ...p,
                 defaultPresentation:
-                  fetched.data.defaultPresentation ?? p.defaultPresentation,
-                presentations: fetched.data.presentations ?? p.presentations,
+                  fetchedProduct.defaultPresentation ?? p.defaultPresentation,
+                presentations: fetchedProduct.presentations ?? p.presentations,
               }
             : p
         )
@@ -195,30 +218,58 @@ export default function InvoiceCreateView() {
     return products.find((p) => p.id === productIdForPresentation) ?? null;
   }, [productIdForPresentation, products]);
 
-  const handleSelectPresentation = (presentation: ProductPresentation) => {
-    if (productIdForPresentation == null) return;
+	  const handleSelectPresentation = (
+	    presentation: ProductPresentation,
+	    priceTier: PriceTier
+	  ) => {
+	    if (productIdForPresentation == null) return;
+
+	    setProducts((prev) =>
+	      prev.map((p) => {
+	        if (p.id !== productIdForPresentation) return p;
+
+	        const price = getPriceForTier(presentation, priceTier);
+	        const unitMeasure = presentation.unitMeasure ?? p.unitMeasure;
+	        const base = (price - p.discount) * p.quantity;
+	        const ivaRate = p.tax?.rate ?? 12;
+	        const taxValue = base * (ivaRate / 100);
+
+	        return {
+	          ...p,
+	          unitMeasure,
+	          price,
+	          priceMode: "manual",
+	          priceTier,
+	          subtotal: base,
+	          taxValue,
+	        };
+	      })
+	    );
+
+	    handleClosePresentationModal();
+	  };
+
+  const handleUnitPriceChange = (productId: number, value: number) => {
+    const next = Number.isFinite(value) ? value : 0;
 
     setProducts((prev) =>
       prev.map((p) => {
-        if (p.id !== productIdForPresentation) return p;
+        if (p.id !== productId) return p;
 
-        const price = presentation.price01 ?? 0;
-        const unitMeasure = presentation.unitMeasure ?? p.unitMeasure;
+        const price = next;
         const base = (price - p.discount) * p.quantity;
         const ivaRate = p.tax?.rate ?? 12;
         const taxValue = base * (ivaRate / 100);
 
         return {
           ...p,
-          unitMeasure,
+          priceMode: "manual",
           price,
           subtotal: base,
           taxValue,
         };
       })
     );
-
-    handleClosePresentationModal();
   };
 
   const handleWeightChange = (
@@ -413,6 +464,7 @@ export default function InvoiceCreateView() {
             handleSelectPresentation={handleSelectPresentation}
             handleWeightChange={handleWeightChange}
             handleQuantityChange={handleQuantityChange}
+            handleUnitPriceChange={handleUnitPriceChange}
             handleRemoveProduct={handleRemoveProduct}
             onSaveDraft={handleSaveDraftAndExit}
             onContinue={handleContinueToPayment}

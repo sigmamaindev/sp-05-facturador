@@ -34,7 +34,7 @@ interface InvoiceProductPresentationModalProps {
   open: boolean;
   onClose: () => void;
   product: InvoiceProduct | null;
-  onSelect: (presentation: ProductPresentation) => void;
+  onSelect: (presentation: ProductPresentation, priceTier: 1 | 2 | 3 | 4) => void;
 }
 
 export default function InvoiceProductPresentationModal({
@@ -75,9 +75,8 @@ export default function InvoiceProductPresentationModal({
                   <thead className="bg-muted/50">
                     <tr className="text-left">
                       <th className="p-3 font-medium">U. medida</th>
-                      <th className="p-3 font-medium text-right">Precio</th>
+                      <th className="p-3 font-medium text-right">Precios</th>
                       <th className="p-3 font-medium text-center">Default</th>
-                      <th className="p-3 font-medium text-right">Acción</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -96,21 +95,44 @@ export default function InvoiceProductPresentationModal({
                             ? `${p.unitMeasure.code} - ${p.unitMeasure.name}`
                             : `ID ${p.unitMeasureId}`}
                         </td>
-                        <td className="p-3 text-right whitespace-nowrap">
-                          ${Number(p.price01 ?? 0).toFixed(2)}
+                        <td className="p-3">
+                          <div className="flex justify-end gap-2 whitespace-nowrap">
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              disabled={!p.isActive}
+                              onClick={() => onSelect(p, 1)}
+                            >
+                              {`P1 $${Number(p.price01 ?? 0).toFixed(2)}`}
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              disabled={!p.isActive}
+                              onClick={() => onSelect(p, 2)}
+                            >
+                              {`P2 $${Number(p.price02 ?? 0).toFixed(2)}`}
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              disabled={!p.isActive}
+                              onClick={() => onSelect(p, 3)}
+                            >
+                              {`P3 $${Number(p.price03 ?? 0).toFixed(2)}`}
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              disabled={!p.isActive}
+                              onClick={() => onSelect(p, 4)}
+                            >
+                              {`P4 $${Number(p.price04 ?? 0).toFixed(2)}`}
+                            </Button>
+                          </div>
                         </td>
                         <td className="p-3 text-center">
                           {p.isDefault ? "Sí" : "—"}
-                        </td>
-                        <td className="p-3 text-right">
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            disabled={!p.isActive}
-                            onClick={() => onSelect(p)}
-                          >
-                            Seleccionar
-                          </Button>
                         </td>
                       </tr>
                     ))}

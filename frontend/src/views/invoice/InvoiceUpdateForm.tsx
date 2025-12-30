@@ -34,7 +34,10 @@ interface InvoiceUpdateFormProps {
   presentationProduct: InvoiceProduct | null;
   onOpenPresentationModal: (productId: number) => void;
   onClosePresentationModal: () => void;
-  handleSelectPresentation: (presentation: ProductPresentation) => void;
+  handleSelectPresentation: (
+    presentation: ProductPresentation,
+    priceTier: 1 | 2 | 3 | 4
+  ) => void;
   handleWeightChange: (
     productId: number,
     field: "netWeight" | "grossWeight",
@@ -94,15 +97,12 @@ export default function InvoiceUpdateForm({
 
           <CardContent>
             <div className="max-h-[400px] overflow-auto rounded-md border">
-              <div className="min-w-[750px]">
+              <div className="min-w-[600px]">
                 <table className="w-full border-collapse">
                   <thead className="sticky top-0 z-10 bg-background">
                     <tr className="border-b">
                       <th className="text-left py-2 px-2 font-semibold">
-                        Código
-                      </th>
-                      <th className="text-left py-2 px-2 font-semibold">
-                        Nombre
+                        Producto
                       </th>
                       <th className="text-left py-2 px-2 font-semibold">
                         Cant. / U.M.
@@ -135,7 +135,7 @@ export default function InvoiceUpdateForm({
 	                    {products.length === 0 ? (
 	                      <tr>
 	                        <td
-	                          colSpan={10}
+	                          colSpan={9}
 	                          className="text-center py-4 text-muted-foreground"
 	                        >
 	                          No hay productos agregados
@@ -144,16 +144,19 @@ export default function InvoiceUpdateForm({
                     ) : (
                       products.map((p) => (
                         <tr key={p.id} className="border-b last:border-b-0">
-                          <td className="py-2 px-2 whitespace-nowrap">
-                            {p.sku}
+                          <td className="py-2 px-2">
+                            <div className="max-w-[220px] leading-tight">
+                              <div className="text-xs text-muted-foreground whitespace-nowrap">
+                                {p.sku}
+                              </div>
+                              <div className="truncate">{p.name}</div>
+                            </div>
                           </td>
-                          <td className="py-2 px-2">{p.name}</td>
 
                           <td className="py-2 px-2">
                             <div className="flex items-center gap-2 whitespace-nowrap">
                               <Input
                                 type="number"
-                                step="0.01"
                                 min={1}
                                 value={p.quantity}
                                 onChange={(e) =>
@@ -162,7 +165,7 @@ export default function InvoiceUpdateForm({
                                     Number(e.target.value)
                                   )
                                 }
-                                className="h-8 w-20 px-2 text-center text-sm"
+                                className="h-8 w-16 px-1 text-center text-sm"
                               />
 
                               <Button
@@ -186,38 +189,38 @@ export default function InvoiceUpdateForm({
 	                          <td className="py-2 px-2 text-right whitespace-nowrap">
 	                            ${p.price.toFixed(2)}
 	                          </td>
-	                          <td className="py-2 px-2 text-right whitespace-nowrap">
-	                            <Input
-	                              type="number"
-	                              step="0.01"
-	                              min={0}
-	                              value={p.netWeight ?? 0}
+		                          <td className="py-2 px-2 text-right whitespace-nowrap">
+		                            <Input
+		                              type="number"
+		                              step="0.01"
+		                              min={0}
+		                              value={p.netWeight ?? 0}
 	                              onChange={(e) =>
 	                                handleWeightChange(
 	                                  p.id,
 	                                  "netWeight",
-	                                  Number(e.target.value)
-	                                )
-	                              }
-	                              className="h-8 w-24 px-2 text-right text-sm"
-	                            />
-	                          </td>
-	                          <td className="py-2 px-2 text-right whitespace-nowrap">
-	                            <Input
-	                              type="number"
-	                              step="0.01"
-	                              min={0}
-	                              value={p.grossWeight ?? 0}
+		                                  Number(e.target.value)
+		                                )
+		                              }
+		                              className="h-8 w-20 px-1 text-right text-sm"
+		                            />
+		                          </td>
+		                          <td className="py-2 px-2 text-right whitespace-nowrap">
+		                            <Input
+		                              type="number"
+		                              step="0.01"
+		                              min={0}
+		                              value={p.grossWeight ?? 0}
 	                              onChange={(e) =>
 	                                handleWeightChange(
 	                                  p.id,
 	                                  "grossWeight",
-	                                  Number(e.target.value)
-	                                )
-	                              }
-	                              className="h-8 w-24 px-2 text-right text-sm"
-	                            />
-	                          </td>
+		                                  Number(e.target.value)
+		                                )
+		                              }
+		                              className="h-8 w-20 px-1 text-right text-sm"
+		                            />
+		                          </td>
 	                          <td className="py-2 px-2 text-right whitespace-nowrap">
 	                            ${p.discount.toFixed(2)}
 	                          </td>

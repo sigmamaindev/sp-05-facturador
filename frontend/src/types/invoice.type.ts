@@ -71,6 +71,8 @@ export type InvoiceDetail = {
 
 export interface InvoiceProduct extends Product {
   price: number;
+  priceMode?: "tier" | "manual";
+  priceTier?: 1 | 2 | 3 | 4;
   netWeight: number;
   grossWeight: number;
   quantity: number;

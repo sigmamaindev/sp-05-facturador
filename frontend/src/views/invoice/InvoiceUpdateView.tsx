@@ -27,6 +27,8 @@ import AlertMessage from "@/components/shared/AlertMessage";
 import InvoicePaymentStep from "./InvoiceCreatePayment";
 
 export default function InvoiceUpdateView() {
+  type PriceTier = 1 | 2 | 3 | 4;
+
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
 
@@ -230,17 +232,18 @@ export default function InvoiceUpdateView() {
 
     try {
       const fetched = await getProductById(productId, token);
-      if (!fetched.data) return;
+      const fetchedProduct = fetched.data;
+      if (!fetchedProduct) return;
 
       setProducts((prev) =>
         prev.map((p) =>
           p.id === productId
             ? {
-                ...fetched.data,
+                ...fetchedProduct,
                 ...p,
                 defaultPresentation:
-                  fetched.data.defaultPresentation ?? p.defaultPresentation,
-                presentations: fetched.data.presentations ?? p.presentations,
+                  fetchedProduct.defaultPresentation ?? p.defaultPresentation,
+                presentations: fetchedProduct.presentations ?? p.presentations,
               }
             : p
         )
@@ -260,14 +263,33 @@ export default function InvoiceUpdateView() {
     return products.find((p) => p.id === productIdForPresentation) ?? null;
   }, [productIdForPresentation, products]);
 
-  const handleSelectPresentation = (presentation: ProductPresentation) => {
+  const getPriceForTier = (
+    presentation: ProductPresentation,
+    tier: PriceTier
+  ) => {
+    switch (tier) {
+      case 1:
+        return Number(presentation.price01 ?? 0);
+      case 2:
+        return Number(presentation.price02 ?? 0);
+      case 3:
+        return Number(presentation.price03 ?? 0);
+      case 4:
+        return Number(presentation.price04 ?? 0);
+    }
+  };
+
+  const handleSelectPresentation = (
+    presentation: ProductPresentation,
+    priceTier: PriceTier
+  ) => {
     if (productIdForPresentation == null) return;
 
     setProducts((prev) =>
       prev.map((p) => {
         if (p.id !== productIdForPresentation) return p;
 
-        const price = presentation.price01 ?? 0;
+        const price = getPriceForTier(presentation, priceTier);
         const unitMeasure = presentation.unitMeasure ?? p.unitMeasure;
         const base = (price - p.discount) * p.quantity;
         const ivaRate = p.tax?.rate ?? 12;
@@ -277,6 +299,8 @@ export default function InvoiceUpdateView() {
           ...p,
           unitMeasure,
           price,
+          priceMode: "manual",
+          priceTier,
           subtotal: base,
           taxValue,
         };
