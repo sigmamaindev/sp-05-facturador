@@ -1,17 +1,23 @@
 import React from "react";
+import { PlusIcon } from "lucide-react";
 
 import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 
 interface InvoiceProductModalHeaderProps {
   keyword: string;
   setPage: React.Dispatch<React.SetStateAction<number>>;
   setKeyword: React.Dispatch<React.SetStateAction<string>>;
+  canCreate?: boolean;
+  onCreate?: () => void;
 }
 
 export default function InvoiceProductModalHeader({
   keyword,
   setPage,
   setKeyword,
+  canCreate,
+  onCreate,
 }: InvoiceProductModalHeaderProps) {
   return (
     <div className="grid grid-cols-1 md:flex md:flex-row md:justify-between md:items-center items-center gap-4 pb-4">
@@ -26,6 +32,14 @@ export default function InvoiceProductModalHeader({
           className="w-full"
         />
       </div>
+      {canCreate && onCreate && (
+        <div className="flex justify-end w-full md:w-auto">
+          <Button type="button" onClick={onCreate}>
+            <PlusIcon />
+            Producto
+          </Button>
+        </div>
+      )}
     </div>
   );
 }

@@ -40,10 +40,10 @@ export default function BusinessUpdateForm({
   } = useForm<UpdateBusinessForm>({
     defaultValues: {
       document: business.document,
-      name: business.name,
-      address: business.address,
-      city: business.city,
-      province: business.province,
+      name: business.name.toUpperCase(),
+      address: business.address.toUpperCase(),
+      city: business.city.toUpperCase(),
+      province: business.province.toUpperCase(),
       sriEnvironment: String(business.sriEnvironment) === "2" ? "2" : "1",
     },
   });
@@ -90,6 +90,7 @@ export default function BusinessUpdateForm({
           id="name"
           type="text"
           placeholder="Nombre"
+          transform="uppercase"
           {...register("name", { required: "El nombre es obligatorio" })}
         />
         {errors.name && (
@@ -103,6 +104,7 @@ export default function BusinessUpdateForm({
           id="address"
           type="text"
           placeholder="Dirección"
+          transform="uppercase"
           {...register("address", {
             required: "La dirección es obligatoria",
           })}
@@ -118,6 +120,7 @@ export default function BusinessUpdateForm({
           id="city"
           type="text"
           placeholder="Ciudad"
+          transform="uppercase"
           {...register("city", { required: "La ciudad es obligatoria" })}
         />
         {errors.city && (
@@ -131,6 +134,7 @@ export default function BusinessUpdateForm({
           id="province"
           type="text"
           placeholder="Provincia"
+          transform="uppercase"
           {...register("province", {
             required: "La provincia es obligatoria",
           })}

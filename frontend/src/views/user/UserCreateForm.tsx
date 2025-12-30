@@ -120,6 +120,7 @@ export default function UserCreateForm({
           id="fullName"
           type="text"
           placeholder="Nombre Completo"
+          transform="uppercase"
           {...register("fullName", {
             required: "El nombre completo es obligatorio",
           })}
@@ -176,6 +177,7 @@ export default function UserCreateForm({
           id="address"
           type="text"
           placeholder="Dirección"
+          transform="uppercase"
           {...register("address", {
             required: "La dirección es obligatorio",
           })}
@@ -190,8 +192,19 @@ export default function UserCreateForm({
           id="cellphone"
           type="text"
           placeholder="Celular"
+          transform="digits"
+          inputMode="numeric"
+          minLength={10}
           {...register("cellphone", {
             required: "El celular es obligatorio",
+            validate: {
+              digitsOnly: (val) =>
+                /^[0-9]+$/.test(val ?? "") ||
+                "El celular debe contener solo números",
+              minLength: (val) =>
+                (val?.length ?? 0) >= 10 ||
+                "El celular debe tener al menos 10 caracteres",
+            },
           })}
         />
         {errors.cellphone && (
@@ -204,8 +217,19 @@ export default function UserCreateForm({
           id="telephone"
           type="text"
           placeholder="Teléfono"
+          transform="digits"
+          inputMode="numeric"
+          minLength={10}
           {...register("telephone", {
             required: "El teléfono es obligatorio",
+            validate: {
+              digitsOnly: (val) =>
+                /^[0-9]+$/.test(val ?? "") ||
+                "El teléfono debe contener solo números",
+              minLength: (val) =>
+                (val?.length ?? 0) >= 10 ||
+                "El teléfono debe tener al menos 10 caracteres",
+            },
           })}
         />
         {errors.telephone && (

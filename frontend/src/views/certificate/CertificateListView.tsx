@@ -92,7 +92,7 @@ export default function CertificateListView() {
 
     const file = data.certificate?.[0];
     if (!file) {
-      toast.error("Debe seleccionar un archivo .p12");
+      toast.error("Debe seleccionar un archivo .p12 o .pfx");
       return;
     }
 
@@ -129,7 +129,7 @@ export default function CertificateListView() {
         <div>
           <div className="leading-none font-semibold">Certificados</div>
           <CardDescription>
-            Carga el certificado para firmar facturas (archivo .p12).
+            Carga el certificado para firmar facturas (archivo .p12 o .pfx).
           </CardDescription>
         </div>
       </CardHeader>
@@ -183,12 +183,22 @@ export default function CertificateListView() {
           />
 
           <div className="grid gap-2">
-            <Label htmlFor="certificate">Certificado (.p12)</Label>
+            <Label htmlFor="certificate">Certificado (.p12 o .pfx)</Label>
             <Input
               key={fileInputKey}
               id="certificate"
               type="file"
-              accept=".p12,application/x-pkcs12"
+              accept=".p12,.pfx,application/x-pkcs12,application/octet-stream"
+              {...register("certificate", {
+                required: "Debe seleccionar un archivo .p12 o .pfx",
+                validate: (files) => {
+                  const file = files?.[0];
+                  if (!file) return "Debe seleccionar un archivo .p12 o .pfx";
+                  const lower = file.name.toLowerCase();
+                  if (lower.endsWith(".p12") || lower.endsWith(".pfx")) return true;
+                  return "Debe seleccionar un archivo .p12 o .pfx";
+                },
+              })}
             />
             {selectedFile ? (
               <p className="text-xs text-muted-foreground">{selectedFile.name}</p>

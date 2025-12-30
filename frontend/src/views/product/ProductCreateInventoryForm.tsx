@@ -18,12 +18,14 @@ interface ProductCreateInventoryFormProps {
   token: string;
   warehouses: Warehouse[];
   product: Product;
+  onComplete?: () => void;
 }
 
 export default function ProductCreateInventoryForm({
   token,
   warehouses,
   product,
+  onComplete,
 }: ProductCreateInventoryFormProps) {
   const navigate = useNavigate();
 
@@ -50,7 +52,11 @@ export default function ProductCreateInventoryForm({
 
       toast.success(response.message);
 
-      navigate("/productos");
+      if (onComplete) {
+        onComplete();
+      } else {
+        navigate("/productos");
+      }
     } catch (err: any) {
       toast.error(err.message);
     } finally {

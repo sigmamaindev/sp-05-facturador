@@ -53,6 +53,7 @@ export default function EstablishmentCreateForm({
           id="name"
           type="text"
           placeholder="Nombre"
+          transform="uppercase"
           {...register("name", { required: "El nombre es obligatorio" })}
         />
         {errors.name && (

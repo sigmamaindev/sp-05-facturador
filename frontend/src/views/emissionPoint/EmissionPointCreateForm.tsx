@@ -59,6 +59,7 @@ export default function EmissionPointCreateForm({
           id="description"
           type="text"
           placeholder="Descripción"
+          transform="uppercase"
           {...register("description", {
             required: "La descripción es obligatorio",
           })}

@@ -31,8 +31,8 @@ export default function WarehouseUpdateForm({
     formState: { errors },
   } = useForm<UpdateWarehouseForm>({
     defaultValues: {
-      name: warehouse.name,
-      address: warehouse.address,
+      name: warehouse.name.toUpperCase(),
+      address: warehouse.address.toUpperCase(),
     },
   });
 
@@ -63,6 +63,7 @@ export default function WarehouseUpdateForm({
           id="name"
           type="text"
           placeholder="Nombre"
+          transform="uppercase"
           {...register("name", { required: "El nombre es obligatorio" })}
         />
         {errors.name && (
@@ -76,6 +77,7 @@ export default function WarehouseUpdateForm({
           id="address"
           type="text"
           placeholder="Dirección"
+          transform="uppercase"
           {...register("address", { required: "La dirección es obligatoria" })}
         />
         {errors.address && (

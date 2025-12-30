@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 import { useAuth } from "@/contexts/AuthContext";
 
@@ -19,6 +19,7 @@ import DataTable from "@/components/shared/DataTable";
 
 import InvoiceProductModalHeader from "./InvoiceProductModalHeader";
 import { columns } from "./InvoiceProductModalColumns";
+import ProductCreateModal from "../product/ProductCreateModal";
 
 interface InvoiceProductModalProps {
   open: boolean;
@@ -31,7 +32,7 @@ export default function InvoiceProductModal({
   onClose,
   onSelect,
 }: InvoiceProductModalProps) {
-  const { token } = useAuth();
+  const { token, user } = useAuth();
 
   const [data, setData] = useState<Product[]>([]);
   const [page, setPage] = useState(1);
@@ -40,11 +41,17 @@ export default function InvoiceProductModal({
   const [keyword, setKeyword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [openCreateProductModal, setOpenCreateProductModal] = useState(false);
+  const [refreshKey, setRefreshKey] = useState(0);
 
-  const fetchData = async () => {
+  const canCreateProduct =
+    user?.roles?.includes("SuperAdmin") || user?.roles?.includes("Admin");
+
+  const fetchData = useCallback(async () => {
     if (!token) return;
 
     setLoading(true);
+    setError(null);
 
     try {
       const products = await getProducts(keyword, page, pageSize, token);
@@ -60,42 +67,60 @@ export default function InvoiceProductModal({
     } finally {
       setLoading(false);
     }
-  };
-
-  useEffect(() => {
-    fetchData();
   }, [keyword, page, pageSize, token]);
 
+  useEffect(() => {
+    if (!open) return;
+    void fetchData();
+  }, [fetchData, open, refreshKey]);
+
   return (
-    <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="!max-w-fit">
-        <DialogHeader>
-          <DialogTitle>Seleccionar Producto</DialogTitle>
-        </DialogHeader>
-        <Card>
-          <CardContent>
-            <InvoiceProductModalHeader
-              keyword={keyword}
-              setKeyword={setKeyword}
-              setPage={setPage}
-            />
-            {error ? (
-              <AlertMessage message={error} variant="destructive" />
-            ) : (
-              <DataTable
-                columns={columns({ onSelect })}
-                data={data}
-                page={page}
-                pageSize={pageSize}
-                totalPages={totalPages}
-                onPageChange={setPage}
-                onPageSizeChange={setPageSize}
-                loading={loading}
+    <>
+      <Dialog open={open} onOpenChange={onClose}>
+        <DialogContent className="!max-w-fit">
+          <DialogHeader>
+            <DialogTitle>Seleccionar Producto</DialogTitle>
+          </DialogHeader>
+          <Card>
+            <CardContent>
+              <InvoiceProductModalHeader
+                keyword={keyword}
+                setKeyword={setKeyword}
+                setPage={setPage}
+                canCreate={canCreateProduct}
+                onCreate={() => {
+                  onClose();
+                  setOpenCreateProductModal(true);
+                }}
               />
-            )}
-          </CardContent>
-        </Card>
-      </DialogContent>
-    </Dialog>
+              {error ? (
+                <AlertMessage message={error} variant="destructive" />
+              ) : (
+                <DataTable
+                  columns={columns({ onSelect })}
+                  data={data}
+                  page={page}
+                  pageSize={pageSize}
+                  totalPages={totalPages}
+                  onPageChange={setPage}
+                  onPageSizeChange={setPageSize}
+                  loading={loading}
+                />
+              )}
+            </CardContent>
+          </Card>
+        </DialogContent>
+      </Dialog>
+
+      <ProductCreateModal
+        open={openCreateProductModal}
+        onClose={() => setOpenCreateProductModal(false)}
+        onCreated={(product) => {
+          setOpenCreateProductModal(false);
+          setRefreshKey((k) => k + 1);
+          onSelect(product);
+        }}
+      />
+    </>
   );
 }

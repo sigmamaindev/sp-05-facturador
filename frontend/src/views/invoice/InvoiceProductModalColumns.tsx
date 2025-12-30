@@ -15,6 +15,22 @@ export const columns = ({ onSelect }: { onSelect: (p: Product) => void }) => {
       header: "Producto",
     },
     {
+      id: "defaultPrice",
+      accessorFn: (product) =>
+        product.defaultPresentation?.price01 ?? product.price ?? 0,
+      header: () => <div className="text-right">Precio</div>,
+      cell: ({ row }) => {
+        const product = row.original;
+        const price =
+          product.defaultPresentation?.price01 ?? product.price ?? 0;
+        return (
+          <div className="text-right whitespace-nowrap">
+            ${Number(price).toFixed(2)}
+          </div>
+        );
+      },
+    },
+    {
       id: "actions",
       header: "",
       cell: ({ row }) => {

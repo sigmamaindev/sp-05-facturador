@@ -65,7 +65,7 @@ export default function InvoiceCreatePayment({
           </CardHeader>
           <CardContent>
             <div className="max-h-[400px] overflow-auto rounded-md border">
-              <div className="min-w-[750px]">
+              <div className="min-w-[500px]">
                 <table className="w-full border-collapse">
                   <thead className="sticky top-0 z-10 bg-background">
                     <tr className="border-b text-left">

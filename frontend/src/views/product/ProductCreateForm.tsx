@@ -117,6 +117,7 @@ export default function ProductCreateForm({
           id="sku"
           type="text"
           placeholder="Código"
+          transform="uppercase"
           {...register("sku", { required: "El código es obligatorio" })}
         />
         {errors.sku && (
@@ -129,6 +130,7 @@ export default function ProductCreateForm({
           id="name"
           type="text"
           placeholder="Nombre"
+          transform="uppercase"
           {...register("name", { required: "El nombre es obligatorio" })}
         />
         {errors.name && (
@@ -141,6 +143,7 @@ export default function ProductCreateForm({
           id="description"
           type="text"
           placeholder="Descripción"
+          transform="uppercase"
           {...register("description")}
         />
         {errors.description && (

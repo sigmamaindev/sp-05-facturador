@@ -60,7 +60,7 @@ export default function ProductUpdateForm({
     formState: { errors },
   } = useForm<UpdateProductForm>({
     defaultValues: {
-      name: product.name,
+      name: product.name.toUpperCase(),
       description: product.description ?? "",
       type: product.type ?? "BIEN",
       taxId: product.tax?.id ?? defaultTaxId,
@@ -157,6 +157,7 @@ export default function ProductUpdateForm({
           id="name"
           type="text"
           placeholder="Nombre"
+          transform="uppercase"
           {...register("name", { required: "El nombre es obligatorio" })}
         />
         {errors.name && (
@@ -169,6 +170,7 @@ export default function ProductUpdateForm({
           id="description"
           type="text"
           placeholder="Descripción"
+          transform="uppercase"
           {...register("description")}
         />
         {errors.description && (

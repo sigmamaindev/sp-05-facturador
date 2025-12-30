@@ -82,11 +82,13 @@ export const createProductSchema = z.object({
   sku: z
     .string()
     .min(1, "El Código no puede estar vacío")
-    .max(50, "El Código no puede tener más de 50 caracteres"),
+    .max(50, "El Código no puede tener más de 50 caracteres")
+    .transform((v) => v.toUpperCase()),
   name: z
     .string()
     .min(2, "El nombre debe tener al menos 2 caracteres")
-    .max(100, "El nombre no puede tener más de 100 caracteres"),
+    .max(100, "El nombre no puede tener más de 100 caracteres")
+    .transform((v) => v.toUpperCase()),
   description: z
     .string()
     .max(500, "La descripción no puede tener más de 500 caracteres")

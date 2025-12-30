@@ -56,6 +56,7 @@ export default function WarehouseCreateForm({
           id="name"
           type="text"
           placeholder="Nombre"
+          transform="uppercase"
           {...register("name", { required: "El nombre es obligatorio" })}
         />
         {errors.name && (
@@ -69,6 +70,7 @@ export default function WarehouseCreateForm({
           id="address"
           type="text"
           placeholder="Dirección"
+          transform="uppercase"
           {...register("address", { required: "La dirección es obligatoria" })}
         />
         {errors.address && (

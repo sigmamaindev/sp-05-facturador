@@ -43,9 +43,9 @@ export default function CustomerUpdateForm({
     defaultValues: {
       documentType: customer.documentType,
       document: customer.document,
-      name: customer.name,
+      name: customer.name.toUpperCase(),
       email: customer.email,
-      address: customer.address,
+      address: customer.address.toUpperCase(),
       cellphone: customer.cellphone || "",
       telephone: customer.telephone || "",
     },
@@ -120,6 +120,7 @@ export default function CustomerUpdateForm({
           id="name"
           type="text"
           placeholder="Nombre"
+          transform="uppercase"
           {...register("name", { required: "El nombre es obligatorio" })}
         />
         {errors.name && (
@@ -144,6 +145,7 @@ export default function CustomerUpdateForm({
           id="address"
           type="text"
           placeholder="Dirección"
+          transform="uppercase"
           {...register("address", { required: "La dirección es obligatoria" })}
         />
         {errors.address && (
@@ -156,7 +158,21 @@ export default function CustomerUpdateForm({
           id="cellphone"
           type="text"
           placeholder="Celular"
-          {...register("cellphone")}
+          transform="digits"
+          inputMode="numeric"
+          minLength={10}
+          {...register("cellphone", {
+            validate: {
+              digitsOnly: (val) =>
+                !val ||
+                /^[0-9]+$/.test(val) ||
+                "El celular debe contener solo números",
+              minLength: (val) =>
+                !val ||
+                val.length >= 10 ||
+                "El celular debe tener al menos 10 caracteres",
+            },
+          })}
         />
         {errors.cellphone && (
           <p className="text-red-500 text-sm">{errors.cellphone.message}</p>
@@ -168,7 +184,21 @@ export default function CustomerUpdateForm({
           id="telephone"
           type="text"
           placeholder="Teléfono"
-          {...register("telephone")}
+          transform="digits"
+          inputMode="numeric"
+          minLength={10}
+          {...register("telephone", {
+            validate: {
+              digitsOnly: (val) =>
+                !val ||
+                /^[0-9]+$/.test(val) ||
+                "El teléfono debe contener solo números",
+              minLength: (val) =>
+                !val ||
+                val.length >= 10 ||
+                "El teléfono debe tener al menos 10 caracteres",
+            },
+          })}
         />
         {errors.telephone && (
           <p className="text-red-500 text-sm">{errors.telephone.message}</p>

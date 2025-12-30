@@ -115,7 +115,7 @@ public class ProductRepository(StoreContext context, IHttpContextAccessor httpCo
                     NetWeight = p.NetWeight,
                     GrossWeight = p.GrossWeight,
                     IsDefault = isDefault,
-                    IsActive = p.IsActive
+                    IsActive = true
                 });
             }
 

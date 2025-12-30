@@ -34,7 +34,7 @@ export default function EstablishmentUpdateForm({
     formState: { errors },
   } = useForm<UpdateEstablishmentForm>({
     defaultValues: {
-      name: establishment.name,
+      name: establishment.name.toUpperCase(),
     },
   });
 
@@ -66,6 +66,7 @@ export default function EstablishmentUpdateForm({
           id="name"
           type="text"
           placeholder="Nombre"
+          transform="uppercase"
           {...register("name", { required: "El nombre es obligatorio" })}
         />
         {errors.name && (

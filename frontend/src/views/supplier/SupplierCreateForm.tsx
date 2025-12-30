@@ -66,6 +66,7 @@ export default function SupplierCreateForm({ token }: SupplierCreateFormProps) {
           id="businessName"
           type="text"
           placeholder="Nombre"
+          transform="uppercase"
           {...register("businessName", {
             required: "El nombre es obligatorio",
           })}
@@ -92,6 +93,7 @@ export default function SupplierCreateForm({ token }: SupplierCreateFormProps) {
           id="address"
           type="text"
           placeholder="Dirección"
+          transform="uppercase"
           {...register("address", { required: "La dirección es obligatoria" })}
         />
         {errors.address && (
@@ -104,7 +106,21 @@ export default function SupplierCreateForm({ token }: SupplierCreateFormProps) {
           id="cellphone"
           type="text"
           placeholder="Celular"
-          {...register("cellphone")}
+          transform="digits"
+          inputMode="numeric"
+          minLength={10}
+          {...register("cellphone", {
+            validate: {
+              digitsOnly: (val) =>
+                !val ||
+                /^[0-9]+$/.test(val) ||
+                "El celular debe contener solo números",
+              minLength: (val) =>
+                !val ||
+                val.length >= 10 ||
+                "El celular debe tener al menos 10 caracteres",
+            },
+          })}
         />
         {errors.cellphone && (
           <p className="text-red-500 text-sm">{errors.cellphone.message}</p>
@@ -116,7 +132,21 @@ export default function SupplierCreateForm({ token }: SupplierCreateFormProps) {
           id="telephone"
           type="text"
           placeholder="Teléfono"
-          {...register("telephone")}
+          transform="digits"
+          inputMode="numeric"
+          minLength={10}
+          {...register("telephone", {
+            validate: {
+              digitsOnly: (val) =>
+                !val ||
+                /^[0-9]+$/.test(val) ||
+                "El teléfono debe contener solo números",
+              minLength: (val) =>
+                !val ||
+                val.length >= 10 ||
+                "El teléfono debe tener al menos 10 caracteres",
+            },
+          })}
         />
         {errors.telephone && (
           <p className="text-red-500 text-sm">{errors.telephone.message}</p>

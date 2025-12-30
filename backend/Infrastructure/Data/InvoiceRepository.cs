@@ -380,6 +380,8 @@ public class InvoiceRepository(
                 return response;
             }
 
+            await kardex.DecreaseStockForSaleAsync(existingInvoice);
+
             if (existingInvoice.TotalInvoice <= 0)
             {
                 response.Success = false;

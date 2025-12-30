@@ -13,10 +13,20 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { Badge } from "@/components/ui/badge";
+import {
+  AlertDialog,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 import { cn } from "@/lib/utils";
 
-import { Eye, FileDown, Pencil } from "lucide-react";
+import { AlertCircleIcon, Eye, FileDown, Pencil } from "lucide-react";
 
 export const columns: ColumnDef<Invoice>[] = [
   {
@@ -112,6 +122,16 @@ export const columns: ColumnDef<Invoice>[] = [
 
       const invoice = row.original;
 
+      const normalizedStatus = (invoice.status ?? "").trim().toUpperCase();
+      const hasSriErrorStatus =
+        normalizedStatus.length === 0 ||
+        normalizedStatus.includes("ERROR") ||
+        normalizedStatus.includes("RECHAZADO") ||
+        normalizedStatus.includes("DEVUELTO");
+
+      const sriMessage =
+        (invoice.sriMessage ?? "").trim() || "Sin mensaje del SRI";
+
       const isAuthorized = invoice.status?.toUpperCase() === "AUTORIZADO";
 
       const isReceived =
@@ -155,6 +175,49 @@ export const columns: ColumnDef<Invoice>[] = [
               Detalles
             </TooltipContent>
           </Tooltip>
+
+          {hasSriErrorStatus ? (
+            <AlertDialog>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <span className="inline-flex">
+                    <AlertDialogTrigger asChild>
+                      <button
+                        type="button"
+                        aria-label="Ver error SRI"
+                        className={cn(
+                          buttonVariants({ size: "icon-sm" }),
+                          "bg-rose-600 text-white hover:bg-rose-700 dark:bg-rose-500 dark:hover:bg-rose-600"
+                        )}
+                      >
+                        <AlertCircleIcon className="size-4 text-white" />
+                      </button>
+                    </AlertDialogTrigger>
+                  </span>
+                </TooltipTrigger>
+                <TooltipContent side="top" sideOffset={6}>
+                  Ver error SRI
+                </TooltipContent>
+              </Tooltip>
+
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Respuesta del SRI</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    Mensaje recibido desde el backend para esta factura.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+
+                <div className="max-h-60 overflow-auto whitespace-pre-wrap break-words rounded-md border bg-muted/30 p-3 text-sm">
+                  {sriMessage}
+                </div>
+
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cerrar</AlertDialogCancel>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+          ) : null}
 
           {isAuthorized ? (
             <Tooltip>
