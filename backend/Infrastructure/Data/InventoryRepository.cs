@@ -48,6 +48,10 @@ public class InventoryRepository(StoreContext context, IHttpContextAccessor http
             .ToListAsync();
 
             var inventoriesToAdd = new List<ProductWarehouse>();
+            var existingWarehouseIds = existingProduct.ProductWarehouses
+                .Select(pw => pw.WarehouseId)
+                .ToHashSet();
+            var requestWarehouseIds = new HashSet<int>();
 
             foreach (var item in inventoryCreateReqDto.Inventories)
             {
@@ -56,11 +60,23 @@ public class InventoryRepository(StoreContext context, IHttpContextAccessor http
                     continue;
                 }
 
+                if (existingWarehouseIds.Contains(item.WarehouseId))
+                {
+                    continue;
+                }
+
+                if (!requestWarehouseIds.Add(item.WarehouseId))
+                {
+                    continue;
+                }
+
                 var newInventory = new ProductWarehouse
                 {
                     ProductId = productId,
                     WarehouseId = item.WarehouseId,
-                    Stock = item.Stock
+                    Stock = item.Stock,
+                    MinStock = item.MinStock,
+                    MaxStock = item.MaxStock
                 };
 
                 inventoriesToAdd.Add(newInventory);
@@ -96,6 +112,92 @@ public class InventoryRepository(StoreContext context, IHttpContextAccessor http
         {
             response.Success = false;
             response.Message = "Error al crear el inventario";
+            response.Error = ex.Message;
+        }
+
+        return response;
+    }
+
+    public async Task<ApiResponse<InventoryResDto>> UpdateInventoryByProductIdAsync(int productId, InventoryUpdateReqDto inventoryUpdateReqDto)
+    {
+        var response = new ApiResponse<InventoryResDto>();
+
+        try
+        {
+            var businessId = GetBusinessIdFromToken();
+
+            if (businessId == 0)
+            {
+                response.Success = false;
+                response.Message = "Negocio no asociado a esta usuario";
+                response.Error = "Error de asociación";
+
+                return response;
+            }
+
+            var productExists = await context.Products
+                .AnyAsync(p => p.Id == productId && p.IsActive && p.BusinessId == businessId);
+
+            if (!productExists)
+            {
+                response.Success = false;
+                response.Message = "Producto no encontrado";
+                response.Error = "No existe un producto con el ID especificado";
+
+                return response;
+            }
+
+            var warehouseOk = await context.Warehouses
+                .AnyAsync(w => w.Id == inventoryUpdateReqDto.WarehouseId && w.BusinessId == businessId && w.IsActive);
+
+            if (!warehouseOk)
+            {
+                response.Success = false;
+                response.Message = "Bodega no encontrada";
+                response.Error = "No existe una bodega válida con el ID especificado";
+
+                return response;
+            }
+
+            var inventory = await context.ProductWarehouses
+                .Include(pw => pw.Warehouse)
+                .FirstOrDefaultAsync(pw =>
+                    pw.ProductId == productId &&
+                    pw.WarehouseId == inventoryUpdateReqDto.WarehouseId);
+
+            if (inventory == null)
+            {
+                response.Success = false;
+                response.Message = "Inventario no encontrado";
+                response.Error = "No existe inventario asignado para esta bodega en el producto";
+
+                return response;
+            }
+
+            inventory.Stock = inventoryUpdateReqDto.Stock;
+            inventory.MinStock = inventoryUpdateReqDto.MinStock;
+            inventory.MaxStock = inventoryUpdateReqDto.MaxStock;
+
+            await context.SaveChangesAsync();
+
+            response.Success = true;
+            response.Message = "Inventario actualizado correctamente";
+            response.Data = new InventoryResDto
+            {
+                Id = inventory.Id,
+                ProductId = inventory.ProductId,
+                WarehouseId = inventory.WarehouseId,
+                WarehouseCode = inventory.Warehouse?.Code ?? string.Empty,
+                WarehouseName = inventory.Warehouse?.Name ?? string.Empty,
+                Stock = inventory.Stock,
+                MinStock = inventory.MinStock,
+                MaxStock = inventory.MaxStock
+            };
+        }
+        catch (Exception ex)
+        {
+            response.Success = false;
+            response.Message = "Error al actualizar el inventario";
             response.Error = ex.Message;
         }
 

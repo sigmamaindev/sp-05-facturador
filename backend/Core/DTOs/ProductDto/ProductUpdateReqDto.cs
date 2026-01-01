@@ -1,4 +1,5 @@
 using Core.Constants;
+using Core.DTOs.InventoryDto;
 
 namespace Core.DTOs.ProductDto;
 
@@ -10,6 +11,7 @@ public class ProductUpdateReqDto
     public int TaxId { get; set; }
     public ProductPresentationUpdateReqDto DefaultPresentation { get; set; } = new();
     public List<ProductPresentationUpdateReqDto> Presentations { get; set; } = [];
+    public List<InventoryUpdateReqDto> Inventory { get; set; } = [];
 }
 
 public class ProductPresentationUpdateReqDto

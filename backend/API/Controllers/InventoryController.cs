@@ -12,9 +12,23 @@ namespace API.Controllers
     {
         [HttpPost("{id:int}")]
         [Authorize(Roles = "SuperAdmin, Admin")]
-        public async Task<ActionResult<ApiResponse<InventoryResDto>>> CreateInventory(int id, [FromBody] InventoryCreateReqDto inventoryCreateReqDto)
+        public async Task<ActionResult<ApiResponse<List<InventoryResDto>>>> CreateInventory(int id, [FromBody] InventoryCreateReqDto inventoryCreateReqDto)
         {
             var response = await inventoryRepository.CreateInventoryByProductIdAsync(id, inventoryCreateReqDto);
+
+            if (!response.Success)
+            {
+                return BadRequest(response);
+            }
+
+            return Ok(response);
+        }
+
+        [HttpPut("{id:int}")]
+        [Authorize(Roles = "SuperAdmin, Admin")]
+        public async Task<ActionResult<ApiResponse<InventoryResDto>>> UpdateInventory(int id, [FromBody] InventoryUpdateReqDto inventoryUpdateReqDto)
+        {
+            var response = await inventoryRepository.UpdateInventoryByProductIdAsync(id, inventoryUpdateReqDto);
 
             if (!response.Success)
             {

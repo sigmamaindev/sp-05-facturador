@@ -2,13 +2,14 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Core.Interfaces.Repository;
 using Core.DTOs;
+using Core.DTOs.InventoryDto;
 using Core.DTOs.ProductDto;
 
 namespace API.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class ProductController(IProductRepository productRepository) : ControllerBase
+    public class ProductController(IProductRepository productRepository, IInventoryRepository inventoryRepository) : ControllerBase
     {
         [HttpGet]
         [Authorize]
@@ -57,6 +58,20 @@ namespace API.Controllers
         public async Task<ActionResult<ApiResponse<ProductResDto>>> UpdateProduct(int id, [FromBody] ProductUpdateReqDto productUpdateReqDto)
         {
             var response = await productRepository.UpdateProductAsync(id, productUpdateReqDto);
+
+            if (!response.Success)
+            {
+                return BadRequest(response);
+            }
+
+            return Ok(response);
+        }
+
+        [HttpPut("{id:int}/inventory")]
+        [Authorize(Roles = "SuperAdmin, Admin")]
+        public async Task<ActionResult<ApiResponse<InventoryResDto>>> UpdateProductInventory(int id, [FromBody] InventoryUpdateReqDto inventoryUpdateReqDto)
+        {
+            var response = await inventoryRepository.UpdateInventoryByProductIdAsync(id, inventoryUpdateReqDto);
 
             if (!response.Success)
             {

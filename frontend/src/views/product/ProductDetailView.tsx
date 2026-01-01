@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 
 import { useAuth } from "@/contexts/AuthContext";
@@ -6,6 +6,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { getProductById } from "@/api/product";
 
 import type { Product } from "@/types/product.types";
+import type { Inventory } from "@/types/inventory.types";
 
 import { Card, CardContent } from "@/components/ui/card";
 
@@ -17,13 +18,16 @@ import ProductDetailInfo from "./ProductDetailInfo";
 
 export default function ProductDetailView() {
   const { id } = useParams<{ id: string }>();
-  const { token } = useAuth();
+  const { token, user } = useAuth();
 
   const [product, setProduct] = useState<Product | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
-  const fetchData = async () => {
+  const canEditInventory =
+    user?.roles?.includes("SuperAdmin") || user?.roles?.includes("Admin");
+
+  const fetchData = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
@@ -31,16 +35,28 @@ export default function ProductDetailView() {
       const response = await getProductById(Number(id), token!);
 
       setProduct(response.data);
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "Error desconocido");
     } finally {
       setLoading(false);
     }
+  }, [id, token]);
+
+  const handleInventoryUpdated = (updated: Inventory) => {
+    setProduct((current) => {
+      if (!current) return current;
+      return {
+        ...current,
+        inventory: current.inventory.map((inv) =>
+          inv.id === updated.id ? { ...inv, ...updated } : inv
+        ),
+      };
+    });
   };
 
   useEffect(() => {
     if (id && token) fetchData();
-  }, [id, token]);
+  }, [fetchData, id, token]);
 
   return (
     <Card>
@@ -56,10 +72,14 @@ export default function ProductDetailView() {
             variant="destructive"
           />
         ) : (
-          <ProductDetailInfo product={product} />
+          <ProductDetailInfo
+            product={product}
+            token={token!}
+            canEditInventory={canEditInventory}
+            onInventoryUpdated={handleInventoryUpdated}
+          />
         )}
       </CardContent>
     </Card>
   );
 }
-

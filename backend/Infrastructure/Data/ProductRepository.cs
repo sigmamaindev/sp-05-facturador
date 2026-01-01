@@ -263,6 +263,7 @@ public class ProductRepository(StoreContext context, IHttpContextAccessor httpCo
                 Inventory = p.ProductWarehouses.Select(pw => new InventoryResDto
                 {
                     Id = pw.Id,
+                    ProductId = pw.ProductId,
                     WarehouseId = pw.Warehouse!.Id,
                     WarehouseCode = pw.Warehouse.Code,
                     WarehouseName = pw.Warehouse.Name,
@@ -407,18 +408,19 @@ public class ProductRepository(StoreContext context, IHttpContextAccessor httpCo
                         })
                         .ToList(),
 
-                    Inventory = p.ProductWarehouses.Select(pw => new InventoryResDto
-                    {
-                        Id = pw.Id,
-                        WarehouseId = pw.Warehouse!.Id,
-                        WarehouseCode = pw.Warehouse.Code,
-                        WarehouseName = pw.Warehouse.Name,
-                        Stock = pw.Stock,
-                        MinStock = pw.MinStock,
-                        MaxStock = pw.MaxStock
-                    }).ToList()
-                })
-                .ToListAsync();
+                Inventory = p.ProductWarehouses.Select(pw => new InventoryResDto
+                {
+                    Id = pw.Id,
+                    ProductId = pw.ProductId,
+                    WarehouseId = pw.Warehouse!.Id,
+                    WarehouseCode = pw.Warehouse.Code,
+                    WarehouseName = pw.Warehouse.Name,
+                    Stock = pw.Stock,
+                    MinStock = pw.MinStock,
+                    MaxStock = pw.MaxStock
+                }).ToList()
+            })
+            .ToListAsync();
 
             response.Success = true;
             response.Message = "Productos obtenidos correctamente";
@@ -629,6 +631,63 @@ public class ProductRepository(StoreContext context, IHttpContextAccessor httpCo
                             IsDefault = false
                         });
                     }
+                }
+            }
+
+            // ======= Inventario (opcional) =======
+            // Regla: si dto.Inventory viene vacío, no toques el inventario existente.
+            // Si llega con items, actualiza/crea el ProductWarehouse para esas bodegas.
+            if (dto.Inventory is not null && dto.Inventory.Count > 0)
+            {
+                var requestWarehouseIds = dto.Inventory
+                    .Select(i => i.WarehouseId)
+                    .ToList();
+
+                if (requestWarehouseIds.Distinct().Count() != requestWarehouseIds.Count)
+                {
+                    response.Success = false;
+                    response.Message = "No puedes repetir la misma bodega en el inventario";
+                    response.Error = "Validación";
+                    return response;
+                }
+
+                var validWarehouseIds = await context.Warehouses
+                    .Where(w => requestWarehouseIds.Contains(w.Id) && w.BusinessId == businessId && w.IsActive)
+                    .Select(w => w.Id)
+                    .ToListAsync();
+
+                if (validWarehouseIds.Count != requestWarehouseIds.Count)
+                {
+                    response.Success = false;
+                    response.Message = "Una o más bodegas no son válidas para el negocio actual";
+                    response.Error = "Validación";
+                    return response;
+                }
+
+                var existingInventories = await context.ProductWarehouses
+                    .Where(pw => pw.ProductId == productId && requestWarehouseIds.Contains(pw.WarehouseId))
+                    .ToListAsync();
+
+                var existingByWarehouseId = existingInventories.ToDictionary(pw => pw.WarehouseId);
+
+                foreach (var invDto in dto.Inventory)
+                {
+                    if (existingByWarehouseId.TryGetValue(invDto.WarehouseId, out var existing))
+                    {
+                        existing.Stock = invDto.Stock;
+                        existing.MinStock = invDto.MinStock;
+                        existing.MaxStock = invDto.MaxStock;
+                        continue;
+                    }
+
+                    context.ProductWarehouses.Add(new ProductWarehouse
+                    {
+                        ProductId = productId,
+                        WarehouseId = invDto.WarehouseId,
+                        Stock = invDto.Stock,
+                        MinStock = invDto.MinStock,
+                        MaxStock = invDto.MaxStock
+                    });
                 }
             }
 

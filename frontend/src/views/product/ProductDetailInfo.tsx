@@ -1,9 +1,15 @@
 import type { Product } from "@/types/product.types";
+import type { Inventory } from "@/types/inventory.types";
 
 import { Card, CardContent } from "@/components/ui/card";
 
+import ProductInventoryUpdateDialog from "./ProductInventoryUpdateDialog";
+
 interface ProductDetailInfoProps {
   product: Product;
+  token: string;
+  canEditInventory: boolean;
+  onInventoryUpdated: (inventory: Inventory) => void;
 }
 
 function renderText(value?: string | null) {
@@ -12,7 +18,12 @@ function renderText(value?: string | null) {
   return trimmed.length ? trimmed : "—";
 }
 
-export default function ProductDetailInfo({ product }: ProductDetailInfoProps) {
+export default function ProductDetailInfo({
+  product,
+  token,
+  canEditInventory,
+  onInventoryUpdated,
+}: ProductDetailInfoProps) {
   const date = product.createdAt ? new Date(product.createdAt) : null;
 
   return (
@@ -100,6 +111,9 @@ export default function ProductDetailInfo({ product }: ProductDetailInfoProps) {
                     <th className="p-3 font-medium">Stock</th>
                     <th className="p-3 font-medium">Mínimo</th>
                     <th className="p-3 font-medium">Máximo</th>
+                    {canEditInventory ? (
+                      <th className="p-3 font-medium">Acciones</th>
+                    ) : null}
                   </tr>
                 </thead>
                 <tbody>
@@ -109,6 +123,16 @@ export default function ProductDetailInfo({ product }: ProductDetailInfoProps) {
                       <td className="p-3">{inv.stock}</td>
                       <td className="p-3">{inv.minStock}</td>
                       <td className="p-3">{inv.maxStock}</td>
+                      {canEditInventory ? (
+                        <td className="p-3">
+                          <ProductInventoryUpdateDialog
+                            productId={product.id}
+                            inventory={inv}
+                            token={token}
+                            onUpdated={onInventoryUpdated}
+                          />
+                        </td>
+                      ) : null}
                     </tr>
                   ))}
                 </tbody>
