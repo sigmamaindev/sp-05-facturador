@@ -6,8 +6,8 @@ export type Supplier = {
   businessName: string;
   email: string;
   address: string;
-  cellphone: string;
-  telephone: string;
+  cellphone: string | null;
+  telephone: string | null;
   isActive: boolean;
   createdAt: Date;
 };

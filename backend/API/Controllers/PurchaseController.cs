@@ -26,7 +26,7 @@ public class PurchaseController(IPurchaseRepository purchaseRepository) : Contro
 
     [HttpGet("{id:int}")]
     [Authorize]
-    public async Task<ActionResult<ApiResponse<PurchaseSimpleResDto>>> GetPurchaseById(int id)
+    public async Task<ActionResult<ApiResponse<PurchaseComplexResDto>>> GetPurchaseById(int id)
     {
         var response = await purchaseRepository.GetPurchaseByIdAsync(id);
 

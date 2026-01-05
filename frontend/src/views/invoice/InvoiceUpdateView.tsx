@@ -74,48 +74,57 @@ export default function InvoiceUpdateView() {
   });
 
   const mapDetailsToProducts = (invoiceData: Invoice) =>
-    invoiceData.details.map((detail) => ({
-      id: detail.productId,
-      sku: detail.productCode,
-      name: detail.productName,
-      description: detail.additionalDetail,
-      price: detail.unitPrice,
-      netWeight: detail.netWeight ?? 0,
-      grossWeight: detail.grossWeight ?? 0,
-      iva: detail.taxRate > 0,
-      isActive: true,
-      tax: {
-        id: detail.taxId,
-        code: detail.taxCode,
-        codePercentage: detail.taxCode,
-        name: detail.taxName,
-        group: "",
-        rate: detail.taxRate,
+    invoiceData.details.map((detail) => {
+      const netWeight = detail.netWeight ?? 0;
+      const grossWeight = detail.grossWeight ?? 0;
+      const quantity = Number((netWeight - grossWeight).toFixed(2));
+
+      const base = (detail.unitPrice - detail.discount) * quantity;
+      const taxValue = base * (detail.taxRate / 100);
+
+      return {
+        id: detail.productId,
+        sku: detail.productCode,
+        name: detail.productName,
+        description: detail.additionalDetail,
+        price: detail.unitPrice,
+        netWeight,
+        grossWeight,
+        iva: detail.taxRate > 0,
         isActive: true,
-      },
-      unitMeasure: {
-        id: detail.unitMeasureId,
-        code: detail.unitMeasureCode,
-        name: detail.unitMeasureName,
-        factorBase: 1,
-        isActive: true,
-      },
-      inventory: [
-        {
-          id: detail.warehouseId,
-          warehouseId: detail.warehouseId,
-          warehouseCode: detail.warehouseCode,
-          warehouseName: detail.warehouseName,
-          stock: detail.quantity,
-          minStock: 0,
-          maxStock: 0,
+        tax: {
+          id: detail.taxId,
+          code: detail.taxCode,
+          codePercentage: detail.taxCode,
+          name: detail.taxName,
+          group: "",
+          rate: detail.taxRate,
+          isActive: true,
         },
-      ],
-      quantity: detail.quantity,
-      discount: detail.discount,
-      subtotal: detail.subtotal,
-      taxValue: detail.taxValue,
-    }));
+        unitMeasure: {
+          id: detail.unitMeasureId,
+          code: detail.unitMeasureCode,
+          name: detail.unitMeasureName,
+          factorBase: 1,
+          isActive: true,
+        },
+        inventory: [
+          {
+            id: detail.warehouseId,
+            warehouseId: detail.warehouseId,
+            warehouseCode: detail.warehouseCode,
+            warehouseName: detail.warehouseName,
+            stock: detail.quantity,
+            minStock: 0,
+            maxStock: 0,
+          },
+        ],
+        quantity,
+        discount: detail.discount,
+        subtotal: base,
+        taxValue,
+      };
+    });
 
   const fetchData = async () => {
     try {
@@ -169,16 +178,19 @@ export default function InvoiceUpdateView() {
 
       const price = product.price ?? 0;
       const discount = 0;
-      const base = price - discount;
+      const netWeight = 0;
+      const grossWeight = 0;
+      const quantity = netWeight - grossWeight;
+      const base = (price - discount) * quantity;
       const ivaRate = product.tax?.rate ?? 12;
       const taxValue = base * (ivaRate / 100);
 
       const newProduct: InvoiceProduct = {
         ...product,
         price,
-        netWeight: 0,
-        grossWeight: 0,
-        quantity: 1,
+        netWeight,
+        grossWeight,
+        quantity,
         discount: discount,
         subtotal: base,
         taxValue,
@@ -195,25 +207,26 @@ export default function InvoiceUpdateView() {
   ) => {
     const nextValue = Number.isFinite(value) ? value : 0;
     setProducts((prev) =>
-      prev.map((p) => (p.id === productId ? { ...p, [field]: nextValue } : p))
-    );
-  };
-
-  const handleQuantityChange = (productId: number, newQty: number) => {
-    setProducts((prev) =>
       prev.map((p) => {
-        if (p.id === productId) {
-          const base = (p.price - p.discount) * newQty;
-          const ivaRate = p.tax?.rate ?? 12;
-          const taxValue = base * (ivaRate / 100);
-          return {
-            ...p,
-            quantity: newQty,
-            subtotal: base,
-            taxValue,
-          };
-        }
-        return p;
+        if (p.id !== productId) return p;
+
+        const netWeight = field === "netWeight" ? nextValue : p.netWeight ?? 0;
+        const grossWeight =
+          field === "grossWeight" ? nextValue : p.grossWeight ?? 0;
+        const quantity = Number((netWeight - grossWeight).toFixed(2));
+
+        const base = (p.price - p.discount) * quantity;
+        const ivaRate = p.tax?.rate ?? 12;
+        const taxValue = base * (ivaRate / 100);
+
+        return {
+          ...p,
+          netWeight,
+          grossWeight,
+          quantity,
+          subtotal: base,
+          taxValue,
+        };
       })
     );
   };
@@ -468,7 +481,6 @@ export default function InvoiceUpdateView() {
               onClosePresentationModal={handleClosePresentationModal}
               handleSelectPresentation={handleSelectPresentation}
               handleWeightChange={handleWeightChange}
-              handleQuantityChange={handleQuantityChange}
               handleRemoveProduct={handleRemoveProduct}
               onSaveDraft={handleUpdateDraft}
               onContinue={handleContinueToPayment}

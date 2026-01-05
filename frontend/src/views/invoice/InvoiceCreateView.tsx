@@ -140,7 +140,10 @@ export default function InvoiceCreateView() {
       const price =
         product.defaultPresentation?.price01 ?? product.price ?? 0;
       const discount = 0;
-      const base = price - discount;
+      const netWeight = 0;
+      const grossWeight = 0;
+      const quantity = 1;
+      const base = (price - discount) * quantity;
       const ivaRate = product.tax?.rate ?? 12;
       const taxValue = base * (ivaRate / 100);
 
@@ -149,9 +152,9 @@ export default function InvoiceCreateView() {
         price,
         priceMode: "manual",
         priceTier,
-        netWeight: 0,
-        grossWeight: 0,
-        quantity: 1,
+        netWeight,
+        grossWeight,
+        quantity,
         discount: discount,
         subtotal: base,
         taxValue: taxValue,
@@ -272,6 +275,28 @@ export default function InvoiceCreateView() {
     );
   };
 
+  const handleQuantityChange = (productId: number, value: number) => {
+    const next = Number.isFinite(value) ? value : 0;
+
+    setProducts((prev) =>
+      prev.map((p) => {
+        if (p.id !== productId) return p;
+
+        const quantity = next;
+        const base = (p.price - p.discount) * quantity;
+        const ivaRate = p.tax?.rate ?? 12;
+        const taxValue = base * (ivaRate / 100);
+
+        return {
+          ...p,
+          quantity,
+          subtotal: base,
+          taxValue,
+        };
+      })
+    );
+  };
+
   const handleWeightChange = (
     productId: number,
     field: "netWeight" | "grossWeight",
@@ -279,25 +304,24 @@ export default function InvoiceCreateView() {
   ) => {
     const nextValue = Number.isFinite(value) ? value : 0;
     setProducts((prev) =>
-      prev.map((p) => (p.id === productId ? { ...p, [field]: nextValue } : p))
-    );
-  };
-
-  const handleQuantityChange = (productId: number, newQty: number) => {
-    setProducts((prev) =>
       prev.map((p) => {
-        if (p.id === productId) {
-          const base = (p.price - p.discount) * newQty;
-          const ivaRate = p.tax?.rate ?? 12;
-          const taxValue = base * (ivaRate / 100);
-          return {
-            ...p,
-            quantity: newQty,
-            subtotal: base,
-            taxValue,
-          };
-        }
-        return p;
+        if (p.id !== productId) return p;
+
+        const netWeight = field === "netWeight" ? nextValue : p.netWeight ?? 0;
+        const grossWeight =
+          field === "grossWeight" ? nextValue : p.grossWeight ?? 0;
+
+        const base = (p.price - p.discount) * p.quantity;
+        const ivaRate = p.tax?.rate ?? 12;
+        const taxValue = base * (ivaRate / 100);
+
+        return {
+          ...p,
+          netWeight,
+          grossWeight,
+          subtotal: base,
+          taxValue,
+        };
       })
     );
   };

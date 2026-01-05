@@ -38,7 +38,7 @@ interface InvoiceCreateFormProps {
     field: "netWeight" | "grossWeight",
     value: number
   ) => void;
-  handleQuantityChange: (productId: number, qty: number) => void;
+  handleQuantityChange: (productId: number, quantity: number) => void;
   handleUnitPriceChange: (productId: number, price: number) => void;
   handleRemoveProduct: (productId: number) => void;
   onSaveDraft: () => void;
@@ -101,9 +101,6 @@ export default function InvoiceCreateForm({
                       <th className="text-left py-2 px-2 font-semibold">
                         Producto
                       </th>
-                      <th className="text-left py-2 px-2 font-semibold">
-                        Cant. / U.M.
-                      </th>
 	                      <th className="text-right py-2 px-2 font-semibold">
 	                        P. Unitario
 	                      </th>
@@ -113,6 +110,9 @@ export default function InvoiceCreateForm({
 	                      <th className="text-right py-2 px-2 font-semibold">
 	                        P. Bruto
 	                      </th>
+                      <th className="text-left py-2 px-2 font-semibold">
+                        Cant. / U.M.
+                      </th>
 	                      <th className="text-right py-2 px-2 font-semibold">
 	                        Desc.
 	                      </th>
@@ -148,39 +148,6 @@ export default function InvoiceCreateForm({
                               </div>
                               <div className="truncate">{p.name}</div>
                             </div>
-                          </td>
-
-                          <td className="py-2 px-2">
-                            <div className="flex items-center gap-2 whitespace-nowrap">
-                              <Input
-                                type="number"
-                                min={1}
-                                value={p.quantity}
-                                onChange={(e) =>
-                                  handleQuantityChange(
-                                    p.id,
-                                    Number(e.target.value)
-                                  )
-                                }
-                                className="h-8 w-16 px-1 text-center text-sm"
-                              />
-
-                              <Button
-                                type="button"
-                                variant="outline"
-                                size="sm"
-                                onClick={() => onOpenPresentationModal(p.id)}
-                                className="h-8 px-2 text-xs"
-                              >
-                                {p.unitMeasure?.code ?? "UND"}
-                              </Button>
-                            </div>
-
-                            {p.unitMeasure?.name && (
-                              <p className="mt-1 text-xs text-muted-foreground">
-                                {p.unitMeasure.name}
-                              </p>
-                            )}
                           </td>
 
 			                          <td className="py-2 px-2 text-right whitespace-nowrap">
@@ -229,6 +196,39 @@ export default function InvoiceCreateForm({
 		                              className="h-8 w-20 px-1 text-right text-sm"
 		                            />
 		                          </td>
+                          <td className="py-2 px-2">
+                            <div className="flex items-center gap-2 whitespace-nowrap">
+                              <Input
+                                type="number"
+                                step="0.01"
+                                min={0.01}
+                                value={p.quantity}
+                                onChange={(e) =>
+                                  handleQuantityChange(
+                                    p.id,
+                                    Number(e.target.value)
+                                  )
+                                }
+                                className="h-8 w-16 px-1 text-center text-sm"
+                              />
+
+                              <Button
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                onClick={() => onOpenPresentationModal(p.id)}
+                                className="h-8 px-2 text-xs"
+                              >
+                                {p.unitMeasure?.code ?? "UND"}
+                              </Button>
+                            </div>
+
+                            {p.unitMeasure?.name && (
+                              <p className="mt-1 text-xs text-muted-foreground">
+                                {p.unitMeasure.name}
+                              </p>
+                            )}
+                          </td>
 	                          <td className="py-2 px-2 text-right whitespace-nowrap">
 	                            ${p.discount.toFixed(2)}
 	                          </td>

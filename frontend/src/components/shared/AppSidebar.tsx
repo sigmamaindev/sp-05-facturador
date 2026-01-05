@@ -9,11 +9,13 @@ import {
   Power,
   User,
   ShoppingCart,
+  ShoppingBag,
   Building2,
   DollarSign,
   MapPin,
   BadgeCheck,
   Edit,
+  ClipboardList,
 } from "lucide-react";
 
 import {
@@ -48,12 +50,21 @@ const data = {
     ],
   },
   product: { to: "/productos", label: "Productos", icon: List },
+  kardex: { to: "/kardex", label: "Kardex", icon: ClipboardList },
   invoices: {
     label: "Facturas",
     icon: DollarSign,
     items: [
       { to: "/clientes", label: "Clientes", icon: HandHelping },
       { to: "/facturas", label: "Ventas", icon: ShoppingCart },
+    ],
+  },
+  purchases: {
+    label: "Compras",
+    icon: ShoppingBag,
+    items: [
+      { to: "/proveedores", label: "Proveedores", icon: HandHelping },
+      { to: "/compras", label: "Compras", icon: ShoppingBag },
     ],
   },
 };
@@ -66,9 +77,9 @@ function isPathActive(pathname: string, to: string) {
 export default function AppSidebar() {
   const { setOpenMobile } = useSidebar();
   const { pathname } = useLocation();
-  const [openNav, setOpenNav] = useState<"organization" | "invoices" | null>(
-    null
-  );
+  const [openNav, setOpenNav] = useState<
+    "organization" | "invoices" | "purchases" | null
+  >(null);
 
   const { logout } = useAuth();
 
@@ -78,11 +89,10 @@ export default function AppSidebar() {
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton asChild onClick={() => setOpenMobile(false)}>
-              <div className="flex items-center gap-2">
-                <Edit width={20} height={20}>
-                  <span>Facturador</span>
-                </Edit>
-              </div>
+              <Link to={data.dashboard.to} className="flex items-center gap-2">
+                <Edit width={20} height={20} />
+                <span>Facturador</span>
+              </Link>
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>
@@ -115,6 +125,11 @@ export default function AppSidebar() {
               open={openNav === "invoices"}
               onOpenChange={(open) => setOpenNav(open ? "invoices" : null)}
             />
+            <NavFinance
+              items={data.purchases}
+              open={openNav === "purchases"}
+              onOpenChange={(open) => setOpenNav(open ? "purchases" : null)}
+            />
             <SidebarMenu>
               <SidebarMenuItem key={data.product.to}>
                 <SidebarMenuButton
@@ -124,6 +139,17 @@ export default function AppSidebar() {
                   <Link to={data.product.to}>
                     <data.product.icon />
                     <span>{data.product.label}</span>
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+              <SidebarMenuItem key={data.kardex.to}>
+                <SidebarMenuButton
+                  asChild
+                  isActive={isPathActive(pathname, data.kardex.to)}
+                >
+                  <Link to={data.kardex.to}>
+                    <data.kardex.icon />
+                    <span>{data.kardex.label}</span>
                   </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>

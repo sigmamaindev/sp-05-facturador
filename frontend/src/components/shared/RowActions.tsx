@@ -6,9 +6,13 @@ import {
 } from "../ui/dropdown-menu";
 import { Button } from "../ui/button";
 import { MoreHorizontal } from "lucide-react";
+import { Link } from "react-router-dom";
 
 interface RowActionsProps {
-  actions: { label: string; onClick: () => void }[];
+  actions: Array<
+    | { label: string; onClick: () => void; to?: never }
+    | { label: string; to: string; onClick?: never }
+  >;
 }
 
 export default function RowActions({ actions }: RowActionsProps) {
@@ -21,8 +25,16 @@ export default function RowActions({ actions }: RowActionsProps) {
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
         {actions.map((action, index) => (
-          <DropdownMenuItem key={index} onClick={action.onClick}>
-            {action.label}
+          <DropdownMenuItem
+            key={index}
+            onClick={"onClick" in action ? action.onClick : undefined}
+            asChild={"to" in action}
+          >
+            {"to" in action ? (
+              <Link to={action.to}>{action.label}</Link>
+            ) : (
+              action.label
+            )}
           </DropdownMenuItem>
         ))}
       </DropdownMenuContent>

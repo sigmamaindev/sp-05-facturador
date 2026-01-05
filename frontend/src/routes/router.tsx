@@ -36,6 +36,7 @@ import ProductListView from "@/views/product/ProductListView";
 import ProductCreateView from "@/views/product/ProductCreateView";
 import ProductDetailView from "@/views/product/ProductDetailView";
 import ProductUpdateView from "@/views/product/ProductUpdateView";
+import KardexListView from "@/views/kardex/KardexListView";
 import PurchaseListView from "@/views/purchase/PurchaseListView";
 import PurchaseCreateView from "@/views/purchase/PurchaseCreateView";
 import PurchaseUpdateView from "@/views/purchase/PurchaseUpdateView";
@@ -135,6 +136,7 @@ export default function Router() {
                 path="/productos/actualizar/:id"
                 element={<ProductUpdateView />}
               />
+              <Route path="/kardex" element={<KardexListView />} />
               <Route path="/compras" element={<PurchaseListView />} />
               <Route path="/compras/:id" element={<PurchaseDetailView />} />
               <Route path="/compras/crear" element={<PurchaseCreateView />} />

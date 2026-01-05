@@ -71,9 +71,9 @@ export default function InvoiceCreatePayment({
                     <tr className="border-b text-left">
                       <th className="py-2 px-2">Código</th>
                       <th className="py-2 px-2">Nombre</th>
-                      <th className="py-2 px-2">Cant.</th>
                       <th className="py-2 px-2 text-right">P. Neto</th>
                       <th className="py-2 px-2 text-right">P. Bruto</th>
+                      <th className="py-2 px-2">Cant.</th>
                       <th className="py-2 px-2 text-right">Base IVA</th>
                       <th className="py-2 px-2 text-right">IVA</th>
                       <th className="py-2 px-2 text-right">Total</th>
@@ -100,14 +100,14 @@ export default function InvoiceCreatePayment({
                             {product.sku}
                           </td>
                           <td className="py-2 px-2">{product.name}</td>
-                          <td className="py-2 px-2 whitespace-nowrap">
-                            {product.quantity}
-                          </td>
                           <td className="py-2 px-2 text-right whitespace-nowrap">
                             {Number(product.netWeight ?? 0).toFixed(2)}
                           </td>
                           <td className="py-2 px-2 text-right whitespace-nowrap">
                             {Number(product.grossWeight ?? 0).toFixed(2)}
+                          </td>
+                          <td className="py-2 px-2 whitespace-nowrap">
+                            {product.quantity}
                           </td>
                           <td className="py-2 px-2 text-right whitespace-nowrap">
                             ${product.subtotal.toFixed(2)}

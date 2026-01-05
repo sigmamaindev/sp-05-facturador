@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using Core.Entities;
 using Core.DTOs;
 using Core.DTOs.PurchaseDto;
+using Core.DTOs.SupplierDto;
 using Core.Interfaces.Repository;
 using Core.Interfaces.Services.IUtilService;
 using Core.Interfaces.Services.IKardexService;
@@ -75,16 +76,24 @@ public class PurchaseRepository(
         return response;
     }
 
-    public async Task<ApiResponse<PurchaseSimpleResDto>> GetPurchaseByIdAsync(int id)
+    public async Task<ApiResponse<PurchaseComplexResDto>> GetPurchaseByIdAsync(int id)
     {
-        var response = new ApiResponse<PurchaseSimpleResDto>();
+        var response = new ApiResponse<PurchaseComplexResDto>();
 
         try
         {
             ValidateCurrentUser();
 
             var purchase = await context.Purchases
+                .Include(p => p.Supplier)
                 .Include(p => p.PurchaseDetails)
+                    .ThenInclude(d => d.Product)
+                .Include(p => p.PurchaseDetails)
+                    .ThenInclude(d => d.UnitMeasure)
+                .Include(p => p.PurchaseDetails)
+                    .ThenInclude(d => d.Warehouse)
+                .Include(p => p.PurchaseDetails)
+                    .ThenInclude(d => d.Tax)
                 .FirstOrDefaultAsync(p =>
                     p.Id == id &&
                     p.BusinessId == currentUser.BusinessId);
@@ -100,7 +109,7 @@ public class PurchaseRepository(
 
             response.Success = true;
             response.Message = "Compra obtenida correctamente";
-            response.Data = MapPurchaseRes(purchase);
+            response.Data = MapPurchaseComplexRes(purchase);
         }
         catch (Exception ex)
         {
@@ -121,6 +130,7 @@ public class PurchaseRepository(
             ValidateCurrentUser();
 
             var query = context.Purchases
+                .Include(p => p.Supplier)
                 .Include(p => p.PurchaseDetails)
                 .Where(p =>
                     p.BusinessId == currentUser.BusinessId);
@@ -164,20 +174,132 @@ public class PurchaseRepository(
         return new PurchaseSimpleResDto
         {
             Id = purchase.Id,
-            Sequential = purchase.Sequential,
-            AccessKey = purchase.AccessKey,
             Environment = purchase.Environment,
+            EmissionTypeCode = purchase.EmissionTypeCode,
+            BusinessName = purchase.BusinessName,
+            Name = purchase.Name,
+            Document = purchase.Document,
+            AccessKey = purchase.AccessKey,
             ReceiptType = purchase.ReceiptType,
+            EstablishmentCode = purchase.EstablishmentCode,
+            EmissionPointCode = purchase.EmissionPointCode,
+            Sequential = purchase.Sequential,
+            MainAddress = purchase.MainAddress,
+            IssueDate = purchase.IssueDate,
+            EstablishmentAddress = purchase.EstablishmentAddress,
+            SpecialTaxpayer = purchase.SpecialTaxpayer,
+            MandatoryAccounting = purchase.MandatoryAccounting,
+            TypeDocumentSubjectDetained = purchase.TypeDocumentSubjectDetained,
+            TypeSubjectDetained = purchase.TypeSubjectDetained ?? string.Empty,
+            RelatedParty = purchase.RelatedParty,
+            BusinessNameSubjectDetained = purchase.BusinessNameSubjectDetained ?? string.Empty,
+            DocumentSubjectDetained = purchase.DocumentSubjectDetained ?? string.Empty,
+            FiscalPeriod = purchase.FiscalPeriod ?? string.Empty,
+            SupplierId = purchase.SupplierId,
+            Supplier = purchase.Supplier == null
+                ? null
+                : new SupplierResDto
+                {
+                    Id = purchase.Supplier.Id,
+                    BusinessName = purchase.Supplier.BusinessName,
+                    Document = purchase.Supplier.Document,
+                    Address = purchase.Supplier.Address,
+                    Email = purchase.Supplier.Email,
+                    Cellphone = purchase.Supplier.Cellphone,
+                    Telephone = purchase.Supplier.Telephone,
+                    IsActive = purchase.Supplier.IsActive,
+                    CreatedAt = purchase.Supplier.CreatedAt
+                },
             Status = purchase.Status,
             IsElectronic = purchase.IsElectronic,
-            SupplierId = purchase.SupplierId,
-            IssueDate = purchase.IssueDate,
-            Document = purchase.Document,
+            AuthorizationNumber = purchase.AuthorizationNumber,
+            AuthorizationDate = purchase.AuthorizationDate,
             SubtotalWithoutTaxes = purchase.SubtotalWithoutTaxes,
             SubtotalWithTaxes = purchase.SubtotalWithTaxes,
             DiscountTotal = purchase.DiscountTotal,
             TaxTotal = purchase.TaxTotal,
             TotalPurchase = purchase.TotalPurchase,
+        };
+    }
+
+    private PurchaseComplexResDto MapPurchaseComplexRes(Purchase purchase)
+    {
+        return new PurchaseComplexResDto
+        {
+            Id = purchase.Id,
+            Environment = purchase.Environment,
+            EmissionTypeCode = purchase.EmissionTypeCode,
+            BusinessName = purchase.BusinessName,
+            Name = purchase.Name,
+            Document = purchase.Document,
+            AccessKey = purchase.AccessKey,
+            ReceiptType = purchase.ReceiptType,
+            EstablishmentCode = purchase.EstablishmentCode,
+            EmissionPointCode = purchase.EmissionPointCode,
+            Sequential = purchase.Sequential,
+            MainAddress = purchase.MainAddress,
+            IssueDate = purchase.IssueDate,
+            EstablishmentAddress = purchase.EstablishmentAddress,
+            SpecialTaxpayer = purchase.SpecialTaxpayer,
+            MandatoryAccounting = purchase.MandatoryAccounting,
+            TypeDocumentSubjectDetained = purchase.TypeDocumentSubjectDetained,
+            TypeSubjectDetained = purchase.TypeSubjectDetained ?? string.Empty,
+            RelatedParty = purchase.RelatedParty,
+            BusinessNameSubjectDetained = purchase.BusinessNameSubjectDetained ?? string.Empty,
+            DocumentSubjectDetained = purchase.DocumentSubjectDetained ?? string.Empty,
+            FiscalPeriod = purchase.FiscalPeriod ?? string.Empty,
+            SupplierId = purchase.SupplierId,
+            Supplier = purchase.Supplier == null
+                ? null
+                : new SupplierResDto
+                {
+                    Id = purchase.Supplier.Id,
+                    BusinessName = purchase.Supplier.BusinessName,
+                    Document = purchase.Supplier.Document,
+                    Address = purchase.Supplier.Address,
+                    Email = purchase.Supplier.Email,
+                    Cellphone = purchase.Supplier.Cellphone,
+                    Telephone = purchase.Supplier.Telephone,
+                    IsActive = purchase.Supplier.IsActive,
+                    CreatedAt = purchase.Supplier.CreatedAt
+                },
+            Status = purchase.Status,
+            IsElectronic = purchase.IsElectronic,
+            AuthorizationNumber = purchase.AuthorizationNumber,
+            AuthorizationDate = purchase.AuthorizationDate,
+            SubtotalWithoutTaxes = purchase.SubtotalWithoutTaxes,
+            SubtotalWithTaxes = purchase.SubtotalWithTaxes,
+            DiscountTotal = purchase.DiscountTotal,
+            TaxTotal = purchase.TaxTotal,
+            TotalPurchase = purchase.TotalPurchase,
+            Details = [.. purchase.PurchaseDetails
+                .OrderBy(d => d.Id)
+                .Select(d => new PurchaseDetailResDto
+                {
+                    Id = d.Id,
+                    PurchaseId = d.PurchaseId,
+                    ProductId = d.ProductId,
+                    ProductCode = d.Product?.Sku ?? string.Empty,
+                    ProductName = d.Product?.Name ?? string.Empty,
+                    WarehouseId = d.WarehouseId,
+                    WarehouseCode = d.Warehouse?.Code ?? string.Empty,
+                    WarehouseName = d.Warehouse?.Name ?? string.Empty,
+                    UnitMeasureId = d.UnitMeasureId,
+                    UnitMeasureCode = d.UnitMeasure?.Code ?? string.Empty,
+                    UnitMeasureName = d.UnitMeasure?.Name ?? string.Empty,
+                    TaxId = d.TaxId,
+                    TaxCode = d.Tax?.Code ?? string.Empty,
+                    TaxName = d.Tax?.Name ?? string.Empty,
+                    TaxRate = d.TaxRate,
+                    TaxValue = d.TaxValue,
+                    Quantity = d.Quantity,
+                    NetWeight = d.NetWeight,
+                    GrossWeight = d.GrossWeight,
+                    UnitCost = d.UnitCost,
+                    Discount = d.Discount,
+                    Subtotal = d.Subtotal,
+                    Total = d.Total
+                })]
         };
     }
 

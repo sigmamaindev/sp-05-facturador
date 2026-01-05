@@ -1,4 +1,3 @@
-import { useNavigate } from "react-router-dom";
 import type { ColumnDef } from "@tanstack/react-table";
 
 import type { Purchase } from "@/types/purchase.type";
@@ -8,29 +7,45 @@ import { Badge } from "@/components/ui/badge";
 
 export const columns: ColumnDef<Purchase>[] = [
   {
-    accessorKey: "id",
-    header: "ID",
-  },
-  {
-    accessorKey: "purchaseDate",
+    accessorKey: "issueDate",
     header: "Fecha",
     cell: ({ row }) => {
-      const date = new Date(row.original.purchaseDate);
+      const date = new Date(row.original.issueDate);
+
+      const dateStr = date.toLocaleDateString("es-EC", {
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+      });
+
+      const timeStr = date.toLocaleTimeString("es-EC", {
+        hour: "2-digit",
+        minute: "2-digit",
+        second: "2-digit",
+        hour12: false,
+      });
 
       return (
-        <span>
-          {date.toLocaleString("es-EC", {
-            year: "numeric",
-            month: "2-digit",
-            day: "2-digit",
-            hour: "2-digit",
-            minute: "2-digit",
-            second: "2-digit",
-            hour12: false,
-          })}
-        </span>
+        <div className="flex flex-col leading-tight">
+          <span className="font-semibold">{dateStr}</span>
+          <span className="text-muted-foreground">{timeStr}</span>
+        </div>
       );
     },
+  },
+  {
+    id: "code",
+    header: "Código",
+    accessorFn: (purchase) =>
+      `${purchase.establishmentCode} ${purchase.emissionPointCode} ${purchase.sequential}`,
+    cell: ({ row }) => (
+      <div className="flex flex-col">
+        <span className="font-semibold">
+          {row.original.establishmentCode}-{row.original.emissionPointCode}-
+          {row.original.sequential}
+        </span>
+      </div>
+    ),
   },
   {
     accessorKey: "status",
@@ -39,19 +54,39 @@ export const columns: ColumnDef<Purchase>[] = [
       const status = row.original.status ?? "Sin estado";
       const normalized = status.toUpperCase();
 
-      const variant = normalized.includes("APROBADO")
+      const variant = normalized.includes("ISSUED")
         ? "default"
-        : normalized.includes("BORRADOR")
-          ? "secondary"
-          : normalized.includes("RECHAZADO")
-            ? "destructive"
-            : "outline";
+        : normalized.includes("DRAFT")
+        ? "secondary"
+        : normalized.includes("RECHAZADO") || normalized.includes("CANCELED")
+        ? "destructive"
+        : "outline";
 
       return <Badge variant={variant}>{status}</Badge>;
     },
   },
   {
-    accessorKey: "total",
+    id: "supplier",
+    header: "Proveedor",
+    accessorFn: (purchase) =>
+      `${purchase.supplier?.document ?? ""} ${purchase.supplier?.businessName ?? ""}`,
+    cell: ({ row }) => {
+      const supplier = row.original.supplier;
+
+      return supplier ? (
+        <div className="flex flex-col">
+          <span className="font-semibold">{supplier.document}</span>
+          <span className="text-muted-foreground">{supplier.businessName}</span>
+        </div>
+      ) : (
+        <span className="text-muted-foreground">
+          Proveedor #{row.original.supplierId}
+        </span>
+      );
+    },
+  },
+  {
+    accessorKey: "totalPurchase",
     header: () => <div className="text-right">Total</div>,
     cell: ({ row }) => {
       const total = row.original.totalPurchase?.toFixed(2) ?? "0.00";
@@ -63,18 +98,16 @@ export const columns: ColumnDef<Purchase>[] = [
     id: "actions",
     header: () => <div className="text-right">Acciones</div>,
     cell: ({ row }) => {
-      const navigate = useNavigate();
-
       const purchase = row.original;
 
       const actions = [
         {
           label: "Detalles",
-          onClick: () => navigate(`/compras/${purchase.id}`),
+          to: `/compras/${purchase.id}`,
         },
         {
           label: "Editar",
-          onClick: () => navigate(`/compras/actualizar/${purchase.id}`),
+          to: `/compras/actualizar/${purchase.id}`,
         },
       ];
 

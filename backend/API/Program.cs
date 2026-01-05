@@ -49,12 +49,13 @@ builder.Services.AddScoped<IProductRepository, ProductRepository>();
 builder.Services.AddScoped<IUnitMeasureRepository, UnitMeasureRepository>();
 builder.Services.AddScoped<ITaxRepository, TaxRepository>();
 builder.Services.AddScoped<IInventoryRepository, InventoryRepository>();
+builder.Services.AddScoped<IKardexRepository, KardexRepository>();
 builder.Services.AddScoped<ICustomerRepository, CustomerRepository>();
 builder.Services.AddScoped<IInvoiceRepository, InvoiceRepository>();
 builder.Services.AddScoped<IAccountsReceivableRepository, AccountsReceivableRepository>();
 builder.Services.AddScoped<ISupplierRepository, SupplierRepository>();
 builder.Services.AddScoped<ICertificateRepository, CertificateRepository>();
-// builder.Services.AddScoped<IPurchaseRepository, PurchaseRepository>();
+builder.Services.AddScoped<IPurchaseRepository, PurchaseRepository>();
 // Invoice Services
 builder.Services.AddScoped<IInvoiceXmlBuilderService, InvoiceXmlBuilderService>();
 builder.Services.AddScoped<IElectronicSignatureService, ElectronicSignatureService>();
@@ -75,9 +76,9 @@ builder.Services.AddScoped<IARDtoFactory, ARDtoFactory>();
 // Kardex Services
 builder.Services.AddScoped<IKardexService, KardexService>();
 // Purchase Services
-// builder.Services.AddScoped<IPurchaseValidationService, PurchaseValidationService>();
-// builder.Services.AddScoped<IPurchaseCalculationService, PurchaseCalculationService>();
-// builder.Services.AddScoped<IPurchaseEditionService, PurchaseEditionService>();
+builder.Services.AddScoped<IPurchaseValidationService, PurchaseValidationService>();
+builder.Services.AddScoped<IPurchaseCalculationService, PurchaseCalculationService>();
+builder.Services.AddScoped<IPurchaseEditionService, PurchaseEditionService>();
 // Backgroud Services
 builder.Services.AddHostedService<SriAuthorizationBackgroundService>();
 builder.Services.AddHostedService<SriReceptionBackgroundService>();

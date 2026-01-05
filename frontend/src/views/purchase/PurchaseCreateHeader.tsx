@@ -1,38 +1,26 @@
-import { ArrowLeft } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { ArrowLeftIcon } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
-import { Card, CardHeader, CardTitle } from "@/components/ui/card";
 
-interface PurchaseCreateHeaderProps {
-  onSave: () => void;
-  saving: boolean;
-}
-
-export default function PurchaseCreateHeader({
-  onSave,
-  saving,
-}: PurchaseCreateHeaderProps) {
+export default function PurchaseCreateHeader() {
   const navigate = useNavigate();
 
   return (
-    <Card>
-      <CardHeader className="flex flex-row items-center justify-between">
-        <div className="flex items-center gap-2">
-          <Button variant="ghost" onClick={() => navigate("/compras")}> 
-            <ArrowLeft className="h-4 w-4" />
-          </Button>
-          <CardTitle>Registrar compra</CardTitle>
-        </div>
-        <div className="flex items-center gap-2">
-          <Button variant="secondary" onClick={() => navigate("/compras")}>
-            Cancelar
-          </Button>
-          <Button onClick={onSave} disabled={saving}>
-            {saving ? "Guardando..." : "Guardar compra"}
-          </Button>
-        </div>
-      </CardHeader>
-    </Card>
+    <div className="grid grid-cols-1 md:flex md:flex-row md:justify-between md:items-center items-center gap-4 pb-4">
+      <div className="grid grid-cols-2 items-center gap-4 md:inline-flex w-auto">
+        <h1 className="text-lg font-semibold">CREAR COMPRA</h1>
+      </div>
+      <div className="inline-flex items-center gap-4 w-auto">
+        <Button
+          variant="outline"
+          onClick={() => navigate("/compras")}
+          className="flex items-center gap-2"
+        >
+          <ArrowLeftIcon size={16} />
+          Volver a la lista
+        </Button>
+      </div>
+    </div>
   );
 }

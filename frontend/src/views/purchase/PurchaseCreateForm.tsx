@@ -3,16 +3,15 @@ import { Trash2Icon } from "lucide-react";
 
 import {
   Card,
-  CardAction,
   CardContent,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
 
 import PurchaseSupplierModal from "./PurchaseSupplierModal";
 import PurchaseProductModal from "./PurchaseProductModal";
+import PurchaseProductPresentationModal from "./PurchaseProductPresentationModal";
 
 import type {
   PurchaseProduct,
@@ -20,168 +19,259 @@ import type {
   PurchaseTotals,
 } from "@/types/purchase.type";
 import type { Product } from "@/types/product.types";
+import type { ProductPresentation } from "@/types/product.types";
 import { Input } from "@/components/ui/input";
 
 interface PurchaseCreateFormProps {
   supplier: PurchaseSupplier | null;
   products: PurchaseProduct[];
   totals: PurchaseTotals;
-  purchaseDate?: Date;
   openSupplierModal: boolean;
   setOpenSupplierModal: React.Dispatch<React.SetStateAction<boolean>>;
   openProductModal: boolean;
   setOpenProductModal: React.Dispatch<React.SetStateAction<boolean>>;
   handleSelectSupplier: (supplier: PurchaseSupplier) => void;
   handleSelectProduct: (product: Product) => void;
-  handleQuantityChange: (productId: number, qty: number) => void;
   handleUnitCostChange: (productId: number, unitCost: number) => void;
   handleDiscountChange: (productId: number, discount: number) => void;
+  handleWeightChange: (
+    productId: number,
+    field: "netWeight" | "grossWeight",
+    value: number
+  ) => void;
   handleRemoveProduct: (productId: number) => void;
+  openPresentationModal: boolean;
+  presentationProduct: PurchaseProduct | null;
+  onOpenPresentationModal: (productId: number) => void;
+  onClosePresentationModal: () => void;
+  handleSelectPresentation: (presentation: ProductPresentation) => void;
+  onSave: () => void;
+  onCancel: () => void;
+  saving: boolean;
+  canProceed: boolean;
 }
 
 export default function PurchaseCreateForm({
   supplier,
   products,
   totals,
-  purchaseDate,
   openSupplierModal,
   setOpenSupplierModal,
   openProductModal,
   setOpenProductModal,
   handleSelectSupplier,
   handleSelectProduct,
-  handleQuantityChange,
   handleUnitCostChange,
   handleDiscountChange,
+  handleWeightChange,
   handleRemoveProduct,
+  openPresentationModal,
+  presentationProduct,
+  onOpenPresentationModal,
+  onClosePresentationModal,
+  handleSelectPresentation,
+  onSave,
+  onCancel,
+  saving,
+  canProceed,
 }: PurchaseCreateFormProps) {
-  const formatDateTimeLocal = (date?: Date) => {
-    if (!date) return "No disponible";
-
-    return date.toLocaleString("es-EC");
-  };
-
   return (
     <div className="flex flex-col md:flex-row gap-4">
       <div className="md:w-3/4">
         <Card className="h-full">
-          <CardHeader>
-            <CardTitle>PRODUCTOS AGREGADOS</CardTitle>
-            <CardAction>
-              <Button type="button" onClick={() => setOpenProductModal(true)}>
+          <CardHeader className="gap-2">
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+              <CardTitle>PRODUCTOS AGREGADOS</CardTitle>
+              <Button
+                type="button"
+                onClick={() => setOpenProductModal(true)}
+                size="sm"
+                className="h-8 px-3 text-xs sm:text-sm w-full sm:w-auto"
+              >
                 Agregar Producto
               </Button>
-            </CardAction>
+            </div>
           </CardHeader>
           <CardContent>
-            <ScrollArea className="max-h-[400px]">
-              <table className="w-full border-collapse">
-                <thead>
-                  <tr className="border-b">
-                    <th className="text-left py-2 px-2 font-semibold">
-                      Código
-                    </th>
-                    <th className="text-left py-2 px-2 font-semibold">
-                      Nombre
-                    </th>
-                    <th className="text-left py-2 px-2 font-semibold">Cant.</th>
-                    <th className="text-right py-2 px-2 font-semibold">
-                      Costo Unit.
-                    </th>
-                    <th className="text-right py-2 px-2 font-semibold">Desc.</th>
-                    <th className="text-right py-2 px-2 font-semibold">
-                      Base IVA
-                    </th>
-                    <th className="text-right py-2 px-2 font-semibold">IVA</th>
-                    <th className="text-right py-2 px-2 font-semibold">
-                      Total
-                    </th>
-                    <th className="text-center py-2 px-2 font-semibold">
-                      Acciones
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {products.length === 0 ? (
-                    <tr>
-                      <td
-                        colSpan={9}
-                        className="text-center py-4 text-muted-foreground"
-                      >
-                        No hay productos agregados
-                      </td>
+            <div className="max-h-[400px] overflow-auto rounded-md border">
+              <div className="min-w-[500px]">
+                <table className="w-full border-collapse">
+                  <thead className="sticky top-0 z-10 bg-background">
+                    <tr className="border-b">
+                      <th className="text-left py-2 px-2 font-semibold">
+                        Producto
+                      </th>
+                      <th className="text-right py-2 px-2 font-semibold">
+                        Costo Unit.
+                      </th>
+                      <th className="text-right py-2 px-2 font-semibold">
+                        P. Neto
+                      </th>
+                      <th className="text-right py-2 px-2 font-semibold">
+                        P. Bruto
+                      </th>
+                      <th className="text-left py-2 px-2 font-semibold">
+                        Cant. / U.M.
+                      </th>
+                      <th className="text-right py-2 px-2 font-semibold">
+                        Desc.
+                      </th>
+                      <th className="text-right py-2 px-2 font-semibold">
+                        Base IVA
+                      </th>
+                      <th className="text-right py-2 px-2 font-semibold">
+                        IVA
+                      </th>
+                      <th className="text-right py-2 px-2 font-semibold">
+                        Total
+                      </th>
+                      <th className="text-center py-2 px-2 font-semibold">
+                        Acciones
+                      </th>
                     </tr>
-                  ) : (
-                    products.map((p) => (
-                      <tr key={p.id} className="border-b">
-                        <td className="py-2 px-2">{p.sku}</td>
-                        <td className="py-2 px-2">{p.name}</td>
-                        <td className="py-2 px-2">
-                          <Input
-                            type="number"
-                            step="0.01"
-                            min={1}
-                            value={p.quantity}
-                            onChange={(e) =>
-                              handleQuantityChange(p.id, Number(e.target.value))
-                            }
-                            className="w-16 text-center"
-                          />
-                        </td>
-                        <td className="py-2 px-2">
-                          <Input
-                            type="number"
-                            step="0.01"
-                            min={0}
-                            value={p.unitCost}
-                            onChange={(e) =>
-                              handleUnitCostChange(
-                                p.id,
-                                Number(e.target.value)
-                              )
-                            }
-                            className="w-28 text-right"
-                          />
-                        </td>
-                        <td className="py-2 px-2">
-                          <Input
-                            type="number"
-                            step="0.01"
-                            min={0}
-                            value={p.discount}
-                            onChange={(e) =>
-                              handleDiscountChange(
-                                p.id,
-                                Number(e.target.value)
-                              )
-                            }
-                            className="w-24 text-right"
-                          />
-                        </td>
-                        <td className="py-2 px-2 text-right">
-                          ${p.subtotal.toFixed(2)}
-                        </td>
-                        <td className="py-2 px-2 text-right">
-                          ${p.taxValue.toFixed(2)}
-                        </td>
-                        <td className="py-2 px-2 text-right">
-                          ${(p.subtotal + p.taxValue).toFixed(2)}
-                        </td>
-                        <td className="py-2 px-2 text-center">
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => handleRemoveProduct(p.id)}
-                          >
-                            <Trash2Icon className="h-4 w-4 text-red-500" />
-                          </Button>
+                  </thead>
+                  <tbody>
+                    {products.length === 0 ? (
+                      <tr>
+                        <td
+                          colSpan={10}
+                          className="text-center py-4 text-muted-foreground"
+                        >
+                          No hay productos agregados
                         </td>
                       </tr>
-                    ))
+                    ) : (
+                      products.map((p) => (
+                        <tr key={p.id} className="border-b">
+                          <td className="py-2 px-2">
+                            <div className="max-w-[220px] leading-tight">
+                              <div className="text-xs text-muted-foreground whitespace-nowrap">
+                                {p.sku}
+                              </div>
+                              <div className="truncate">{p.name}</div>
+                            </div>
+                          </td>
+
+                          <td className="py-2 px-2 text-right whitespace-nowrap">
+                            <Input
+                              type="number"
+                              step="0.01"
+                              min={0}
+                              value={p.unitCost}
+                              onChange={(e) =>
+                                handleUnitCostChange(
+                                  p.id,
+                                  Number(e.target.value)
+                                )
+                              }
+                              className="h-8 w-24 px-1 text-right text-sm"
+                            />
+                          </td>
+
+                          <td className="py-2 px-2 text-right whitespace-nowrap">
+                            <Input
+                              type="number"
+                              step="0.01"
+                              min={0}
+                              value={p.netWeight ?? 0}
+                              onChange={(e) =>
+                                handleWeightChange(
+                                  p.id,
+                                  "netWeight",
+                                  Number(e.target.value)
+                                )
+                              }
+                              className="h-8 w-20 px-1 text-right text-sm"
+                            />
+                          </td>
+
+                          <td className="py-2 px-2 text-right whitespace-nowrap">
+                            <Input
+                              type="number"
+                              step="0.01"
+                              min={0}
+                              value={p.grossWeight ?? 0}
+                              onChange={(e) =>
+                                handleWeightChange(
+                                  p.id,
+                                  "grossWeight",
+                                  Number(e.target.value)
+                                )
+                              }
+                              className="h-8 w-20 px-1 text-right text-sm"
+                            />
+                          </td>
+
+                          <td className="py-2 px-2">
+                            <div className="flex items-center gap-2 whitespace-nowrap">
+                              <Input
+                                type="number"
+                                step="0.01"
+                                min={0}
+                                value={p.quantity}
+                                readOnly
+                                className="h-8 w-16 px-1 text-center text-sm"
+                              />
+                              <Button
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                className="h-8 px-2 text-xs"
+                                onClick={() => onOpenPresentationModal(p.id)}
+                              >
+                                {p.unitMeasure?.code ?? "UND"}
+                              </Button>
+                            </div>
+
+                            {p.unitMeasure?.name && (
+                              <p className="mt-1 text-xs text-muted-foreground">
+                                {p.unitMeasure.name}
+                              </p>
+                            )}
+                          </td>
+
+                          <td className="py-2 px-2 text-right whitespace-nowrap">
+                            <Input
+                              type="number"
+                              step="0.01"
+                              min={0}
+                              value={p.discount}
+                              onChange={(e) =>
+                                handleDiscountChange(
+                                  p.id,
+                                  Number(e.target.value)
+                                )
+                              }
+                              className="h-8 w-20 px-1 text-right text-sm"
+                            />
+                          </td>
+
+                          <td className="py-2 px-2 text-right whitespace-nowrap">
+                            ${p.subtotal.toFixed(2)}
+                          </td>
+                          <td className="py-2 px-2 text-right whitespace-nowrap">
+                            ${p.taxValue.toFixed(2)}
+                          </td>
+                          <td className="py-2 px-2 text-right whitespace-nowrap">
+                            ${(p.subtotal + p.taxValue).toFixed(2)}
+                          </td>
+                          <td className="py-2 px-2 text-center">
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => handleRemoveProduct(p.id)}
+                              className="h-8 w-8"
+                            >
+                              <Trash2Icon className="h-4 w-4 text-red-500" />
+                            </Button>
+                          </td>
+                        </tr>
+                      ))
                   )}
                 </tbody>
               </table>
-            </ScrollArea>
+            </div>
+            </div>
           </CardContent>
         </Card>
       </div>
@@ -224,30 +314,35 @@ export default function PurchaseCreateForm({
           <CardHeader>
             <CardTitle>RESUMEN</CardTitle>
           </CardHeader>
-          <CardContent className="space-y-4">
+          <CardContent className="space-y-2">
             <div className="flex justify-between text-sm">
-              <span>Fecha de compra</span>
-              <span className="font-medium">
-                {formatDateTimeLocal(purchaseDate)}
-              </span>
+              <span>Subtotal:</span>
+              <span>${totals.subtotal.toFixed(2)}</span>
             </div>
-            <div className="space-y-2 text-sm">
-              <div className="flex justify-between">
-                <span>Subtotal</span>
-                <span>${totals.subtotal.toFixed(2)}</span>
-              </div>
-              <div className="flex justify-between">
-                <span>Descuento</span>
-                <span>${totals.discount.toFixed(2)}</span>
-              </div>
-              <div className="flex justify-between">
-                <span>IVA</span>
-                <span>${totals.tax.toFixed(2)}</span>
-              </div>
-              <div className="flex justify-between font-semibold">
-                <span>Total</span>
-                <span>${totals.total.toFixed(2)}</span>
-              </div>
+            <div className="flex justify-between text-sm">
+              <span>Descuento:</span>
+              <span>${totals.discount.toFixed(2)}</span>
+            </div>
+            <div className="flex justify-between text-sm">
+              <span>IVA:</span>
+              <span>${totals.tax.toFixed(2)}</span>
+            </div>
+            <div className="flex justify-between font-semibold text-base border-t pt-2">
+              <span>Total:</span>
+              <span>${totals.total.toFixed(2)}</span>
+            </div>
+
+            <div className="flex flex-col gap-2 mt-4">
+              <Button type="button" variant="outline" onClick={onCancel}>
+                Cancelar
+              </Button>
+              <Button
+                type="button"
+                onClick={onSave}
+                disabled={saving || !canProceed}
+              >
+                {saving ? "Guardando..." : "Guardar compra"}
+              </Button>
             </div>
           </CardContent>
         </Card>
@@ -263,6 +358,13 @@ export default function PurchaseCreateForm({
         open={openProductModal}
         onClose={() => setOpenProductModal(false)}
         onSelect={handleSelectProduct}
+      />
+
+      <PurchaseProductPresentationModal
+        open={openPresentationModal}
+        onClose={onClosePresentationModal}
+        product={presentationProduct}
+        onSelect={handleSelectPresentation}
       />
     </div>
   );

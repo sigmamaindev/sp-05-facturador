@@ -1,3 +1,5 @@
+using Core.DTOs.SupplierDto;
+
 namespace Core.DTOs.PurchaseDto;
 
 public class PurchaseSimpleResDto
@@ -25,6 +27,7 @@ public class PurchaseSimpleResDto
     public string DocumentSubjectDetained { get; set; } = string.Empty;
     public string FiscalPeriod { get; set; } = string.Empty;
     public int SupplierId { get; set; }
+    public SupplierResDto? Supplier { get; set; }
     public string Status { get; set; } = string.Empty;
     public bool IsElectronic { get; set; }
     public string? AuthorizationNumber { get; set; }

@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
 
 import { createPurchase } from "@/api/purchase";
+import { getProductById } from "@/api/product";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -25,6 +26,7 @@ import type {
   PurchaseTotals,
 } from "@/types/purchase.type";
 import type { Product } from "@/types/product.types";
+import type { ProductPresentation } from "@/types/product.types";
 
 import PurchaseCreateHeader from "./PurchaseCreateHeader";
 import PurchaseCreateForm from "./PurchaseCreateForm";
@@ -39,6 +41,10 @@ export default function PurchaseCreateView() {
   const [supplier, setSupplier] = useState<PurchaseSupplier | null>(null);
   const [openProductModal, setOpenProductModal] = useState(false);
   const [products, setProducts] = useState<PurchaseProduct[]>([]);
+  const [openPresentationModal, setOpenPresentationModal] = useState(false);
+  const [productIdForPresentation, setProductIdForPresentation] = useState<
+    number | null
+  >(null);
 
   const { setValue, handleSubmit, watch } = useForm<CreatePurchaseForm>({
     defaultValues: {
@@ -122,40 +128,106 @@ export default function PurchaseCreateView() {
 
       const unitCost = product.price ?? 0;
       const discount = 0;
-      const base = unitCost - discount;
       const ivaRate = product.tax?.rate ?? 12;
-      const taxValue = base * (ivaRate / 100);
+      const netWeight = product.defaultPresentation?.netWeight ?? 0;
+      const grossWeight = product.defaultPresentation?.grossWeight ?? 0;
+      const unitMeasure =
+        product.defaultPresentation?.unitMeasure ?? product.unitMeasure;
+      const computedQuantity = Number((netWeight - grossWeight).toFixed(2));
+      const quantity = Number.isFinite(computedQuantity)
+        ? Math.max(0, computedQuantity)
+        : 0;
 
       const newProduct: PurchaseProduct = {
         ...product,
-        quantity: 1,
+        unitMeasure,
+        quantity,
         unitCost,
         discount,
-        subtotal: base,
-        taxValue,
+        netWeight,
+        grossWeight,
+        subtotal: unitCost * quantity - discount,
+        taxValue: (unitCost * quantity - discount) * (ivaRate / 100),
       };
 
       return [...prev, newProduct];
     });
   };
 
-  const handleQuantityChange = (productId: number, newQty: number) => {
+  const handleOpenPresentationModal = async (productId: number) => {
+    setProductIdForPresentation(productId);
+    setOpenPresentationModal(true);
+
+    const current = products.find((p) => p.id === productId);
+    if (!token || !current) return;
+    if (current.defaultPresentation || current.presentations?.length) return;
+
+    try {
+      const fetched = await getProductById(productId, token);
+      const fetchedProduct = fetched.data;
+      if (!fetchedProduct) return;
+
+      setProducts((prev) =>
+        prev.map((p) =>
+          p.id === productId
+            ? {
+                ...fetchedProduct,
+                ...p,
+                defaultPresentation:
+                  fetchedProduct.defaultPresentation ?? p.defaultPresentation,
+                presentations: fetchedProduct.presentations ?? p.presentations,
+              }
+            : p
+        )
+      );
+    } catch (error: unknown) {
+      const message =
+        error instanceof Error ? error.message : "No se pudo cargar el producto";
+      toast.error(message);
+    }
+  };
+
+  const handleClosePresentationModal = () => {
+    setOpenPresentationModal(false);
+    setProductIdForPresentation(null);
+  };
+
+  const productForPresentation = useMemo(() => {
+    if (productIdForPresentation == null) return null;
+    return products.find((p) => p.id === productIdForPresentation) ?? null;
+  }, [productIdForPresentation, products]);
+
+  const handleSelectPresentation = (presentation: ProductPresentation) => {
+    if (productIdForPresentation == null) return;
+
     setProducts((prev) =>
       prev.map((p) => {
-        if (p.id === productId) {
-          const base = p.unitCost * newQty - p.discount;
-          const ivaRate = p.tax?.rate ?? 12;
-          const taxValue = base * (ivaRate / 100);
-          return {
-            ...p,
-            quantity: newQty,
-            subtotal: base,
-            taxValue,
-          };
-        }
-        return p;
+        if (p.id !== productIdForPresentation) return p;
+
+        const unitMeasure = presentation.unitMeasure ?? p.unitMeasure;
+        const netWeight = Number(presentation.netWeight ?? p.netWeight ?? 0);
+        const grossWeight = Number(presentation.grossWeight ?? p.grossWeight ?? 0);
+        const computedQuantity = Number((netWeight - grossWeight).toFixed(2));
+        const quantity = Number.isFinite(computedQuantity)
+          ? Math.max(0, computedQuantity)
+          : 0;
+        const base = p.unitCost * quantity - p.discount;
+        const ivaRate = p.tax?.rate ?? 12;
+        const taxValue = base * (ivaRate / 100);
+
+        return {
+          ...p,
+          unitMeasure,
+          netWeight,
+          grossWeight,
+          quantity,
+          subtotal: base,
+          taxValue,
+        };
       })
     );
+
+    handleClosePresentationModal();
   };
 
   const handleUnitCostChange = (productId: number, newUnitCost: number) => {
@@ -178,6 +250,39 @@ export default function PurchaseCreateView() {
         const ivaRate = p.tax?.rate ?? 12;
         const taxValue = base * (ivaRate / 100);
         return { ...p, discount: newDiscount, subtotal: base, taxValue };
+      })
+    );
+  };
+
+  const handleWeightChange = (
+    productId: number,
+    field: "netWeight" | "grossWeight",
+    value: number
+  ) => {
+    const nextValue = Number.isFinite(value) ? value : 0;
+    setProducts((prev) =>
+      prev.map((p) => {
+        if (p.id !== productId) return p;
+
+        const netWeight = field === "netWeight" ? nextValue : p.netWeight ?? 0;
+        const grossWeight =
+          field === "grossWeight" ? nextValue : p.grossWeight ?? 0;
+        const computedQuantity = Number((netWeight - grossWeight).toFixed(2));
+        const quantity = Number.isFinite(computedQuantity)
+          ? Math.max(0, computedQuantity)
+          : 0;
+        const base = p.unitCost * quantity - p.discount;
+        const ivaRate = p.tax?.rate ?? 12;
+        const taxValue = base * (ivaRate / 100);
+
+        return {
+          ...p,
+          netWeight,
+          grossWeight,
+          quantity,
+          subtotal: base,
+          taxValue,
+        };
       })
     );
   };
@@ -253,8 +358,8 @@ export default function PurchaseCreateView() {
         taxRate,
         taxValue,
         quantity: p.quantity,
-        netWeight: 0,
-        grossWeight: 0,
+        netWeight: p.netWeight ?? 0,
+        grossWeight: p.grossWeight ?? 0,
         unitCost: p.unitCost,
         discount: p.discount,
         subtotal,
@@ -350,189 +455,209 @@ export default function PurchaseCreateView() {
     }
   };
 
+  const canProceed =
+    supplier !== null &&
+    products.length > 0 &&
+    Boolean(String(sequential ?? "").trim()) &&
+    (!isElectronic || String(accessKey ?? "").trim().length === 49);
+
   return (
-    <div className="space-y-4">
-      <PurchaseCreateHeader onSave={handleSubmit(savePurchase)} saving={saving} />
+    <Card>
+      <CardContent className="space-y-4">
+        <PurchaseCreateHeader />
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Datos generales</CardTitle>
-        </CardHeader>
-        <CardContent className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div className="space-y-2">
-            <label className="text-sm font-medium">Documento electrónico</label>
-            <Select
-              value={isElectronic ? "true" : "false"}
-              onValueChange={(v) => setValue("isElectronic", v === "true")}
-            >
-              <SelectTrigger className="w-full">
-                <SelectValue placeholder="Seleccione" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="true">Sí</SelectItem>
-                <SelectItem value="false">No</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
+        <Card>
+          <CardHeader>
+            <CardTitle>Datos generales</CardTitle>
+          </CardHeader>
+          <CardContent className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="space-y-2">
+              <label className="text-sm font-medium">
+                Documento electrónico
+              </label>
+              <Select
+                value={isElectronic ? "true" : "false"}
+                onValueChange={(v) => setValue("isElectronic", v === "true")}
+              >
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Seleccione" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="true">Sí</SelectItem>
+                  <SelectItem value="false">No</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
 
-          <div className="space-y-2">
-            <label className="text-sm font-medium">Ambiente SRI</label>
-            <Select
-              value={environment}
-              onValueChange={(v) => setValue("environment", v)}
-            >
-              <SelectTrigger className="w-full">
-                <SelectValue placeholder="Seleccione" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="1">Pruebas (1)</SelectItem>
-                <SelectItem value="2">Producción (2)</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Ambiente SRI</label>
+              <Select
+                value={environment}
+                onValueChange={(v) => setValue("environment", v)}
+              >
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Seleccione" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="1">Pruebas (1)</SelectItem>
+                  <SelectItem value="2">Producción (2)</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
 
-          <div className="space-y-2">
-            <label className="text-sm font-medium">Tipo de documento</label>
-            <Select
-              value={receiptType}
-              onValueChange={(v) => setValue("receiptType", v)}
-            >
-              <SelectTrigger className="w-full">
-                <SelectValue placeholder="Seleccione" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="01">Factura (01)</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Tipo de documento</label>
+              <Select
+                value={receiptType}
+                onValueChange={(v) => setValue("receiptType", v)}
+              >
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Seleccione" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="01">Factura (01)</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
 
-          <div className="space-y-2">
-            <label className="text-sm font-medium">Tipo de emisión</label>
-            <Select
-              value={emissionTypeCode}
-              onValueChange={(v) => setValue("emissionTypeCode", v)}
-            >
-              <SelectTrigger className="w-full">
-                <SelectValue placeholder="Seleccione" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="1">Normal (1)</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Tipo de emisión</label>
+              <Select
+                value={emissionTypeCode}
+                onValueChange={(v) => setValue("emissionTypeCode", v)}
+              >
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Seleccione" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="1">Normal (1)</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
 
-          <div className="space-y-2">
-            <label className="text-sm font-medium">Fecha de emisión</label>
-            <Input
-              type="datetime-local"
-              value={formatDateTimeLocalValue(purchaseDate)}
-              onChange={(e) =>
-                setValue(
-                  "purchaseDate",
-                  e.target.value ? new Date(e.target.value) : new Date()
-                )
-              }
-            />
-          </div>
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Fecha de emisión</label>
+              <Input
+                type="datetime-local"
+                value={formatDateTimeLocalValue(purchaseDate)}
+                onChange={(e) =>
+                  setValue(
+                    "purchaseDate",
+                    e.target.value ? new Date(e.target.value) : new Date()
+                  )
+                }
+              />
+            </div>
 
-          <div className="space-y-2">
-            <label className="text-sm font-medium">Establecimiento</label>
-            <Input
-              placeholder="001"
-              value={establishmentCode}
-              onChange={(e) => setValue("establishmentCode", e.target.value)}
-            />
-          </div>
-          <div className="space-y-2">
-            <label className="text-sm font-medium">Punto de emisión</label>
-            <Input
-              placeholder="001"
-              value={emissionPointCode}
-              onChange={(e) => setValue("emissionPointCode", e.target.value)}
-            />
-          </div>
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Establecimiento</label>
+              <Input
+                placeholder="001"
+                value={establishmentCode}
+                onChange={(e) => setValue("establishmentCode", e.target.value)}
+              />
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Punto de emisión</label>
+              <Input
+                placeholder="001"
+                value={emissionPointCode}
+                onChange={(e) => setValue("emissionPointCode", e.target.value)}
+              />
+            </div>
 
-          <div className="space-y-2">
-            <label className="text-sm font-medium">Secuencial</label>
-            <Input
-              placeholder="000000001"
-              value={sequential}
-              onChange={(e) => setValue("sequential", e.target.value)}
-            />
-          </div>
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Secuencial</label>
+              <Input
+                placeholder="000000001"
+                value={sequential}
+                onChange={(e) => setValue("sequential", e.target.value)}
+              />
+            </div>
 
-          <div className="space-y-2 md:col-span-3">
-            <label className="text-sm font-medium">Número de documento</label>
-            <Input value={documentNumber} disabled />
-          </div>
+            <div className="space-y-2 md:col-span-3">
+              <label className="text-sm font-medium">Número de documento</label>
+              <Input value={documentNumber} disabled />
+            </div>
 
-          {isElectronic && (
-            <>
-              <div className="space-y-2 md:col-span-3">
-                <label className="text-sm font-medium">Clave de acceso</label>
-                <Input
-                  placeholder="49 dígitos"
-                  value={accessKey ?? ""}
-                  onChange={(e) => setValue("accessKey", e.target.value)}
-                />
-              </div>
+            {isElectronic && (
+              <>
+                <div className="space-y-2 md:col-span-3">
+                  <label className="text-sm font-medium">Clave de acceso</label>
+                  <Input
+                    placeholder="49 dígitos"
+                    value={accessKey ?? ""}
+                    onChange={(e) => setValue("accessKey", e.target.value)}
+                  />
+                </div>
 
-              <div className="space-y-2 md:col-span-2">
-                <label className="text-sm font-medium">
-                  Número de autorización
-                </label>
-                <Input
-                  placeholder="Opcional"
-                  value={authorizationNumber ?? ""}
-                  onChange={(e) =>
-                    setValue("authorizationNumber", e.target.value)
-                  }
-                />
-              </div>
+                <div className="space-y-2 md:col-span-2">
+                  <label className="text-sm font-medium">
+                    Número de autorización
+                  </label>
+                  <Input
+                    placeholder="Opcional"
+                    value={authorizationNumber ?? ""}
+                    onChange={(e) =>
+                      setValue("authorizationNumber", e.target.value)
+                    }
+                  />
+                </div>
 
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Fecha autorización</label>
-                <Input
-                  type="datetime-local"
-                  value={formatDateTimeLocalValue(authorizationDate)}
-                  onChange={(e) =>
-                    setValue(
-                      "authorizationDate",
-                      e.target.value ? new Date(e.target.value) : undefined
-                    )
-                  }
-                />
-              </div>
-            </>
-          )}
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">
+                    Fecha autorización
+                  </label>
+                  <Input
+                    type="datetime-local"
+                    value={formatDateTimeLocalValue(authorizationDate)}
+                    onChange={(e) =>
+                      setValue(
+                        "authorizationDate",
+                        e.target.value ? new Date(e.target.value) : undefined
+                      )
+                    }
+                  />
+                </div>
+              </>
+            )}
 
-          <div className="space-y-2 md:col-span-3">
-            <label className="text-sm font-medium">Referencia</label>
-            <Input
-              placeholder="Nota interna opcional"
-              value={reference ?? ""}
-              onChange={(e) => setValue("reference", e.target.value)}
-            />
-          </div>
-        </CardContent>
-      </Card>
+            <div className="space-y-2 md:col-span-3">
+              <label className="text-sm font-medium">Referencia</label>
+              <Input
+                placeholder="Nota interna opcional"
+                value={reference ?? ""}
+                onChange={(e) => setValue("reference", e.target.value)}
+              />
+            </div>
+          </CardContent>
+        </Card>
 
-      <PurchaseCreateForm
-        supplier={supplier}
-        products={products}
-        totals={totals}
-        purchaseDate={purchaseDate}
-        openSupplierModal={openSupplierModal}
-        setOpenSupplierModal={setOpenSupplierModal}
-        openProductModal={openProductModal}
-        setOpenProductModal={setOpenProductModal}
-        handleSelectSupplier={handleSelectSupplier}
-        handleSelectProduct={handleSelectProduct}
-        handleQuantityChange={handleQuantityChange}
-        handleUnitCostChange={handleUnitCostChange}
-        handleDiscountChange={handleDiscountChange}
-        handleRemoveProduct={handleRemoveProduct}
-      />
-    </div>
+        <PurchaseCreateForm
+          supplier={supplier}
+          products={products}
+          totals={totals}
+          openSupplierModal={openSupplierModal}
+          setOpenSupplierModal={setOpenSupplierModal}
+          openProductModal={openProductModal}
+          setOpenProductModal={setOpenProductModal}
+          handleSelectSupplier={handleSelectSupplier}
+          handleSelectProduct={handleSelectProduct}
+          handleUnitCostChange={handleUnitCostChange}
+          handleDiscountChange={handleDiscountChange}
+          handleWeightChange={handleWeightChange}
+          handleRemoveProduct={handleRemoveProduct}
+          openPresentationModal={openPresentationModal}
+          presentationProduct={productForPresentation}
+          onOpenPresentationModal={handleOpenPresentationModal}
+          onClosePresentationModal={handleClosePresentationModal}
+          handleSelectPresentation={handleSelectPresentation}
+          onSave={handleSubmit(savePurchase)}
+          onCancel={() => navigate("/compras")}
+          saving={saving}
+          canProceed={canProceed}
+        />
+      </CardContent>
+    </Card>
   );
 }
