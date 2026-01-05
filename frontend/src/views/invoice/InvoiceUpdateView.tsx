@@ -73,14 +73,19 @@ export default function InvoiceUpdateView() {
     },
   });
 
-  const mapDetailsToProducts = (invoiceData: Invoice) =>
-    invoiceData.details.map((detail) => {
-      const netWeight = detail.netWeight ?? 0;
-      const grossWeight = detail.grossWeight ?? 0;
-      const quantity = Number((grossWeight - netWeight).toFixed(2));
+	  const mapDetailsToProducts = (invoiceData: Invoice) =>
+	    invoiceData.details.map((detail) => {
+	      const netWeight = detail.netWeight ?? 0;
+	      const grossWeight = detail.grossWeight ?? 0;
+	      const computedQuantity = Number((grossWeight - netWeight).toFixed(2));
+	      const calculatedQuantity = Number.isFinite(computedQuantity)
+	        ? Math.max(0, computedQuantity)
+	        : 0;
+	      const shouldUseCalculated = netWeight !== 0 || grossWeight !== 0;
+	      const quantity = shouldUseCalculated ? calculatedQuantity : detail.quantity;
 
-      const base = (detail.unitPrice - detail.discount) * quantity;
-      const taxValue = base * (detail.taxRate / 100);
+	      const base = (detail.unitPrice - detail.discount) * quantity;
+	      const taxValue = base * (detail.taxRate / 100);
 
       return {
         id: detail.productId,
@@ -168,22 +173,22 @@ export default function InvoiceUpdateView() {
     setOpenCustomerModal(false);
   };
 
-  const handleSelectProduct = (product: Product) => {
-    setOpenProductModal(false);
+	  const handleSelectProduct = (product: Product) => {
+	    setOpenProductModal(false);
 
-    setProducts((prev) => {
+	    setProducts((prev) => {
       const exists = prev.find((p) => p.id === product.id);
 
       if (exists) return prev;
 
-      const price = product.price ?? 0;
-      const discount = 0;
-      const netWeight = 0;
-      const grossWeight = 0;
-      const quantity = grossWeight - netWeight;
-      const base = (price - discount) * quantity;
-      const ivaRate = product.tax?.rate ?? 12;
-      const taxValue = base * (ivaRate / 100);
+	      const price = product.price ?? 0;
+	      const discount = 0;
+	      const netWeight = 0;
+	      const grossWeight = 0;
+	      const quantity = 1;
+	      const base = (price - discount) * quantity;
+	      const ivaRate = product.tax?.rate ?? 12;
+	      const taxValue = base * (ivaRate / 100);
 
       const newProduct: InvoiceProduct = {
         ...product,
@@ -200,24 +205,29 @@ export default function InvoiceUpdateView() {
     });
   };
 
-  const handleWeightChange = (
-    productId: number,
-    field: "netWeight" | "grossWeight",
-    value: number
-  ) => {
-    const nextValue = Number.isFinite(value) ? value : 0;
-    setProducts((prev) =>
-      prev.map((p) => {
-        if (p.id !== productId) return p;
+	  const handleWeightChange = (
+	    productId: number,
+	    field: "netWeight" | "grossWeight",
+	    value: number
+	  ) => {
+	    const nextValue = Number.isFinite(value) ? value : 0;
+	    setProducts((prev) =>
+	      prev.map((p) => {
+	        if (p.id !== productId) return p;
 
-        const netWeight = field === "netWeight" ? nextValue : p.netWeight ?? 0;
-        const grossWeight =
-          field === "grossWeight" ? nextValue : p.grossWeight ?? 0;
-        const quantity = Number((grossWeight - netWeight).toFixed(2));
+	        const netWeight = field === "netWeight" ? nextValue : p.netWeight ?? 0;
+	        const grossWeight =
+	          field === "grossWeight" ? nextValue : p.grossWeight ?? 0;
+	        const computedQuantity = Number((grossWeight - netWeight).toFixed(2));
+	        const calculatedQuantity = Number.isFinite(computedQuantity)
+	          ? Math.max(0, computedQuantity)
+	          : 0;
+	        const shouldUseCalculated = netWeight !== 0 || grossWeight !== 0;
+	        const quantity = shouldUseCalculated ? calculatedQuantity : p.quantity;
 
-        const base = (p.price - p.discount) * quantity;
-        const ivaRate = p.tax?.rate ?? 12;
-        const taxValue = base * (ivaRate / 100);
+	        const base = (p.price - p.discount) * quantity;
+	        const ivaRate = p.tax?.rate ?? 12;
+	        const taxValue = base * (ivaRate / 100);
 
         return {
           ...p,

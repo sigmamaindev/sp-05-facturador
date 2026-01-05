@@ -311,7 +311,14 @@ export default function InvoiceCreateView() {
         const grossWeight =
           field === "grossWeight" ? nextValue : p.grossWeight ?? 0;
 
-        const base = (p.price - p.discount) * p.quantity;
+        const computedQuantity = Number((grossWeight - netWeight).toFixed(2));
+        const calculatedQuantity = Number.isFinite(computedQuantity)
+          ? Math.max(0, computedQuantity)
+          : 0;
+        const shouldUseCalculated = netWeight !== 0 || grossWeight !== 0;
+        const quantity = shouldUseCalculated ? calculatedQuantity : p.quantity;
+
+        const base = (p.price - p.discount) * quantity;
         const ivaRate = p.tax?.rate ?? 12;
         const taxValue = base * (ivaRate / 100);
 
@@ -319,6 +326,7 @@ export default function InvoiceCreateView() {
           ...p,
           netWeight,
           grossWeight,
+          quantity,
           subtotal: base,
           taxValue,
         };
