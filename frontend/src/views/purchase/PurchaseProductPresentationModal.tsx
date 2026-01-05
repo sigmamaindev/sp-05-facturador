@@ -99,8 +99,8 @@ export default function PurchaseProductPresentationModal({
                             : `ID ${p.unitMeasureId}`}
                         </td>
                         <td className="p-3 text-right whitespace-nowrap">
-                          {`N ${Number(p.netWeight ?? 0).toFixed(2)} / B ${Number(
-                            p.grossWeight ?? 0
+                          {`B ${Number(p.grossWeight ?? 0).toFixed(2)} / N ${Number(
+                            p.netWeight ?? 0
                           ).toFixed(2)}`}
                         </td>
                         <td className="p-3 text-center">
@@ -128,4 +128,3 @@ export default function PurchaseProductPresentationModal({
     </Dialog>
   );
 }
-

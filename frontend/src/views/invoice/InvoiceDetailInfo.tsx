@@ -33,10 +33,10 @@ export default function InvoiceDetailInfo({ invoice }: InvoiceDetailInfoProps) {
                         P. Unitario
                       </th>
                       <th className="text-right py-2 px-2 font-semibold">
-                        P. Neto
+                        P. Bruto
                       </th>
                       <th className="text-right py-2 px-2 font-semibold">
-                        P. Bruto
+                        P. Neto
                       </th>
                       <th className="text-right py-2 px-2 font-semibold">
                         Desc.
@@ -79,10 +79,10 @@ export default function InvoiceDetailInfo({ invoice }: InvoiceDetailInfoProps) {
                             {d.unitPrice.toFixed(2)}
                           </td>
                           <td className="py-2 px-2 text-right whitespace-nowrap">
-                            {Number(d.netWeight ?? 0).toFixed(2)}
+                            {Number(d.grossWeight ?? 0).toFixed(2)}
                           </td>
                           <td className="py-2 px-2 text-right whitespace-nowrap">
-                            {Number(d.grossWeight ?? 0).toFixed(2)}
+                            {Number(d.netWeight ?? 0).toFixed(2)}
                           </td>
                           <td className="py-2 px-2 text-right whitespace-nowrap">
                             {d.discount.toFixed(2)}

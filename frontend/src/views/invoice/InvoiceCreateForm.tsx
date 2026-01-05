@@ -105,10 +105,10 @@ export default function InvoiceCreateForm({
 	                        P. Unitario
 	                      </th>
 	                      <th className="text-right py-2 px-2 font-semibold">
-	                        P. Neto
+	                        P. Bruto
 	                      </th>
 	                      <th className="text-right py-2 px-2 font-semibold">
-	                        P. Bruto
+	                        P. Neto
 	                      </th>
                       <th className="text-left py-2 px-2 font-semibold">
                         Cant. / U.M.
@@ -169,11 +169,11 @@ export default function InvoiceCreateForm({
 		                              type="number"
 		                              step="0.01"
 		                              min={0}
-		                              value={p.netWeight ?? 0}
+		                              value={p.grossWeight ?? 0}
 	                              onChange={(e) =>
 	                                handleWeightChange(
 	                                  p.id,
-	                                  "netWeight",
+	                                  "grossWeight",
 		                                  Number(e.target.value)
 		                                )
 		                              }
@@ -185,11 +185,11 @@ export default function InvoiceCreateForm({
 		                              type="number"
 		                              step="0.01"
 		                              min={0}
-		                              value={p.grossWeight ?? 0}
+		                              value={p.netWeight ?? 0}
 	                              onChange={(e) =>
 	                                handleWeightChange(
 	                                  p.id,
-	                                  "grossWeight",
+	                                  "netWeight",
 		                                  Number(e.target.value)
 		                                )
 		                              }

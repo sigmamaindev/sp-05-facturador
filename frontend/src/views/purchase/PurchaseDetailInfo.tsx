@@ -48,10 +48,10 @@ export default function PurchaseDetailInfo({
                         C. Unitario
                       </th>
                       <th className="text-right py-2 px-2 font-semibold">
-                        P. Neto
+                        P. Bruto
                       </th>
                       <th className="text-right py-2 px-2 font-semibold">
-                        P. Bruto
+                        P. Neto
                       </th>
                       <th className="text-left py-2 px-2 font-semibold">
                         Cant. / U.M.
@@ -83,7 +83,7 @@ export default function PurchaseDetailInfo({
                         const netWeight = Number(d.netWeight ?? 0);
                         const grossWeight = Number(d.grossWeight ?? 0);
                         const calculatedQuantity = Number(
-                          (netWeight - grossWeight).toFixed(2)
+                          (grossWeight - netWeight).toFixed(2)
                         );
                         const shouldUseCalculated =
                           netWeight !== 0 || grossWeight !== 0;
@@ -108,10 +108,10 @@ export default function PurchaseDetailInfo({
                               {d.unitCost.toFixed(2)}
                             </td>
                             <td className="py-2 px-2 text-right whitespace-nowrap">
-                              {netWeight.toFixed(2)}
+                              {grossWeight.toFixed(2)}
                             </td>
                             <td className="py-2 px-2 text-right whitespace-nowrap">
-                              {grossWeight.toFixed(2)}
+                              {netWeight.toFixed(2)}
                             </td>
                             <td className="py-2 px-2">
                               <div className="flex flex-col items-end whitespace-nowrap">

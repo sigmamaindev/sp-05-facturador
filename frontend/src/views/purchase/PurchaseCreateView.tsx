@@ -133,7 +133,7 @@ export default function PurchaseCreateView() {
       const grossWeight = product.defaultPresentation?.grossWeight ?? 0;
       const unitMeasure =
         product.defaultPresentation?.unitMeasure ?? product.unitMeasure;
-      const computedQuantity = Number((netWeight - grossWeight).toFixed(2));
+      const computedQuantity = Number((grossWeight - netWeight).toFixed(2));
       const quantity = Number.isFinite(computedQuantity)
         ? Math.max(0, computedQuantity)
         : 0;
@@ -206,8 +206,10 @@ export default function PurchaseCreateView() {
 
         const unitMeasure = presentation.unitMeasure ?? p.unitMeasure;
         const netWeight = Number(presentation.netWeight ?? p.netWeight ?? 0);
-        const grossWeight = Number(presentation.grossWeight ?? p.grossWeight ?? 0);
-        const computedQuantity = Number((netWeight - grossWeight).toFixed(2));
+        const grossWeight = Number(
+          presentation.grossWeight ?? p.grossWeight ?? 0
+        );
+        const computedQuantity = Number((grossWeight - netWeight).toFixed(2));
         const quantity = Number.isFinite(computedQuantity)
           ? Math.max(0, computedQuantity)
           : 0;
@@ -267,7 +269,7 @@ export default function PurchaseCreateView() {
         const netWeight = field === "netWeight" ? nextValue : p.netWeight ?? 0;
         const grossWeight =
           field === "grossWeight" ? nextValue : p.grossWeight ?? 0;
-        const computedQuantity = Number((netWeight - grossWeight).toFixed(2));
+        const computedQuantity = Number((grossWeight - netWeight).toFixed(2));
         const quantity = Number.isFinite(computedQuantity)
           ? Math.max(0, computedQuantity)
           : 0;

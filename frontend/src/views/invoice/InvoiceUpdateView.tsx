@@ -77,7 +77,7 @@ export default function InvoiceUpdateView() {
     invoiceData.details.map((detail) => {
       const netWeight = detail.netWeight ?? 0;
       const grossWeight = detail.grossWeight ?? 0;
-      const quantity = Number((netWeight - grossWeight).toFixed(2));
+      const quantity = Number((grossWeight - netWeight).toFixed(2));
 
       const base = (detail.unitPrice - detail.discount) * quantity;
       const taxValue = base * (detail.taxRate / 100);
@@ -180,7 +180,7 @@ export default function InvoiceUpdateView() {
       const discount = 0;
       const netWeight = 0;
       const grossWeight = 0;
-      const quantity = netWeight - grossWeight;
+      const quantity = grossWeight - netWeight;
       const base = (price - discount) * quantity;
       const ivaRate = product.tax?.rate ?? 12;
       const taxValue = base * (ivaRate / 100);
@@ -213,7 +213,7 @@ export default function InvoiceUpdateView() {
         const netWeight = field === "netWeight" ? nextValue : p.netWeight ?? 0;
         const grossWeight =
           field === "grossWeight" ? nextValue : p.grossWeight ?? 0;
-        const quantity = Number((netWeight - grossWeight).toFixed(2));
+        const quantity = Number((grossWeight - netWeight).toFixed(2));
 
         const base = (p.price - p.discount) * quantity;
         const ivaRate = p.tax?.rate ?? 12;
