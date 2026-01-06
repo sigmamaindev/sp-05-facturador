@@ -380,6 +380,15 @@ public class InvoiceRepository(
                 return response;
             }
 
+            if (!TryNormalizePaymentType(invoicePaymentUpdateReqDto.PaymentType, out var normalizedPaymentType))
+            {
+                response.Success = false;
+                response.Message = "Tipo de pago requerido";
+                response.Error = "Debe especificar un tipo de pago válido";
+
+                return response;
+            }
+
             await kardex.DecreaseStockForSaleAsync(existingInvoice);
 
             if (existingInvoice.TotalInvoice <= 0)
@@ -397,6 +406,7 @@ public class InvoiceRepository(
                 StringComparison.OrdinalIgnoreCase);
 
             existingInvoice.PaymentMethod = invoicePaymentUpdateReqDto.PaymentMethod;
+            existingInvoice.PaymentType = normalizedPaymentType;
             existingInvoice.PaymentTermDays = invoicePaymentUpdateReqDto.PaymentTermDays;
             existingInvoice.Status = InvoiceStatus.PENDING;
 
@@ -444,5 +454,43 @@ public class InvoiceRepository(
         {
             throw new InvalidOperationException("Datos de autenticación incompletos");
         }
+    }
+
+    private static bool TryNormalizePaymentType(string? paymentType, out string normalizedPaymentType)
+    {
+        normalizedPaymentType = string.Empty;
+
+        if (string.IsNullOrWhiteSpace(paymentType))
+        {
+            return false;
+        }
+
+        var trimmed = paymentType.Trim();
+
+        if (trimmed.Equals(PaymentType.CASH, StringComparison.OrdinalIgnoreCase))
+        {
+            normalizedPaymentType = PaymentType.CASH;
+            return true;
+        }
+
+        if (trimmed.Equals(PaymentType.CHECK, StringComparison.OrdinalIgnoreCase))
+        {
+            normalizedPaymentType = PaymentType.CHECK;
+            return true;
+        }
+
+        if (trimmed.Equals(PaymentType.CREDIT_CARD, StringComparison.OrdinalIgnoreCase))
+        {
+            normalizedPaymentType = PaymentType.CREDIT_CARD;
+            return true;
+        }
+
+        if (trimmed.Equals(PaymentType.DEBIT_CARD, StringComparison.OrdinalIgnoreCase))
+        {
+            normalizedPaymentType = PaymentType.DEBIT_CARD;
+            return true;
+        }
+
+        return false;
     }
 }

@@ -325,6 +325,7 @@ public class StoreContext(DbContextOptions options) : DbContext(options)
             entity.Property(i => i.TaxTotal).HasColumnName("TotalImpuesto");
             entity.Property(i => i.TotalInvoice).HasColumnName("Total");
             entity.Property(i => i.PaymentMethod).HasColumnName("MetodoPago");
+            entity.Property(i => i.PaymentType).HasColumnName("TipoPago");
             entity.Property(i => i.PaymentTermDays).HasColumnName("DiasPago");
             entity.Property(i => i.DueDate).HasColumnName("FechaVencimiento").HasColumnType("timestamp without time zone");
             entity.Property(i => i.Description).HasColumnName("Descripcion");

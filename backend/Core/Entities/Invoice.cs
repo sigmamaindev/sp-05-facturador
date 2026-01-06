@@ -28,6 +28,7 @@ public class Invoice : BaseEntity
     public decimal TaxTotal { get; set; }
     public decimal TotalInvoice { get; set; }
     public required string PaymentMethod { get; set; }
+    public string? PaymentType { get; set; }
     public int PaymentTermDays { get; set; } = 0;
     public DateTime? DueDate { get; set; }
     public string? Description { get; set; }

@@ -32,6 +32,7 @@ public class InvoiceSimpleResDto
     public decimal TaxTotal { get; set; }
     public decimal TotalInvoice { get; set; }
     public string PaymentMethod { get; set; } = string.Empty;
+    public string? PaymentType { get; set; }
     public int PaymentTermDays { get; set; }
     public DateTime? DueDate { get; set; }
     public string Description { get; set; } = string.Empty;

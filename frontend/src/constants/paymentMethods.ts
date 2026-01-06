@@ -29,3 +29,56 @@ export const PAYMENT_METHOD_OPTIONS = (
   value,
   label: PAYMENT_METHOD_LABEL[value],
 }));
+
+export const PaymentType = {
+  CASH: "EFECTIVO",
+  CHECK: "CHEQUE",
+  CREDIT_CARD: "TARJETA CREDITO",
+  DEBIT_CARD: "TARJETA DEBITO",
+} as const;
+
+export type PaymentTypeValue = (typeof PaymentType)[keyof typeof PaymentType];
+
+const PAYMENT_TYPE_VALUES = Object.values(PaymentType) as PaymentTypeValue[];
+
+export function isPaymentType(value: unknown): value is PaymentTypeValue {
+  return (
+    typeof value === "string" &&
+    PAYMENT_TYPE_VALUES.includes(value as PaymentTypeValue)
+  );
+}
+
+export const PAYMENT_TYPE_OPTIONS = PAYMENT_TYPE_VALUES.map((value) => ({
+  value,
+  label: value,
+}));
+
+export function paymentMethodCodeFromPaymentType(
+  paymentType: PaymentTypeValue
+): PaymentMethodCode {
+  switch (paymentType) {
+    case PaymentType.CASH:
+      return PaymentMethodCode.NFS;
+    case PaymentType.CHECK:
+      return PaymentMethodCode.FS;
+    case PaymentType.CREDIT_CARD:
+      return PaymentMethodCode.CREDIT_CARD;
+    case PaymentType.DEBIT_CARD:
+      return PaymentMethodCode.DEBIT_CARD;
+  }
+}
+
+export function paymentTypeFromPaymentMethodCode(
+  paymentMethod: string | null | undefined
+): PaymentTypeValue {
+  switch (paymentMethod) {
+    case PaymentMethodCode.FS:
+      return PaymentType.CHECK;
+    case PaymentMethodCode.CREDIT_CARD:
+      return PaymentType.CREDIT_CARD;
+    case PaymentMethodCode.DEBIT_CARD:
+      return PaymentType.DEBIT_CARD;
+    default:
+      return PaymentType.CASH;
+  }
+}

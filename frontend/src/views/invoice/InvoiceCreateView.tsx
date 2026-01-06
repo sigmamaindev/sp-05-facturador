@@ -7,6 +7,11 @@ import { useAuth } from "@/contexts/AuthContext";
 
 import {
   PaymentMethodCode,
+  PaymentType,
+  type PaymentTypeValue,
+  isPaymentType,
+  paymentMethodCodeFromPaymentType,
+  paymentTypeFromPaymentMethodCode,
   type PaymentMethodCode as PaymentMethodCodeType,
 } from "@/constants/paymentMethods";
 
@@ -32,17 +37,6 @@ import InvoiceCreateForm from "./InvoiceCreateForm";
 import InvoiceCreatePayment from "./InvoiceCreatePayment";
 import InvoiceAdditionalInfoModal from "./InvoiceAdditionalInfoModal";
 
-const PAYMENT_METHOD_VALUES = Object.values(
-  PaymentMethodCode
-) as PaymentMethodCodeType[];
-
-function isPaymentMethodCode(v: unknown): v is PaymentMethodCodeType {
-  return (
-    typeof v === "string" &&
-    PAYMENT_METHOD_VALUES.includes(v as PaymentMethodCodeType)
-  );
-}
-
 export default function InvoiceCreateView() {
   type PriceTier = 1 | 2 | 3 | 4;
 
@@ -65,6 +59,9 @@ export default function InvoiceCreateView() {
   const [draftInvoice, setDraftInvoice] = useState<Invoice | null>(null);
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethodCodeType>(
     PaymentMethodCode.NFS
+  );
+  const [paymentType, setPaymentType] = useState<PaymentTypeValue>(
+    PaymentType.CASH
   );
   const [paymentTermDays, setPaymentTermDays] = useState(0);
   const [openAdditionalInfoModal, setOpenAdditionalInfoModal] = useState(false);
@@ -407,12 +404,12 @@ export default function InvoiceCreateView() {
       if (response.data) {
         setDraftInvoice(response.data);
         
-        const pm =
-          response.data.paymentMethod ??
-          payload.paymentMethod ??
-          PaymentMethodCode.NFS;
-
-        setPaymentMethod(isPaymentMethodCode(pm) ? pm : PaymentMethodCode.NFS);
+        const pm = response.data.paymentMethod ?? payload.paymentMethod;
+        const nextPaymentType = isPaymentType(response.data.paymentType)
+          ? response.data.paymentType
+          : paymentTypeFromPaymentMethodCode(pm);
+        setPaymentType(nextPaymentType);
+        setPaymentMethod(paymentMethodCodeFromPaymentType(nextPaymentType));
 
         setPaymentTermDays(
           response.data.paymentTermDays ?? payload.paymentTermDays
@@ -450,6 +447,7 @@ export default function InvoiceCreateView() {
 
     const body: InvoicePaymentUpdate = {
       paymentMethod,
+      paymentType,
       paymentTermDays,
     };
 
@@ -508,8 +506,9 @@ export default function InvoiceCreateView() {
             customer={customer}
             products={products}
             totals={totals}
-            paymentMethod={paymentMethod}
+            paymentType={paymentType}
             paymentTermDays={paymentTermDays}
+            onPaymentTypeChange={setPaymentType}
             onPaymentMethodChange={setPaymentMethod}
             onPaymentTermChange={setPaymentTermDays}
             onConfirmPayment={handleConfirmPayment}

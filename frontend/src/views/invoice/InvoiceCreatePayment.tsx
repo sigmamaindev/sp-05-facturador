@@ -1,6 +1,10 @@
 import { useEffect, useState } from "react";
 
-import { PAYMENT_METHOD_OPTIONS } from "@/constants/paymentMethods";
+import {
+  PAYMENT_TYPE_OPTIONS,
+  type PaymentTypeValue,
+  paymentMethodCodeFromPaymentType,
+} from "@/constants/paymentMethods";
 import type { PaymentMethodCode } from "@/constants/paymentMethods";
 
 import type { Customer } from "@/types/customer.types";
@@ -33,8 +37,9 @@ interface InvoiceCreatePaymentProps {
   customer: Customer | null;
   products: InvoiceProduct[];
   totals: InvoiceTotals;
-  paymentMethod: PaymentMethodCode;
+  paymentType: PaymentTypeValue;
   paymentTermDays: number;
+  onPaymentTypeChange: (value: PaymentTypeValue) => void;
   onPaymentMethodChange: (value: PaymentMethodCode) => void;
   onPaymentTermChange: (value: number) => void;
   onConfirmPayment: () => void;
@@ -46,8 +51,9 @@ export default function InvoiceCreatePayment({
   customer,
   products,
   totals,
-  paymentMethod,
+  paymentType,
   paymentTermDays,
+  onPaymentTypeChange,
   onPaymentMethodChange,
   onPaymentTermChange,
   onConfirmPayment,
@@ -55,12 +61,14 @@ export default function InvoiceCreatePayment({
   sequential,
 }: InvoiceCreatePaymentProps) {
   const [confirmOpen, setConfirmOpen] = useState(false);
-  const [paymentType, setPaymentType] = useState<"CASH" | "CREDIT">(
+  const [paymentCondition, setPaymentCondition] = useState<
+    "CASH" | "CREDIT"
+  >(
     paymentTermDays > 0 ? "CREDIT" : "CASH"
   );
 
   useEffect(() => {
-    if (paymentTermDays > 0) setPaymentType("CREDIT");
+    if (paymentTermDays > 0) setPaymentCondition("CREDIT");
   }, [paymentTermDays]);
 
   return (
@@ -159,10 +167,10 @@ export default function InvoiceCreatePayment({
             <div className="space-y-2">
               <Label>Tipo de pago</Label>
               <Select
-                value={paymentType}
+                value={paymentCondition}
                 onValueChange={(value) => {
                   const next = value === "CREDIT" ? "CREDIT" : "CASH";
-                  setPaymentType(next);
+                  setPaymentCondition(next);
                   if (next === "CASH") onPaymentTermChange(0);
                 }}
               >
@@ -179,14 +187,19 @@ export default function InvoiceCreatePayment({
             <div className="space-y-2">
               <Label>Método de pago</Label>
               <Select
-                value={paymentMethod}
-                onValueChange={onPaymentMethodChange}
+                value={paymentType}
+                onValueChange={(value) => {
+                  onPaymentTypeChange(value as PaymentTypeValue);
+                  onPaymentMethodChange(
+                    paymentMethodCodeFromPaymentType(value as PaymentTypeValue)
+                  );
+                }}
               >
                 <SelectTrigger className="w-full">
                   <SelectValue placeholder="Seleccionar método" />
                 </SelectTrigger>
                 <SelectContent>
-                  {PAYMENT_METHOD_OPTIONS.map((option) => (
+                  {PAYMENT_TYPE_OPTIONS.map((option) => (
                     <SelectItem key={option.value} value={option.value}>
                       {option.label}
                     </SelectItem>
@@ -195,7 +208,7 @@ export default function InvoiceCreatePayment({
               </Select>
             </div>
 
-            {paymentType === "CREDIT" && (
+            {paymentCondition === "CREDIT" && (
               <div className="space-y-2">
                 <Label>Plazo (días)</Label>
                 <Input
