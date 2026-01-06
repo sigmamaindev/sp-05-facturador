@@ -51,7 +51,7 @@ export default function PurchaseDetailInfo({
                         P. Bruto
                       </th>
                       <th className="text-right py-2 px-2 font-semibold">
-                        P. Neto
+                        Tara
                       </th>
                       <th className="text-left py-2 px-2 font-semibold">
                         Cant. / U.M.

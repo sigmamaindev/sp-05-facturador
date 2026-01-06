@@ -6,14 +6,17 @@ import { getSuppliers } from "@/api/supplier";
 
 import { Card, CardContent } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
 
 import AlertMessage from "@/components/shared/AlertMessage";
 import DataTable from "@/components/shared/DataTable";
 
 import type { PurchaseSupplier } from "@/types/purchase.type";
+import type { Supplier } from "@/types/supplier.types";
 
 import PurchaseSupplierModalHeader from "./PurchaseSupplierModalHeader";
 import { columns } from "./PurchaseSupplierModalColumns";
+import PurchaseSupplierCreateModal from "./PurchaseSupplierCreateModal";
 
 interface PurchaseSupplierModalProps {
   open: boolean;
@@ -35,6 +38,7 @@ export default function PurchaseSupplierModal({
   const [totalPages, setTotalPages] = useState(1);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [openCreateModal, setOpenCreateModal] = useState(false);
 
   useEffect(() => {
     if (!token || !open) return;
@@ -81,25 +85,49 @@ export default function PurchaseSupplierModal({
         </DialogHeader>
         <Card>
           <CardContent>
-            <PurchaseSupplierModalHeader
-              keyword={keyword}
-              setKeyword={setKeyword}
-            />
-            <DataTable
-              columns={columns({ onSelect })}
-              data={data}
-              page={page}
-              pageSize={pageSize}
-              totalPages={totalPages}
-              onPageChange={setPage}
-              onPageSizeChange={setPageSize}
-              loading={loading}
-            />
-            {error ? (
-              <AlertMessage message={error} variant="destructive" />
-            ) : null}
+            <div className="flex flex-col gap-3">
+              <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-2">
+                <PurchaseSupplierModalHeader
+                  keyword={keyword}
+                  setKeyword={setKeyword}
+                />
+                <Button onClick={() => setOpenCreateModal(true)}>
+                  Nuevo proveedor
+                </Button>
+              </div>
+
+              {error ? (
+                <AlertMessage message={error} variant="destructive" />
+              ) : (
+                <DataTable
+                  columns={columns({ onSelect })}
+                  data={data}
+                  page={page}
+                  pageSize={pageSize}
+                  totalPages={totalPages}
+                  onPageChange={setPage}
+                  onPageSizeChange={setPageSize}
+                  loading={loading}
+                />
+              )}
+            </div>
           </CardContent>
         </Card>
+
+        <PurchaseSupplierCreateModal
+          open={openCreateModal}
+          onClose={() => setOpenCreateModal(false)}
+          onCreated={(supplier: Supplier) => {
+            onSelect({
+              id: supplier.id,
+              name: supplier.businessName,
+              document: supplier.document,
+              email: supplier.email,
+            });
+            setOpenCreateModal(false);
+            onClose();
+          }}
+        />
       </DialogContent>
     </Dialog>
   );

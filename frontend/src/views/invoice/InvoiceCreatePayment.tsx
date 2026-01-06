@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import { PAYMENT_METHOD_OPTIONS } from "@/constants/paymentMethods";
 import type { PaymentMethodCode } from "@/constants/paymentMethods";
@@ -55,6 +55,13 @@ export default function InvoiceCreatePayment({
   sequential,
 }: InvoiceCreatePaymentProps) {
   const [confirmOpen, setConfirmOpen] = useState(false);
+  const [paymentType, setPaymentType] = useState<"CASH" | "CREDIT">(
+    paymentTermDays > 0 ? "CREDIT" : "CASH"
+  );
+
+  useEffect(() => {
+    if (paymentTermDays > 0) setPaymentType("CREDIT");
+  }, [paymentTermDays]);
 
   return (
     <div className="flex flex-col md:flex-row gap-4">
@@ -71,7 +78,7 @@ export default function InvoiceCreatePayment({
                     <tr className="border-b text-left">
                       <th className="py-2 px-2">Código</th>
                       <th className="py-2 px-2">Nombre</th>
-                      <th className="py-2 px-2 text-right">P. Neto</th>
+                      <th className="py-2 px-2 text-right">Tara</th>
                       <th className="py-2 px-2 text-right">P. Bruto</th>
                       <th className="py-2 px-2">Cant.</th>
                       <th className="py-2 px-2 text-right">Base IVA</th>
@@ -150,6 +157,26 @@ export default function InvoiceCreatePayment({
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-2">
+              <Label>Tipo de pago</Label>
+              <Select
+                value={paymentType}
+                onValueChange={(value) => {
+                  const next = value === "CREDIT" ? "CREDIT" : "CASH";
+                  setPaymentType(next);
+                  if (next === "CASH") onPaymentTermChange(0);
+                }}
+              >
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Seleccionar tipo" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="CASH">Contado</SelectItem>
+                  <SelectItem value="CREDIT">Crédito</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
               <Label>Método de pago</Label>
               <Select
                 value={paymentMethod}
@@ -168,15 +195,17 @@ export default function InvoiceCreatePayment({
               </Select>
             </div>
 
-            <div className="space-y-2">
-              <Label>Plazo (días)</Label>
-              <Input
-                type="number"
-                min={0}
-                value={paymentTermDays}
-                onChange={(e) => onPaymentTermChange(Number(e.target.value))}
-              />
-            </div>
+            {paymentType === "CREDIT" && (
+              <div className="space-y-2">
+                <Label>Plazo (días)</Label>
+                <Input
+                  type="number"
+                  min={0}
+                  value={paymentTermDays}
+                  onChange={(e) => onPaymentTermChange(Number(e.target.value))}
+                />
+              </div>
+            )}
 
             <div className="space-y-1 text-sm">
               <div className="flex justify-between">

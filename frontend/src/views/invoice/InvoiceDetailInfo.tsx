@@ -36,7 +36,7 @@ export default function InvoiceDetailInfo({ invoice }: InvoiceDetailInfoProps) {
                         P. Bruto
                       </th>
                       <th className="text-right py-2 px-2 font-semibold">
-                        P. Neto
+                        Tara
                       </th>
                       <th className="text-right py-2 px-2 font-semibold">
                         Desc.
