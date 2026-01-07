@@ -50,7 +50,7 @@ export default function PurchaseCreateView() {
     defaultValues: {
       receiptType: "01",
       isElectronic: true,
-      environment: user?.business?.sriEnvironment ?? "1",
+      environment: "2",
       emissionTypeCode: "1",
       supplierId: 0,
       purchaseDate: new Date(),
@@ -76,9 +76,8 @@ export default function PurchaseCreateView() {
   }, [setValue]);
 
   useEffect(() => {
-    if (user?.business?.sriEnvironment) {
-      setValue("environment", user.business.sriEnvironment);
-    }
+    setValue("environment", "2");
+    setValue("isElectronic", true);
 
     if (user?.establishment?.[0]?.code) {
       setValue("establishmentCode", user.establishment[0].code);
@@ -311,14 +310,12 @@ export default function PurchaseCreateView() {
   }, [totals, setValue]);
 
   const purchaseDate = watch("purchaseDate");
-  const environment = watch("environment");
   const receiptType = watch("receiptType");
   const emissionTypeCode = watch("emissionTypeCode");
   const isElectronic = watch("isElectronic");
   const establishmentCode = watch("establishmentCode");
   const emissionPointCode = watch("emissionPointCode");
   const sequential = watch("sequential");
-  const documentNumber = watch("documentNumber");
   const accessKey = watch("accessKey");
   const authorizationNumber = watch("authorizationNumber");
   const authorizationDate = watch("authorizationDate");
@@ -394,7 +391,7 @@ export default function PurchaseCreateView() {
       documentSubjectDetained: "",
       fiscalPeriod,
       supplierId: data.supplierId,
-      status: "ISSUED",
+      status: "EMITIDO",
       isElectronic: data.isElectronic,
       authorizationNumber: data.authorizationNumber ?? "",
       authorizationDate: data.authorizationDate ?? null,
@@ -474,40 +471,6 @@ export default function PurchaseCreateView() {
           </CardHeader>
           <CardContent className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="space-y-2">
-              <label className="text-sm font-medium">
-                Documento electrónico
-              </label>
-              <Select
-                value={isElectronic ? "true" : "false"}
-                onValueChange={(v) => setValue("isElectronic", v === "true")}
-              >
-                <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Seleccione" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="true">Sí</SelectItem>
-                  <SelectItem value="false">No</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Ambiente SRI</label>
-              <Select
-                value={environment}
-                onValueChange={(v) => setValue("environment", v)}
-              >
-                <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Seleccione" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="1">Pruebas (1)</SelectItem>
-                  <SelectItem value="2">Producción (2)</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-2">
               <label className="text-sm font-medium">Tipo de documento</label>
               <Select
                 value={receiptType}
@@ -575,11 +538,6 @@ export default function PurchaseCreateView() {
                 value={sequential}
                 onChange={(e) => setValue("sequential", e.target.value)}
               />
-            </div>
-
-            <div className="space-y-2 md:col-span-3">
-              <label className="text-sm font-medium">Número de documento</label>
-              <Input value={documentNumber} disabled />
             </div>
 
             {isElectronic && (
