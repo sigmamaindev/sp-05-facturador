@@ -12,6 +12,8 @@ export type Purchase = {
   document: string;
   accessKey: string;
   receiptType: string;
+  supportingCode?: string | null;
+  supportingDocumentCode?: string | null;
   establishmentCode: string;
   emissionPointCode: string;
   sequential: string;
@@ -113,6 +115,15 @@ export const purchaseDetailSchema = z.object({
 
 export const createPurchaseSchema = z.object({
   receiptType: z.string().min(1, "Debe seleccionar un tipo de documento"),
+  supportingDocumentCode: z
+    .string()
+    .min(2, "Debe seleccionar un documento de sustento")
+    .max(3, "El documento de sustento es inválido"),
+  supportingCode: z
+    .string()
+    .min(2, "Debe seleccionar un código de sustento")
+    .max(2, "El código de sustento debe tener 2 dígitos"),
+  relatedParty: z.enum(["SI", "NO"]),
   isElectronic: z.boolean(),
   environment: z.string().min(1, "Debe seleccionar un ambiente"),
   emissionTypeCode: z.string().min(1, "Debe seleccionar un tipo de emisión"),
@@ -173,6 +184,8 @@ export type CreatePurchasePayload = {
   document: string;
   accessKey: string;
   receiptType: string;
+  supportingDocumentCode: string;
+  supportingCode: string;
   establishmentCode: string;
   emissionPointCode: string;
   sequential: string;

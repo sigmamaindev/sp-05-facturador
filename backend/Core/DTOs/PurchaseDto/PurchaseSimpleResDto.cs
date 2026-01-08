@@ -12,6 +12,8 @@ public class PurchaseSimpleResDto
     public string Document { get; set; } = string.Empty;
     public string AccessKey { get; set; } = string.Empty;
     public string ReceiptType { get; set; } = string.Empty;
+    public string SupportingCode { get; set; } = string.Empty;
+    public string SupportingDocumentCode { get; set; } = string.Empty;
     public string EstablishmentCode { get; set; } = string.Empty;
     public string EmissionPointCode { get; set; } = string.Empty;
     public string Sequential { get; set; } = string.Empty;

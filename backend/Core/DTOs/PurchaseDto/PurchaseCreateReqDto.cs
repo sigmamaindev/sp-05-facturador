@@ -6,6 +6,8 @@ public class PurchaseCreateReqDto
     public string EmissionTypeCode { get; set; } = string.Empty;
     public string AccessKey { get; set; } = string.Empty;
     public string ReceiptType { get; set; } = string.Empty;
+    public string? SupportingCode { get; set; }
+    public string? SupportingDocumentCode { get; set; }
     public string EstablishmentCode { get; set; } = string.Empty;
     public string EmissionPointCode { get; set; } = string.Empty;
     public string Sequential { get; set; } = string.Empty;

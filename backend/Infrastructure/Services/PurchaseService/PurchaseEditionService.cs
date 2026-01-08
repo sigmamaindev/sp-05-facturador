@@ -73,6 +73,8 @@ public class PurchaseEditionService(StoreContext context) : IPurchaseEditionServ
             Document = supplier.Document,
             AccessKey = dto.AccessKey,
             ReceiptType = dto.ReceiptType,
+            SupportingCode = dto.SupportingCode,
+            SupportingDocumentCode = dto.SupportingDocumentCode,
             EstablishmentCode = dto.EstablishmentCode,
             EmissionPointCode = dto.EmissionPointCode,
             Sequential = dto.Sequential,

@@ -15,6 +15,8 @@ public class Purchase : BaseEntity
     public required string Document { get; set; }
     public required string AccessKey { get; set; }
     public string ReceiptType { get; set; } = ReceiptCodeType.WITHHOLDING_RECEIPT;
+    public string? SupportingCode { get; set; }
+    public string? SupportingDocumentCode { get; set; }
     public required string EstablishmentCode { get; set; }
     public required string EmissionPointCode { get; set; }
     public required string Sequential { get; set; }

@@ -18,6 +18,9 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
+import { SUPPORTING_CODE_OPTIONS } from "@/constants/supportingCodes";
+import { SUPPORTING_DOCUMENT_CODE_OPTIONS } from "@/constants/supportingDocumentCodes";
+
 import type {
   CreatePurchaseForm,
   CreatePurchasePayload,
@@ -49,6 +52,9 @@ export default function PurchaseCreateView() {
   const { setValue, handleSubmit, watch } = useForm<CreatePurchaseForm>({
     defaultValues: {
       receiptType: "01",
+      supportingDocumentCode: "01",
+      supportingCode: "01",
+      relatedParty: "NO",
       isElectronic: true,
       environment: "2",
       emissionTypeCode: "1",
@@ -311,7 +317,8 @@ export default function PurchaseCreateView() {
 
   const purchaseDate = watch("purchaseDate");
   const receiptType = watch("receiptType");
-  const emissionTypeCode = watch("emissionTypeCode");
+  const supportingCode = watch("supportingCode");
+  const relatedParty = watch("relatedParty");
   const isElectronic = watch("isElectronic");
   const establishmentCode = watch("establishmentCode");
   const emissionPointCode = watch("emissionPointCode");
@@ -370,12 +377,14 @@ export default function PurchaseCreateView() {
       businessId: user?.business?.id ?? 0,
       userId: user?.id ?? 0,
       environment: data.environment,
-      emissionTypeCode: data.emissionTypeCode,
+      emissionTypeCode: "1",
       businessName: user?.business?.name ?? "",
       name: `Compra #${data.sequential}`,
       document: user?.business?.document ?? "",
       accessKey: data.accessKey ?? "",
       receiptType: data.receiptType,
+      supportingDocumentCode: data.supportingDocumentCode,
+      supportingCode: data.supportingCode,
       establishmentCode: data.establishmentCode,
       emissionPointCode: data.emissionPointCode,
       sequential: data.sequential,
@@ -386,7 +395,7 @@ export default function PurchaseCreateView() {
       mandatoryAccounting: "NO",
       typeDocumentSubjectDetained: "04",
       typeSubjectDetained: "",
-      relatedParty: "NO",
+      relatedParty: data.relatedParty,
       businessNameSubjectDetained: "",
       documentSubjectDetained: "",
       fiscalPeriod,
@@ -474,28 +483,39 @@ export default function PurchaseCreateView() {
               <label className="text-sm font-medium">Tipo de documento</label>
               <Select
                 value={receiptType}
-                onValueChange={(v) => setValue("receiptType", v)}
+                onValueChange={(v) => {
+                  setValue("receiptType", v);
+                  setValue("supportingDocumentCode", v);
+                }}
               >
                 <SelectTrigger className="w-full">
                   <SelectValue placeholder="Seleccione" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="01">Factura (01)</SelectItem>
+                  {SUPPORTING_DOCUMENT_CODE_OPTIONS.map((option) => (
+                    <SelectItem key={option.value} value={option.value}>
+                      {option.label}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>
 
             <div className="space-y-2">
-              <label className="text-sm font-medium">Tipo de emisión</label>
+              <label className="text-sm font-medium">Código de sustento</label>
               <Select
-                value={emissionTypeCode}
-                onValueChange={(v) => setValue("emissionTypeCode", v)}
+                value={supportingCode}
+                onValueChange={(v) => setValue("supportingCode", v)}
               >
                 <SelectTrigger className="w-full">
                   <SelectValue placeholder="Seleccione" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="1">Normal (1)</SelectItem>
+                  {SUPPORTING_CODE_OPTIONS.map((option) => (
+                    <SelectItem key={option.value} value={option.value}>
+                      {option.label}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>
@@ -512,6 +532,22 @@ export default function PurchaseCreateView() {
                   )
                 }
               />
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Parte relacionada</label>
+              <Select
+                value={relatedParty}
+                onValueChange={(v) => setValue("relatedParty", v as "SI" | "NO")}
+              >
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Seleccione" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="NO">NO</SelectItem>
+                  <SelectItem value="SI">SI</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
 
             <div className="space-y-2">

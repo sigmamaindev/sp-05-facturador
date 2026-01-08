@@ -436,6 +436,8 @@ public class StoreContext(DbContextOptions options) : DbContext(options)
             entity.Property(p => p.Document).HasColumnName("Documento");
             entity.Property(p => p.AccessKey).HasColumnName("ClaveAcceso");
             entity.Property(p => p.ReceiptType).HasColumnName("TipoRecibo");
+            entity.Property(p => p.SupportingCode).HasColumnName("CodigoSustento");
+            entity.Property(p => p.SupportingDocumentCode).HasColumnName("CodigoDocumentoSustento");
             entity.Property(p => p.EstablishmentCode).HasColumnName("Establecimiento");
             entity.Property(p => p.EmissionPointCode).HasColumnName("PuntoEmision");
             entity.Property(p => p.Sequential).HasColumnName("Secuencial");
