@@ -16,6 +16,8 @@ using Core.Interfaces.Services.IPurchaseService;
 using Infrastructure.Services.PurchaseService;
 using Core.Interfaces.Services.IARService;
 using Infrastructure.Services.ARService;
+using Core.Interfaces.Services.IAPService;
+using Infrastructure.Services.APService;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -53,6 +55,7 @@ builder.Services.AddScoped<IKardexRepository, KardexRepository>();
 builder.Services.AddScoped<ICustomerRepository, CustomerRepository>();
 builder.Services.AddScoped<IInvoiceRepository, InvoiceRepository>();
 builder.Services.AddScoped<IAccountsReceivableRepository, AccountsReceivableRepository>();
+builder.Services.AddScoped<IAccountsPayableRepository, AccountsPayableRepository>();
 builder.Services.AddScoped<ISupplierRepository, SupplierRepository>();
 builder.Services.AddScoped<ICertificateRepository, CertificateRepository>();
 builder.Services.AddScoped<IPurchaseRepository, PurchaseRepository>();
@@ -73,6 +76,9 @@ builder.Services.AddHttpClient<ISriReceptionService, SriReceptionService>();
 // Accounts Receivable Services
 builder.Services.AddScoped<IAccountsReceivableService, AccountsReceivableService>();
 builder.Services.AddScoped<IARDtoFactory, ARDtoFactory>();
+// Accounts Payable Services
+builder.Services.AddScoped<IAccountsPayableService, AccountsPayableService>();
+builder.Services.AddScoped<IAPDtoFactory, APDtoFactory>();
 // Kardex Services
 builder.Services.AddScoped<IKardexService, KardexService>();
 // Purchase Services

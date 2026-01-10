@@ -43,4 +43,5 @@ public class Purchase : BaseEntity
     public decimal TaxTotal { get; set; }
     public decimal TotalPurchase { get; set; }
     public ICollection<PurchaseDetail> PurchaseDetails { get; set; } = [];
+    public AccountsPayable? AccountsPayable { get; set; }
 }

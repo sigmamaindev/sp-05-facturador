@@ -51,7 +51,10 @@ import WarehouseDetailView from "@/views/warehouse/WarehouseDetailView";
 import WarehouseUpdateView from "@/views/warehouse/WarehouseUpdateView";
 import AccountsReceivableListView from "@/views/accountsReceivable/AccountsReceivableListView";
 import AccountsReceivableDetailView from "@/views/accountsReceivable/AccountsReceivableDetailView";
+import AccountsReceivableUpdateView from "@/views/accountsReceivable/AccountsReceivableUpdateView";
 import AccountsPayableListView from "@/views/accountsPayable/AccountsPayableListView";
+import AccountsPayableDetailView from "@/views/accountsPayable/AccountsPayableDetailView";
+import AccountsPayableUpdateView from "@/views/accountsPayable/AccountsPayableUpdateView";
 import NotFoundRoute from "./notFoundRoute";
 
 export default function Router() {
@@ -153,8 +156,20 @@ export default function Router() {
                 element={<AccountsReceivableDetailView />}
               />
               <Route
+                path="/cuentas-por-cobrar/actualizar/:id"
+                element={<AccountsReceivableUpdateView />}
+              />
+              <Route
                 path="/cuentas-por-pagar"
                 element={<AccountsPayableListView />}
+              />
+              <Route
+                path="/cuentas-por-pagar/:id"
+                element={<AccountsPayableDetailView />}
+              />
+              <Route
+                path="/cuentas-por-pagar/actualizar/:id"
+                element={<AccountsPayableUpdateView />}
               />
               <Route path="/facturas" element={<InvoiceListView />} />
               <Route path="/facturas/:id" element={<InvoiceDetailView />} />

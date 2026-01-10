@@ -5,8 +5,8 @@ export type AccountsReceivableTransaction = {
   arTransactionType: string;
   amount: number;
   paymentMethod: string | null;
-  reference: string;
-  notes: string;
+  reference: string | null;
+  notes: string | null;
   paymentDetails: unknown | null;
   accountReceivableId: number;
   createdAt: string;
@@ -43,4 +43,15 @@ export type AccountsReceivable = {
   balance: number;
   status: string;
   transactions: AccountsReceivableTransaction[];
+};
+
+export type AccountsReceivableDetail = AccountsReceivable;
+
+export type CreateAccountsReceivableTransaction = {
+  arTransactionType: string;
+  amount: number;
+  paymentMethod?: string | null;
+  reference?: string | null;
+  notes?: string | null;
+  paymentDetails?: string | null;
 };

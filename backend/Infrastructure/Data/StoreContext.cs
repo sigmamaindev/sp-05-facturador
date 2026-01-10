@@ -27,6 +27,8 @@ public class StoreContext(DbContextOptions options) : DbContext(options)
     public DbSet<PurchaseDetail> PurchaseDetails { get; set; }
     public DbSet<AccountsReceivable> AccountsReceivables { get; set; }
     public DbSet<ARTransaction> ARTransactions { get; set; }
+    public DbSet<AccountsPayable> AccountsPayables { get; set; }
+    public DbSet<APTransaction> APTransactions { get; set; }
     public DbSet<Kardex> Kardexes { get; set; }
     public DbSet<BusinessCertificate> BusinessCertificates => Set<BusinessCertificate>();
 
@@ -582,6 +584,69 @@ public class StoreContext(DbContextOptions options) : DbContext(options)
             entity.HasOne(t => t.AccountsReceivable)
             .WithMany(a => a.Transactions)
             .HasForeignKey(t => t.AccountReceivableId);
+        });
+
+        modelBuilder.Entity<AccountsPayable>(entity =>
+        {
+            entity.ToTable("CuentaPorPagar");
+            entity.Property(a => a.BusinessId).HasColumnName("EmpresaId");
+            entity.Property(a => a.UserId).HasColumnName("UsuarioId");
+            entity.Property(a => a.SupplierId).HasColumnName("ProveedorId");
+            entity.Property(a => a.PurchaseId).HasColumnName("CompraId");
+            entity.Property(a => a.DocumentNumber).HasColumnName("NumeroDocumento");
+            entity.Property(a => a.Subtotal).HasColumnName("Subtotal");
+            entity.Property(a => a.DiscountTotal).HasColumnName("DescuentoTotal");
+            entity.Property(a => a.TaxTotal).HasColumnName("ImpuestoTotal");
+            entity.Property(a => a.Total).HasColumnName("Total");
+            entity.Property(a => a.Balance).HasColumnName("Saldo");
+            entity.Property(a => a.Status).HasColumnName("Estado");
+            entity.Property(a => a.Notes).HasColumnName("Notas");
+            entity.Property(a => a.IssueDate).HasColumnName("FechaEmision").HasColumnType("timestamp without time zone");
+            entity.Property(a => a.DueDate).HasColumnName("FechaVencimiento").HasColumnType("timestamp without time zone");
+            entity.Property(a => a.ExpectedPaymentDate).HasColumnName("FechaPagoEsperado").HasColumnType("timestamp without time zone");
+
+            entity.HasOne(a => a.Business)
+                .WithMany(b => b.AccountsPayables)
+                .HasForeignKey(a => a.BusinessId);
+
+            entity.HasOne(a => a.Supplier)
+                .WithMany(s => s.AccountsPayables)
+                .HasForeignKey(a => a.SupplierId);
+
+            entity.HasOne(a => a.User)
+                .WithMany()
+                .HasForeignKey(a => a.UserId);
+
+            entity.HasOne(a => a.Purchase)
+                .WithOne(p => p.AccountsPayable)
+                .HasForeignKey<AccountsPayable>(a => a.PurchaseId);
+
+            entity.HasMany(a => a.Transactions)
+                .WithOne(t => t.AccountsPayable)
+                .HasForeignKey(t => t.AccountsPayableId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasIndex(a => new { a.BusinessId, a.PurchaseId })
+                .IsUnique()
+                .HasDatabaseName("UX_CuentaPorPagar_Empresa_Compra");
+        });
+
+        modelBuilder.Entity<APTransaction>(entity =>
+        {
+            entity.ToTable("CuentaPorPagarTransaccion");
+            entity.Property(t => t.AccountsPayableId).HasColumnName("CuentaPorPagarId");
+            entity.Property(t => t.APTransactionType).HasColumnName("Tipo");
+            entity.Property(t => t.Amount).HasColumnName("Monto");
+            entity.Property(t => t.PaymentMethod).HasColumnName("MetodoPago");
+            entity.Property(t => t.Reference).HasColumnName("Referencia");
+            entity.Property(t => t.PaymentDetails).HasColumnName("DetallesPago");
+            entity.Property(t => t.Notes).HasColumnName("Notas");
+            entity.Property(t => t.CreatedAt).HasColumnName("FechaCreado");
+            entity.Property(t => t.UpdatedAt).HasColumnName("FechaActualizado");
+
+            entity.HasOne(t => t.AccountsPayable)
+                .WithMany(a => a.Transactions)
+                .HasForeignKey(t => t.AccountsPayableId);
         });
 
         modelBuilder.Entity<BusinessCertificate>(entity =>

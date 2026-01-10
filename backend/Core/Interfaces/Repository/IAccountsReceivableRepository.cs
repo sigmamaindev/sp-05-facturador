@@ -7,5 +7,5 @@ public interface IAccountsReceivableRepository
 {
     Task<ApiResponse<List<ARSimpleResDto>>> GetAccountsReceivablesAsync(string? keyword, int page, int limit);
     Task<ApiResponse<ARComplexResDto>> GetAccountsReceivableByIdAsync(int id);
+    Task<ApiResponse<ARComplexResDto>> AddTransactionAsync(int accountsReceivableId, ARTransactionCreateReqDto aRTransactionCreateReqDto);
 }
-

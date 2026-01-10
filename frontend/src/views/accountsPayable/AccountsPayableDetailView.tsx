@@ -3,24 +3,25 @@ import { useParams } from "react-router-dom";
 
 import { useAuth } from "@/contexts/AuthContext";
 
-import { getAccountsReceivableById } from "@/api/accountsReceivable";
+import { getAccountsPayableById } from "@/api/accountsPayable";
 
-import type { AccountsReceivable } from "@/types/accountsReceivable.types";
+import type { AccountsPayable } from "@/types/accountsPayable.types";
 
 import { Card, CardContent } from "@/components/ui/card";
 
 import Loading from "@/components/shared/Loading";
 import AlertMessage from "@/components/shared/AlertMessage";
 
-import AccountsReceivableDetailHeader from "./AccountsReceivableDetailHeader";
-import AccountsReceivableDetailInfo from "./AccountsReceivableDetailInfo";
+import AccountsPayableDetailHeader from "./AccountsPayableDetailHeader";
+import AccountsPayableDetailInfo from "./AccountsPayableDetailInfo";
 
-export default function AccountsReceivableDetailView() {
+export default function AccountsPayableDetailView() {
   const { id } = useParams<{ id: string }>();
   const { token } = useAuth();
 
-  const [accountsReceivable, setAccountsReceivable] =
-    useState<AccountsReceivable | null>(null);
+  const [accountsPayable, setAccountsPayable] = useState<AccountsPayable | null>(
+    null
+  );
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -29,9 +30,9 @@ export default function AccountsReceivableDetailView() {
       setLoading(true);
       setError(null);
 
-      const response = await getAccountsReceivableById(Number(id), token!);
+      const response = await getAccountsPayableById(Number(id), token!);
 
-      setAccountsReceivable(response.data);
+      setAccountsPayable(response.data);
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "Error desconocido");
     } finally {
@@ -46,20 +47,18 @@ export default function AccountsReceivableDetailView() {
   return (
     <Card>
       <CardContent>
-        <AccountsReceivableDetailHeader />
+        <AccountsPayableDetailHeader />
         {loading ? (
           <Loading />
         ) : error ? (
           <AlertMessage message={error} variant="destructive" />
-        ) : !accountsReceivable ? (
+        ) : !accountsPayable ? (
           <AlertMessage
-            message="Los datos de la cuenta por cobrar no se han cargado completamente"
+            message="Los datos de la cuenta por pagar no se han cargado completamente"
             variant="destructive"
           />
         ) : (
-          <AccountsReceivableDetailInfo
-            accountsReceivable={accountsReceivable}
-          />
+          <AccountsPayableDetailInfo accountsPayable={accountsPayable} />
         )}
       </CardContent>
     </Card>

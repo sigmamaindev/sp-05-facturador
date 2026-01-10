@@ -331,6 +331,8 @@ public class InvoiceRepository(
     {
         var response = new ApiResponse<InvoiceComplexResDto>();
 
+        await using var transaction = await context.Database.BeginTransactionAsync();
+
         try
         {
             ValidateCurrentUser();
@@ -428,6 +430,8 @@ public class InvoiceRepository(
 
             await context.SaveChangesAsync();
 
+            await transaction.CommitAsync();
+
             response.Success = true;
             response.Message = "Pago registrado en factura";
             response.Data = invoiceDtoFactory.InvoiceComplexRes(existingInvoice);
@@ -435,6 +439,8 @@ public class InvoiceRepository(
         }
         catch (Exception ex)
         {
+            await transaction.RollbackAsync();
+
             response.Success = false;
             response.Message = "Error al actualizar el pago de la factura";
             response.Error = ex.Message;

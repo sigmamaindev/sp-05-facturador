@@ -1,8 +1,8 @@
 import type { ColumnDef } from "@tanstack/react-table";
 
-import type { AccountsReceivable } from "@/types/accountsReceivable.types";
+import type { AccountsPayable } from "@/types/accountsPayable.types";
 
-import AccountsReceivableActionsCell from "./AccountsReceivableActionsCell";
+import AccountsPayableActionsCell from "./AccountsPayableActionsCell";
 
 function daysUntil(dueDate: Date) {
   const due = new Date(dueDate);
@@ -14,12 +14,12 @@ function daysUntil(dueDate: Date) {
   return Math.ceil((due.getTime() - today.getTime()) / 86400000);
 }
 
-export const columns: ColumnDef<AccountsReceivable>[] = [
+export const columns: ColumnDef<AccountsPayable>[] = [
   {
-    accessorKey: "invoiceDate",
+    accessorKey: "issueDate",
     header: "Fecha de emisión",
     cell: ({ row }) => {
-      const date = new Date(row.original.invoice.invoiceDate);
+      const date = new Date(row.original.purchase.issueDate);
 
       const dateStr = date.toLocaleDateString("es-EC", {
         year: "numeric",
@@ -45,26 +45,32 @@ export const columns: ColumnDef<AccountsReceivable>[] = [
   {
     id: "code",
     header: "Código",
-    accessorFn: (ar) =>
-      `${ar.invoice.establishmentCode} ${ar.invoice.emissionPointCode} ${ar.invoice.sequential}`,
-    cell: ({ row }) => (
-      <span className="font-semibold">
-        {row.original.invoice.establishmentCode}-
-        {row.original.invoice.emissionPointCode}-
-        {row.original.invoice.sequential}
-      </span>
-    ),
+    accessorFn: (ap) =>
+      ap.purchase.establishmentCode && ap.purchase.emissionPointCode
+        ? `${ap.purchase.establishmentCode} ${ap.purchase.emissionPointCode} ${ap.purchase.sequential}`
+        : ap.purchase.sequential,
+    cell: ({ row }) => {
+      const establishmentCode = row.original.purchase.establishmentCode;
+      const emissionPointCode = row.original.purchase.emissionPointCode;
+
+      return (
+        <span className="font-semibold">
+          {establishmentCode && emissionPointCode
+            ? `${establishmentCode}-${emissionPointCode}-${row.original.purchase.sequential}`
+            : row.original.purchase.sequential}
+        </span>
+      );
+    },
   },
   {
-    id: "customer",
-    header: "Cliente",
-    accessorFn: (invoice) =>
-      `${invoice.customer.document} ${invoice.customer.name}`,
+    id: "supplier",
+    header: "Proveedor",
+    accessorFn: (ap) => `${ap.supplier.document} ${ap.supplier.businessName}`,
     cell: ({ row }) => (
       <div className="flex flex-col">
-        <span className="font-semibold">{row.original.customer.document}</span>
+        <span className="font-semibold">{row.original.supplier.document}</span>
         <span className="text-muted-foreground">
-          {row.original.customer.name}
+          {row.original.supplier.businessName}
         </span>
       </div>
     ),
@@ -100,17 +106,15 @@ export const columns: ColumnDef<AccountsReceivable>[] = [
   {
     accessorKey: "balance",
     header: () => <div className="text-right">Saldo</div>,
-    cell: ({ row }) => (
-      <p className="text-right">{row.original.balance.toFixed(2)}</p>
-    ),
+    cell: ({ row }) => <p className="text-right">{row.original.balance.toFixed(2)}</p>,
   },
   {
     id: "actions",
     header: () => <div className="text-center">Acciones</div>,
     cell: ({ row }) => {
-      const ar = row.original;
+      const ap = row.original;
 
-      return <AccountsReceivableActionsCell accountsReceivable={ar} />;
+      return <AccountsPayableActionsCell accountsPayable={ap} />;
     },
   },
 ];

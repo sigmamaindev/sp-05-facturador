@@ -1,10 +1,10 @@
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
-import type { AccountsReceivable } from "@/types/accountsReceivable.types";
+import type { AccountsPayable } from "@/types/accountsPayable.types";
 
-interface AccountsReceivableDetailInfoProps {
-  accountsReceivable: AccountsReceivable;
+interface AccountsPayableDetailInfoProps {
+  accountsPayable: AccountsPayable;
 }
 
 function formatDateTime(value: string | null) {
@@ -65,20 +65,23 @@ function displayValue(value: string | null | undefined) {
   return trimmed.length ? trimmed : "—";
 }
 
-export default function AccountsReceivableDetailInfo({
-  accountsReceivable,
-}: AccountsReceivableDetailInfoProps) {
-  const code = `${accountsReceivable.invoice.establishmentCode}-${accountsReceivable.invoice.emissionPointCode}-${accountsReceivable.invoice.sequential}`;
+export default function AccountsPayableDetailInfo({
+  accountsPayable,
+}: AccountsPayableDetailInfoProps) {
+  const establishmentCode = accountsPayable.purchase.establishmentCode;
+  const emissionPointCode = accountsPayable.purchase.emissionPointCode;
+  const code =
+    establishmentCode && emissionPointCode
+      ? `${establishmentCode}-${emissionPointCode}-${accountsPayable.purchase.sequential}`
+      : accountsPayable.purchase.sequential;
 
-  const due = new Date(accountsReceivable.dueDate);
+  const due = new Date(accountsPayable.dueDate);
   const dueDays = Number.isNaN(due.getTime()) ? null : daysUntil(due);
   const dueLabel =
     dueDays === null
       ? "—"
       : dueDays < 0
-      ? `Vencida (${Math.abs(dueDays)} día${
-          Math.abs(dueDays) === 1 ? "" : "s"
-        })`
+      ? `Vencida (${Math.abs(dueDays)} día${Math.abs(dueDays) === 1 ? "" : "s"})`
       : dueDays === 0
       ? "Vence hoy"
       : `Por vencer: ${dueDays} día${dueDays === 1 ? "" : "s"}`;
@@ -118,7 +121,7 @@ export default function AccountsReceivableDetailInfo({
                   </thead>
 
                   <tbody>
-                    {accountsReceivable.transactions.length === 0 ? (
+                    {accountsPayable.transactions.length === 0 ? (
                       <tr>
                         <td
                           colSpan={6}
@@ -128,14 +131,14 @@ export default function AccountsReceivableDetailInfo({
                         </td>
                       </tr>
                     ) : (
-                      accountsReceivable.transactions.map((t) => (
+                      accountsPayable.transactions.map((t) => (
                         <tr key={t.id} className="border-b last:border-b-0">
                           <td className="py-2 px-2 whitespace-nowrap">
                             {formatDateTime(t.createdAt)}
                           </td>
                           <td className="py-2 px-2 whitespace-nowrap">
                             <Badge variant="outline">
-                              {t.arTransactionType}
+                              {t.apTransactionType}
                             </Badge>
                           </td>
                           <td className="py-2 px-2 text-right whitespace-nowrap">
@@ -167,8 +170,8 @@ export default function AccountsReceivableDetailInfo({
           <CardContent className="space-y-2">
             <div className="flex items-center justify-between text-sm gap-2">
               <span className="text-muted-foreground">Estado:</span>
-              <Badge variant={statusVariant(accountsReceivable.status)}>
-                {accountsReceivable.status}
+              <Badge variant={statusVariant(accountsPayable.status)}>
+                {accountsPayable.status}
               </Badge>
             </div>
             <div className="flex justify-between text-sm">
@@ -178,14 +181,14 @@ export default function AccountsReceivableDetailInfo({
             <div className="flex justify-between text-sm">
               <span className="text-muted-foreground">Emisión:</span>
               <span className="font-medium">
-                {formatDate(accountsReceivable.invoice.invoiceDate)}
+                {formatDate(accountsPayable.purchase.issueDate)}
               </span>
             </div>
             <div className="flex flex-col text-sm">
               <div className="flex justify-between">
                 <span className="text-muted-foreground">Vencimiento:</span>
                 <span className="font-medium">
-                  {formatDate(accountsReceivable.dueDate)}
+                  {formatDate(accountsPayable.dueDate)}
                 </span>
               </div>
               <span className="text-xs text-muted-foreground">{dueLabel}</span>
@@ -193,26 +196,26 @@ export default function AccountsReceivableDetailInfo({
             <div className="flex justify-between text-sm">
               <span className="text-muted-foreground">Plazo:</span>
               <span className="font-medium">
-                {accountsReceivable.invoice.paymentTermDays} día
-                {accountsReceivable.invoice.paymentTermDays === 1 ? "" : "s"}
+                {accountsPayable.purchase.paymentTermDays} día
+                {accountsPayable.purchase.paymentTermDays === 1 ? "" : "s"}
               </span>
             </div>
             <div className="flex justify-between text-sm">
               <span className="text-muted-foreground">Método pago:</span>
               <span className="font-medium">
-                {displayValue(accountsReceivable.paymentMethod)}
+                {displayValue(accountsPayable.purchase.paymentMethod)}
               </span>
             </div>
             <div className="flex justify-between text-sm">
               <span className="text-muted-foreground">Saldo:</span>
               <span className="font-medium">
-                ${accountsReceivable.balance.toFixed(2)}
+                ${accountsPayable.balance.toFixed(2)}
               </span>
             </div>
 
             <div className="flex justify-between font-semibold text-base border-t pt-2">
               <span>Monto:</span>
-              <span>${accountsReceivable.originalAmount.toFixed(2)}</span>
+              <span>${accountsPayable.total.toFixed(2)}</span>
             </div>
           </CardContent>
         </Card>
@@ -225,37 +228,37 @@ export default function AccountsReceivableDetailInfo({
             <div className="flex justify-between gap-2">
               <span className="text-muted-foreground">Clave acceso:</span>
               <span className="font-medium text-right break-all">
-                {displayValue(accountsReceivable.invoice.accessKey)}
+                {displayValue(accountsPayable.purchase.accessKey)}
               </span>
             </div>
             <div className="flex justify-between gap-2">
               <span className="text-muted-foreground">N° autorización:</span>
               <span className="font-medium text-right break-all">
-                {displayValue(accountsReceivable.invoice.authorizationNumber)}
+                {displayValue(accountsPayable.purchase.authorizationNumber)}
               </span>
             </div>
             <div className="flex justify-between gap-2">
               <span className="text-muted-foreground">F. autorización:</span>
               <span className="font-medium text-right">
-                {formatDateTime(accountsReceivable.invoice.authorizationDate)}
+                {formatDateTime(accountsPayable.purchase.authorizationDate)}
               </span>
             </div>
             <div className="flex justify-between gap-2">
               <span className="text-muted-foreground">Ambiente:</span>
               <span className="font-medium text-right">
-                {displayValue(accountsReceivable.invoice.environment)}
+                {displayValue(accountsPayable.purchase.environment)}
               </span>
             </div>
             <div className="flex justify-between gap-2">
               <span className="text-muted-foreground">Tipo comprobante:</span>
               <span className="font-medium text-right">
-                {displayValue(accountsReceivable.invoice.receiptType)}
+                {displayValue(accountsPayable.purchase.receiptType)}
               </span>
             </div>
             <div className="flex justify-between gap-2">
               <span className="text-muted-foreground">Electrónica:</span>
               <span className="font-medium text-right">
-                {accountsReceivable.invoice.isElectronic ? "Sí" : "No"}
+                {accountsPayable.purchase.isElectronic ? "Sí" : "No"}
               </span>
             </div>
           </CardContent>

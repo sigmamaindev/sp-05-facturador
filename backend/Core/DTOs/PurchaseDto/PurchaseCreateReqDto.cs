@@ -27,5 +27,11 @@ public class PurchaseCreateReqDto
     public bool IsElectronic { get; set; }
     public string? AuthorizationNumber { get; set; }
     public DateTime? AuthorizationDate { get; set; }
+    public int PaymentTermDays { get; set; } = 0;
+    public DateTime? ExpectedPaymentDate { get; set; }
+    public decimal? InitialPaymentAmount { get; set; }
+    public string? InitialPaymentMethodCode { get; set; }
+    public string? Reference { get; set; }
+    public string? Notes { get; set; }
     public List<PurchaseDetailCreateReqDto> Details { get; set; } = [];
 }

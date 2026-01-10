@@ -37,5 +37,18 @@ public class AccountsReceivableController(IAccountsReceivableRepository accounts
 
         return Ok(response);
     }
-}
 
+    [HttpPost("{id:int}/transactions")]
+    [Authorize]
+    public async Task<ActionResult<ApiResponse<ARComplexResDto>>> AddTransaction(int id, [FromBody] ARTransactionCreateReqDto aRTransactionCreateReqDto)
+    {
+        var response = await accountsReceivableRepository.AddTransactionAsync(id, aRTransactionCreateReqDto);
+
+        if (!response.Success)
+        {
+            return BadRequest(response);
+        }
+
+        return Ok(response);
+    }
+}

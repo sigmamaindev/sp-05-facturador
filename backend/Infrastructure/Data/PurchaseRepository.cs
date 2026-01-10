@@ -7,6 +7,8 @@ using Core.Interfaces.Repository;
 using Core.Interfaces.Services.IUtilService;
 using Core.Interfaces.Services.IKardexService;
 using Core.Interfaces.Services.IPurchaseService;
+using Core.Interfaces.Services.IAPService;
+using Core.DTOs.APDto;
 
 namespace Infrastructure.Data;
 
@@ -16,7 +18,8 @@ public class PurchaseRepository(
     IPurchaseValidationService validate,
     IPurchaseEditionService edition,
     IPurchaseCalculationService calc,
-    IKardexService kardex) : IPurchaseRepository
+    IKardexService kardex,
+    IAccountsPayableService accountsPayableService) : IPurchaseRepository
 {
     public async Task<ApiResponse<PurchaseSimpleResDto>> CreatePurchaseAsync(PurchaseCreateReqDto purchaseCreateReqDto)
     {
@@ -55,6 +58,18 @@ public class PurchaseRepository(
             context.Purchases.Add(newPurchase);
 
             await kardex.IncreaseStockForPurchaseAsync(newPurchase);
+
+            var apDto = new APCreateFromPurchaseReqDto
+            {
+                TermDays = purchaseCreateReqDto.PaymentTermDays,
+                ExpectedPaymentDate = purchaseCreateReqDto.ExpectedPaymentDate,
+                InitialPaymentAmount = purchaseCreateReqDto.InitialPaymentAmount,
+                InitialPaymentMethodCode = purchaseCreateReqDto.InitialPaymentMethodCode,
+                Reference = purchaseCreateReqDto.Reference,
+                Notes = purchaseCreateReqDto.Notes
+            };
+
+            await accountsPayableService.UpsertFromPurchaseAsync(newPurchase, apDto);
 
             await context.SaveChangesAsync();
 

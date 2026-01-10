@@ -57,6 +57,11 @@ const data = {
     items: [
       { to: "/clientes", label: "Clientes", icon: HandHelping },
       { to: "/facturas", label: "Ventas", icon: ShoppingCart },
+      {
+        to: "/cuentas-por-cobrar",
+        label: "Cuentas por cobrar",
+        icon: DollarSign,
+      },
     ],
   },
   purchases: {
@@ -65,6 +70,11 @@ const data = {
     items: [
       { to: "/proveedores", label: "Proveedores", icon: HandHelping },
       { to: "/compras", label: "Compras", icon: ShoppingBag },
+      {
+        to: "/cuentas-por-pagar",
+        label: "Cuentas por pagar",
+        icon: ShoppingBag,
+      },
     ],
   },
 };

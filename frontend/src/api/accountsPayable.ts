@@ -4,23 +4,23 @@ import api from "@/utils/axios";
 
 import type { ApiResponseList, ApiResponseSingle } from "@/types/api.types";
 import type {
-  AccountsReceivable,
-  AccountsReceivableDetail,
-  CreateAccountsReceivableTransaction,
-} from "@/types/accountsReceivable.types";
+  AccountsPayable,
+  AccountsPayableDetail,
+  CreateAccountsPayableTransaction,
+} from "@/types/accountsPayable.types";
 
-export async function getAccountsReceivable(
+export async function getAccountsPayable(
   keyword: string,
   page = 1,
   limit = 10,
   token: string
-): Promise<ApiResponseList<AccountsReceivable>> {
+): Promise<ApiResponseList<AccountsPayable>> {
   try {
     const search = `keyword=${keyword}`;
     const pagination = `page=${page}&limit=${limit}`;
-    const url = `/accountsReceivable?${search}&${pagination}`;
+    const url = `/accountsPayable?${search}&${pagination}`;
 
-    const { data } = await api.get<ApiResponseList<AccountsReceivable>>(url, {
+    const { data } = await api.get<ApiResponseList<AccountsPayable>>(url, {
       headers: {
         Authorization: `Bearer ${token}`,
       },
@@ -35,14 +35,14 @@ export async function getAccountsReceivable(
   }
 }
 
-export async function getAccountsReceivableById(
+export async function getAccountsPayableById(
   id: number,
   token: string
-): Promise<ApiResponseSingle<AccountsReceivableDetail>> {
+): Promise<ApiResponseSingle<AccountsPayableDetail>> {
   try {
-    const url = `/accountsReceivable/${id}`;
+    const url = `/accountsPayable/${id}`;
 
-    const { data } = await api.get<ApiResponseSingle<AccountsReceivableDetail>>(
+    const { data } = await api.get<ApiResponseSingle<AccountsPayableDetail>>(
       url,
       {
         headers: {
@@ -60,21 +60,23 @@ export async function getAccountsReceivableById(
   }
 }
 
-export async function addAccountsReceivableTransaction(
+export async function addAccountsPayableTransaction(
   id: number,
-  payload: CreateAccountsReceivableTransaction,
+  payload: CreateAccountsPayableTransaction,
   token: string
-): Promise<ApiResponseSingle<AccountsReceivableDetail>> {
+): Promise<ApiResponseSingle<AccountsPayableDetail>> {
   try {
-    const url = `/accountsReceivable/${id}/transactions`;
+    const url = `/accountsPayable/${id}/transactions`;
 
-    const { data } = await api.post<
-      ApiResponseSingle<AccountsReceivableDetail>
-    >(url, payload, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
+    const { data } = await api.post<ApiResponseSingle<AccountsPayableDetail>>(
+      url,
+      payload,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
 
     return data;
   } catch (error) {

@@ -14,4 +14,5 @@ public class Supplier : BaseEntity
     public int BusinessId { get; set; }
     public Business? Business { get; set; }
     public ICollection<Purchase> Purchases { get; set; } = [];
+    public ICollection<AccountsPayable> AccountsPayables { get; set; } = [];
 }
