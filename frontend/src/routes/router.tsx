@@ -52,6 +52,7 @@ import WarehouseUpdateView from "@/views/warehouse/WarehouseUpdateView";
 import AccountsReceivableListView from "@/views/accountsReceivable/AccountsReceivableListView";
 import AccountsReceivableDetailView from "@/views/accountsReceivable/AccountsReceivableDetailView";
 import AccountsReceivableUpdateView from "@/views/accountsReceivable/AccountsReceivableUpdateView";
+import AccountsReceivableCustomerPaymentsView from "@/views/accountsReceivable/AccountsReceivableCustomerPaymentsView";
 import AccountsPayableListView from "@/views/accountsPayable/AccountsPayableListView";
 import AccountsPayableDetailView from "@/views/accountsPayable/AccountsPayableDetailView";
 import AccountsPayableUpdateView from "@/views/accountsPayable/AccountsPayableUpdateView";
@@ -150,6 +151,10 @@ export default function Router() {
               <Route
                 path="/cuentas-por-cobrar"
                 element={<AccountsReceivableListView />}
+              />
+              <Route
+                path="/cuentas-por-cobrar/cliente/:customerId/pagos"
+                element={<AccountsReceivableCustomerPaymentsView />}
               />
               <Route
                 path="/cuentas-por-cobrar/:id"

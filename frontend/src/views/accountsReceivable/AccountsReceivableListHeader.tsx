@@ -1,15 +1,20 @@
 import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 
 interface AccountsReceivableListHeaderProps {
   keyword: string;
+  viewMode: "invoice" | "customer";
   setPage: React.Dispatch<React.SetStateAction<number>>;
   setKeyword: React.Dispatch<React.SetStateAction<string>>;
+  setViewMode: React.Dispatch<React.SetStateAction<"invoice" | "customer">>;
 }
 
 export default function AccountsReceivableListHeader({
   keyword,
+  viewMode,
   setPage,
   setKeyword,
+  setViewMode,
 }: AccountsReceivableListHeaderProps) {
   return (
     <div className="grid grid-cols-1 md:flex md:flex-row md:justify-between md:items-center items-center gap-4 pb-4">
@@ -26,8 +31,31 @@ export default function AccountsReceivableListHeader({
           }}
           className="max-w-sm"
         />
+        <div className="flex gap-2 justify-end w-full md:w-auto">
+          <Button
+            type="button"
+            size="sm"
+            variant={viewMode === "invoice" ? "default" : "outline"}
+            onClick={() => {
+              setPage(1);
+              setViewMode("invoice");
+            }}
+          >
+            Por factura
+          </Button>
+          <Button
+            type="button"
+            size="sm"
+            variant={viewMode === "customer" ? "default" : "outline"}
+            onClick={() => {
+              setPage(1);
+              setViewMode("customer");
+            }}
+          >
+            Por cliente
+          </Button>
+        </div>
       </div>
     </div>
   );
 }
-

@@ -1,4 +1,5 @@
 import type { Customer } from "./customer.types";
+import type { PaymentTypeValue } from "@/constants/paymentMethods";
 
 export type AccountsReceivableTransaction = {
   id: number;
@@ -46,6 +47,22 @@ export type AccountsReceivable = {
 };
 
 export type AccountsReceivableDetail = AccountsReceivable;
+
+export type AccountsReceivableCustomerSummary = {
+  customer: Customer;
+  totalBalance: number;
+};
+
+export type AccountsReceivableBulkPaymentItem = {
+  accountsReceivableId: number;
+  amount: number;
+};
+
+export type AccountsReceivableBulkPaymentCreate = {
+  paymentMethod: PaymentTypeValue;
+  notes?: string | null;
+  items: AccountsReceivableBulkPaymentItem[];
+};
 
 export type CreateAccountsReceivableTransaction = {
   arTransactionType: string;
