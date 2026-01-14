@@ -5,6 +5,13 @@ import { toast } from "sonner";
 
 import { useAuth } from "@/contexts/AuthContext";
 
+import {
+  PaymentType,
+  type PaymentTypeValue,
+  paymentMethodCodeFromPaymentType,
+} from "@/constants/paymentMethods";
+import type { PaymentMethodCode as PaymentMethodCodeType } from "@/constants/paymentMethods";
+
 import { createPurchase } from "@/api/purchase";
 import { getProductById } from "@/api/product";
 
@@ -48,6 +55,16 @@ export default function PurchaseCreateView() {
   const [productIdForPresentation, setProductIdForPresentation] = useState<
     number | null
   >(null);
+  const [paymentCondition, setPaymentCondition] = useState<"CASH" | "CREDIT">(
+    "CASH"
+  );
+  const [paymentType, setPaymentType] = useState<PaymentTypeValue>(
+    PaymentType.CASH
+  );
+  const [paymentMethod, setPaymentMethod] = useState<PaymentMethodCodeType>(
+    paymentMethodCodeFromPaymentType(PaymentType.CASH)
+  );
+  const [paymentTermDays, setPaymentTermDays] = useState(0);
 
   const { setValue, handleSubmit, watch } = useForm<CreatePurchaseForm>({
     defaultValues: {
@@ -73,6 +90,8 @@ export default function PurchaseCreateView() {
       discountTotal: 0,
       taxTotal: 0,
       totalPurchase: 0,
+      paymentMethod: paymentMethodCodeFromPaymentType(PaymentType.CASH),
+      paymentTermDays: 0,
       details: [],
     },
   });
@@ -315,6 +334,18 @@ export default function PurchaseCreateView() {
     setValue("totalPurchase", totals.total);
   }, [totals, setValue]);
 
+  useEffect(() => {
+    setValue("paymentMethod", paymentMethod);
+  }, [paymentMethod, setValue]);
+
+  useEffect(() => {
+    setValue("paymentTermDays", paymentTermDays);
+  }, [paymentTermDays, setValue]);
+
+  useEffect(() => {
+    if (paymentTermDays > 0) setPaymentCondition("CREDIT");
+  }, [paymentTermDays]);
+
   const purchaseDate = watch("purchaseDate");
   const receiptType = watch("receiptType");
   const supportingCode = watch("supportingCode");
@@ -404,6 +435,8 @@ export default function PurchaseCreateView() {
       isElectronic: data.isElectronic,
       authorizationNumber: data.authorizationNumber ?? "",
       authorizationDate: data.authorizationDate ?? null,
+      paymentMethod: data.paymentMethod,
+      paymentTermDays: data.paymentTermDays,
       subtotalWithoutTaxes: data.subtotalWithoutTaxes,
       subtotalWithTaxes: data.subtotalWithTaxes,
       discountTotal: data.discountTotal,
@@ -633,6 +666,23 @@ export default function PurchaseCreateView() {
           supplier={supplier}
           products={products}
           totals={totals}
+          paymentCondition={paymentCondition}
+          paymentType={paymentType}
+          paymentTermDays={paymentTermDays}
+          onPaymentConditionChange={(value) => {
+            setPaymentCondition(value);
+            if (value === "CASH") setPaymentTermDays(0);
+          }}
+          onPaymentTypeChange={(value) => {
+            setPaymentType(value);
+            setPaymentMethod(paymentMethodCodeFromPaymentType(value));
+          }}
+          onPaymentTermDaysChange={(value) => {
+            const normalized = Number.isFinite(value)
+              ? Math.min(365, Math.max(0, Math.trunc(value)))
+              : 0;
+            setPaymentTermDays(normalized);
+          }}
           openSupplierModal={openSupplierModal}
           setOpenSupplierModal={setOpenSupplierModal}
           openProductModal={openProductModal}

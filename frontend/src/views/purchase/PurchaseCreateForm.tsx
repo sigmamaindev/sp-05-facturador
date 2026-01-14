@@ -1,6 +1,8 @@
 import React from "react";
 import { Trash2Icon } from "lucide-react";
 
+import { PAYMENT_TYPE_OPTIONS, type PaymentTypeValue } from "@/constants/paymentMethods";
+
 import {
   Card,
   CardContent,
@@ -8,6 +10,14 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 import PurchaseSupplierModal from "./PurchaseSupplierModal";
 import PurchaseProductModal from "./PurchaseProductModal";
@@ -26,6 +36,12 @@ interface PurchaseCreateFormProps {
   supplier: PurchaseSupplier | null;
   products: PurchaseProduct[];
   totals: PurchaseTotals;
+  paymentCondition: "CASH" | "CREDIT";
+  paymentType: PaymentTypeValue;
+  paymentTermDays: number;
+  onPaymentConditionChange: (value: "CASH" | "CREDIT") => void;
+  onPaymentTypeChange: (value: PaymentTypeValue) => void;
+  onPaymentTermDaysChange: (value: number) => void;
   openSupplierModal: boolean;
   setOpenSupplierModal: React.Dispatch<React.SetStateAction<boolean>>;
   openProductModal: boolean;
@@ -55,6 +71,12 @@ export default function PurchaseCreateForm({
   supplier,
   products,
   totals,
+  paymentCondition,
+  paymentType,
+  paymentTermDays,
+  onPaymentConditionChange,
+  onPaymentTypeChange,
+  onPaymentTermDaysChange,
   openSupplierModal,
   setOpenSupplierModal,
   openProductModal,
@@ -306,6 +328,63 @@ export default function PurchaseCreateForm({
               >
                 Agregar Proveedor
               </Button>
+            )}
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>PAGO</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="space-y-2">
+              <Label>Tipo de pago</Label>
+              <Select
+                value={paymentCondition}
+                onValueChange={(value) =>
+                  onPaymentConditionChange(value === "CREDIT" ? "CREDIT" : "CASH")
+                }
+              >
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Seleccionar tipo" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="CASH">Contado</SelectItem>
+                  <SelectItem value="CREDIT">Crédito</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label>Método de pago</Label>
+              <Select
+                value={paymentType}
+                onValueChange={(value) => onPaymentTypeChange(value as PaymentTypeValue)}
+              >
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Seleccionar método" />
+                </SelectTrigger>
+                <SelectContent>
+                  {PAYMENT_TYPE_OPTIONS.map((option) => (
+                    <SelectItem key={option.value} value={option.value}>
+                      {option.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {paymentCondition === "CREDIT" && (
+              <div className="space-y-2">
+                <Label>Plazo (días)</Label>
+                <Input
+                  type="number"
+                  min={0}
+                  max={365}
+                  value={paymentTermDays}
+                  onChange={(e) => onPaymentTermDaysChange(Number(e.target.value))}
+                />
+              </div>
             )}
           </CardContent>
         </Card>

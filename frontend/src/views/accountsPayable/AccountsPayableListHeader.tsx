@@ -1,15 +1,20 @@
 import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 
 interface AccountsPayableListHeaderProps {
   keyword: string;
+  viewMode: "purchase" | "supplier";
   setPage: React.Dispatch<React.SetStateAction<number>>;
   setKeyword: React.Dispatch<React.SetStateAction<string>>;
+  setViewMode: React.Dispatch<React.SetStateAction<"purchase" | "supplier">>;
 }
 
 export default function AccountsPayableListHeader({
   keyword,
+  viewMode,
   setPage,
   setKeyword,
+  setViewMode,
 }: AccountsPayableListHeaderProps) {
   return (
     <div className="grid grid-cols-1 md:flex md:flex-row md:justify-between md:items-center items-center gap-4 pb-4">
@@ -26,8 +31,31 @@ export default function AccountsPayableListHeader({
           }}
           className="max-w-sm"
         />
+        <div className="flex gap-2 justify-end w-full md:w-auto">
+          <Button
+            type="button"
+            size="sm"
+            variant={viewMode === "purchase" ? "default" : "outline"}
+            onClick={() => {
+              setPage(1);
+              setViewMode("purchase");
+            }}
+          >
+            Por compra
+          </Button>
+          <Button
+            type="button"
+            size="sm"
+            variant={viewMode === "supplier" ? "default" : "outline"}
+            onClick={() => {
+              setPage(1);
+              setViewMode("supplier");
+            }}
+          >
+            Por proveedor
+          </Button>
+        </div>
       </div>
     </div>
   );
 }
-

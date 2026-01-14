@@ -1,4 +1,5 @@
 import type { Supplier } from "./supplier.types";
+import type { PaymentTypeValue } from "@/constants/paymentMethods";
 
 export type AccountsPayableTransaction = {
   id: number;
@@ -45,6 +46,22 @@ export type AccountsPayable = {
 };
 
 export type AccountsPayableDetail = AccountsPayable;
+
+export type AccountsPayableSupplierSummary = {
+  supplier: Supplier;
+  totalBalance: number;
+};
+
+export type AccountsPayableBulkPaymentItem = {
+  accountsPayableId: number;
+  amount: number;
+};
+
+export type AccountsPayableBulkPaymentCreate = {
+  paymentMethod: PaymentTypeValue;
+  notes?: string | null;
+  items: AccountsPayableBulkPaymentItem[];
+};
 
 export type CreateAccountsPayableTransaction = {
   apTransactionType: string;

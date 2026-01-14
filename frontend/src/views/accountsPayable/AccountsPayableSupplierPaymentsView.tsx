@@ -11,10 +11,10 @@ import { toast } from "sonner";
 
 import { useAuth } from "@/contexts/AuthContext";
 import {
-  addAccountsReceivableBulkPayments,
-  getAccountsReceivableByCustomerId,
-} from "@/api/accountsReceivable";
-import type { AccountsReceivable } from "@/types/accountsReceivable.types";
+  addAccountsPayableBulkPayments,
+  getAccountsPayableBySupplierId,
+} from "@/api/accountsPayable";
+import type { AccountsPayable } from "@/types/accountsPayable.types";
 import type { PaymentTypeValue } from "@/constants/paymentMethods";
 import {
   isPaymentType,
@@ -34,7 +34,7 @@ import {
 import AlertMessage from "@/components/shared/AlertMessage";
 import DataTable from "@/components/shared/DataTable";
 import type { ColumnDef } from "@tanstack/react-table";
-import AccountsReceivableCustomerPaymentsHeader from "./AccountsReceivableCustomerPaymentsHeader";
+import AccountsPayableSupplierPaymentsHeader from "./AccountsPayableSupplierPaymentsHeader";
 
 type PaymentDraft = {
   amount: string;
@@ -57,14 +57,10 @@ function useDraftsContext() {
   return ctx;
 }
 
-function AmountCell({
-  accountsReceivableId,
-}: {
-  accountsReceivableId: number;
-}) {
+function AmountCell({ accountsPayableId }: { accountsPayableId: number }) {
   const { drafts, setDrafts, sending } = useDraftsContext();
-  const value = drafts[accountsReceivableId]?.amount ?? "";
-  const payFullBalance = drafts[accountsReceivableId]?.payFullBalance ?? false;
+  const value = drafts[accountsPayableId]?.amount ?? "";
+  const payFullBalance = drafts[accountsPayableId]?.payFullBalance ?? false;
 
   return (
     <Input
@@ -78,8 +74,8 @@ function AmountCell({
         const amount = e.target.value;
         setDrafts((prev) => ({
           ...prev,
-          [accountsReceivableId]: {
-            ...(prev[accountsReceivableId] ?? {
+          [accountsPayableId]: {
+            ...(prev[accountsPayableId] ?? {
               notes: "",
               paymentMethod: "",
               amount: "",
@@ -95,13 +91,9 @@ function AmountCell({
   );
 }
 
-function PaymentMethodCell({
-  accountsReceivableId,
-}: {
-  accountsReceivableId: number;
-}) {
+function PaymentMethodCell({ accountsPayableId }: { accountsPayableId: number }) {
   const { drafts, setDrafts, sending } = useDraftsContext();
-  const value = drafts[accountsReceivableId]?.paymentMethod ?? "";
+  const value = drafts[accountsPayableId]?.paymentMethod ?? "";
 
   return (
     <Select
@@ -110,8 +102,8 @@ function PaymentMethodCell({
         if (!isPaymentType(val)) return;
         setDrafts((prev) => ({
           ...prev,
-          [accountsReceivableId]: {
-            ...(prev[accountsReceivableId] ?? {
+          [accountsPayableId]: {
+            ...(prev[accountsPayableId] ?? {
               amount: "",
               notes: "",
               paymentMethod: "",
@@ -137,13 +129,9 @@ function PaymentMethodCell({
   );
 }
 
-function NotesCell({
-  accountsReceivableId,
-}: {
-  accountsReceivableId: number;
-}) {
+function NotesCell({ accountsPayableId }: { accountsPayableId: number }) {
   const { drafts, setDrafts, sending } = useDraftsContext();
-  const value = drafts[accountsReceivableId]?.notes ?? "";
+  const value = drafts[accountsPayableId]?.notes ?? "";
 
   return (
     <Input
@@ -153,8 +141,8 @@ function NotesCell({
         const notes = e.target.value;
         setDrafts((prev) => ({
           ...prev,
-          [accountsReceivableId]: {
-            ...(prev[accountsReceivableId] ?? {
+          [accountsPayableId]: {
+            ...(prev[accountsPayableId] ?? {
               amount: "",
               notes: "",
               paymentMethod: "",
@@ -171,14 +159,14 @@ function NotesCell({
 }
 
 function PayFullBalanceCell({
-  accountsReceivableId,
+  accountsPayableId,
   balance,
 }: {
-  accountsReceivableId: number;
+  accountsPayableId: number;
   balance: number;
 }) {
   const { drafts, setDrafts, sending } = useDraftsContext();
-  const checked = drafts[accountsReceivableId]?.payFullBalance ?? false;
+  const checked = drafts[accountsPayableId]?.payFullBalance ?? false;
 
   return (
     <div className="flex justify-center">
@@ -191,8 +179,8 @@ function PayFullBalanceCell({
           const nextChecked = e.target.checked;
           setDrafts((prev) => ({
             ...prev,
-            [accountsReceivableId]: {
-              ...(prev[accountsReceivableId] ?? {
+            [accountsPayableId]: {
+              ...(prev[accountsPayableId] ?? {
                 amount: "",
                 notes: "",
                 paymentMethod: "",
@@ -209,15 +197,15 @@ function PayFullBalanceCell({
   );
 }
 
-export default function AccountsReceivableCustomerPaymentsView() {
+export default function AccountsPayableSupplierPaymentsView() {
   const { token } = useAuth();
-  const { customerId } = useParams<{ customerId: string }>();
+  const { supplierId } = useParams<{ supplierId: string }>();
   const navigate = useNavigate();
 
-  const parsedCustomerId = Number(customerId);
-  const backTo = "/cuentas-por-cobrar";
+  const parsedSupplierId = Number(supplierId);
+  const backTo = "/cuentas-por-pagar";
 
-  const [data, setData] = useState<AccountsReceivable[]>([]);
+  const [data, setData] = useState<AccountsPayable[]>([]);
   const [drafts, setDrafts] = useState<Record<number, PaymentDraft>>({});
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
@@ -229,8 +217,8 @@ export default function AccountsReceivableCustomerPaymentsView() {
 
   const fetchData = useCallback(async () => {
     if (!token) return;
-    if (!Number.isFinite(parsedCustomerId) || parsedCustomerId <= 0) {
-      setError("Cliente inválido");
+    if (!Number.isFinite(parsedSupplierId) || parsedSupplierId <= 0) {
+      setError("Proveedor inválido");
       return;
     }
 
@@ -238,8 +226,8 @@ export default function AccountsReceivableCustomerPaymentsView() {
     setError(null);
 
     try {
-      const response = await getAccountsReceivableByCustomerId(
-        parsedCustomerId,
+      const response = await getAccountsPayableBySupplierId(
+        parsedSupplierId,
         keyword,
         page,
         pageSize,
@@ -255,7 +243,7 @@ export default function AccountsReceivableCustomerPaymentsView() {
     } finally {
       setLoading(false);
     }
-  }, [keyword, page, pageSize, parsedCustomerId, token]);
+  }, [keyword, page, pageSize, parsedSupplierId, token]);
 
   useEffect(() => {
     fetchData();
@@ -264,16 +252,16 @@ export default function AccountsReceivableCustomerPaymentsView() {
   useEffect(() => {
     setDrafts((prev) => {
       const next = { ...prev };
-      for (const ar of data) {
-        if (!next[ar.id]) {
-          next[ar.id] = {
+      for (const ap of data) {
+        if (!next[ap.id]) {
+          next[ap.id] = {
             amount: "",
             paymentMethod: "",
             notes: "",
             payFullBalance: false,
           };
-        } else if (next[ar.id]?.payFullBalance) {
-          next[ar.id] = { ...next[ar.id], amount: ar.balance.toFixed(2) };
+        } else if (next[ap.id]?.payFullBalance) {
+          next[ap.id] = { ...next[ap.id], amount: ap.balance.toFixed(2) };
         }
       }
       return next;
@@ -281,31 +269,31 @@ export default function AccountsReceivableCustomerPaymentsView() {
   }, [data]);
 
   const totalAmount = useMemo(() => {
-    const arById = new Map<number, AccountsReceivable>();
-    for (const ar of data) arById.set(ar.id, ar);
+    const apById = new Map<number, AccountsPayable>();
+    for (const ap of data) apById.set(ap.id, ap);
 
     let total = 0;
     for (const [idStr, draft] of Object.entries(drafts)) {
       const id = Number(idStr);
-      const ar = arById.get(id);
-      if (!ar) continue;
+      const ap = apById.get(id);
+      if (!ap) continue;
 
       const amount = Number(draft.amount);
       if (!draft.amount || !Number.isFinite(amount) || amount <= 0) continue;
-      if (amount > ar.balance) continue;
+      if (amount > ap.balance) continue;
 
       total += amount;
     }
     return total;
   }, [data, drafts]);
 
-  const columns = useMemo<ColumnDef<AccountsReceivable>[]>(() => {
+  const columns = useMemo<ColumnDef<AccountsPayable>[]>(() => {
     return [
       {
-        id: "invoiceDate",
+        id: "issueDate",
         header: "Fecha de emisión",
         cell: ({ row }) => {
-          const date = new Date(row.original.invoice.invoiceDate);
+          const date = new Date(row.original.purchase.issueDate);
           const dateStr = date.toLocaleDateString("es-EC", {
             year: "numeric",
             month: "2-digit",
@@ -317,15 +305,22 @@ export default function AccountsReceivableCustomerPaymentsView() {
       {
         id: "code",
         header: "Código",
-        accessorFn: (ar) =>
-          `${ar.invoice.establishmentCode} ${ar.invoice.emissionPointCode} ${ar.invoice.sequential}`,
-        cell: ({ row }) => (
-          <span className="font-semibold">
-            {row.original.invoice.establishmentCode}-
-            {row.original.invoice.emissionPointCode}-
-            {row.original.invoice.sequential}
-          </span>
-        ),
+        accessorFn: (ap) =>
+          ap.purchase.establishmentCode && ap.purchase.emissionPointCode
+            ? `${ap.purchase.establishmentCode} ${ap.purchase.emissionPointCode} ${ap.purchase.sequential}`
+            : ap.purchase.sequential,
+        cell: ({ row }) => {
+          const establishmentCode = row.original.purchase.establishmentCode;
+          const emissionPointCode = row.original.purchase.emissionPointCode;
+
+          return (
+            <span className="font-semibold">
+              {establishmentCode && emissionPointCode
+                ? `${establishmentCode}-${emissionPointCode}-${row.original.purchase.sequential}`
+                : row.original.purchase.sequential}
+            </span>
+          );
+        },
       },
       {
         id: "dueDate",
@@ -350,28 +345,26 @@ export default function AccountsReceivableCustomerPaymentsView() {
       {
         id: "amount",
         header: "Monto",
-        cell: ({ row }) => (
-          <AmountCell accountsReceivableId={row.original.id} />
-        ),
+        cell: ({ row }) => <AmountCell accountsPayableId={row.original.id} />,
       },
       {
         id: "paymentMethod",
         header: "Método",
         cell: ({ row }) => (
-          <PaymentMethodCell accountsReceivableId={row.original.id} />
+          <PaymentMethodCell accountsPayableId={row.original.id} />
         ),
       },
       {
         id: "notes",
         header: "Notas",
-        cell: ({ row }) => <NotesCell accountsReceivableId={row.original.id} />,
+        cell: ({ row }) => <NotesCell accountsPayableId={row.original.id} />,
       },
       {
         id: "payFullBalance",
         header: () => <div className="text-center">Pagar saldo</div>,
         cell: ({ row }) => (
           <PayFullBalanceCell
-            accountsReceivableId={row.original.id}
+            accountsPayableId={row.original.id}
             balance={row.original.balance}
           />
         ),
@@ -381,21 +374,21 @@ export default function AccountsReceivableCustomerPaymentsView() {
 
   const onSendPayments = useCallback(async () => {
     if (!token) return;
-    if (!Number.isFinite(parsedCustomerId) || parsedCustomerId <= 0) {
-      toast.error("Cliente inválido");
+    if (!Number.isFinite(parsedSupplierId) || parsedSupplierId <= 0) {
+      toast.error("Proveedor inválido");
       return;
     }
 
     try {
       setSending(true);
 
-      const arById = new Map<number, AccountsReceivable>();
-      for (const ar of data) arById.set(ar.id, ar);
+      const apById = new Map<number, AccountsPayable>();
+      for (const ap of data) apById.set(ap.id, ap);
 
       const pending = Object.entries(drafts).flatMap(([idStr, draft]) => {
         const id = Number(idStr);
-        const ar = arById.get(id);
-        if (!ar) return [];
+        const ap = apById.get(id);
+        if (!ap) return [];
 
         const amount = Number(draft.amount);
         if (!draft.amount || !Number.isFinite(amount) || amount <= 0) return [];
@@ -405,15 +398,15 @@ export default function AccountsReceivableCustomerPaymentsView() {
           throw new Error(`Seleccione un método de pago para el ID ${id}`);
         }
 
-        if (amount > ar.balance) {
+        if (amount > ap.balance) {
           throw new Error(
-            `El monto (${amount.toFixed(2)}) no puede ser mayor al saldo (${ar.balance.toFixed(2)}) para el ID ${id}`
+            `El monto (${amount.toFixed(2)}) no puede ser mayor al saldo (${ap.balance.toFixed(2)}) para el ID ${id}`
           );
         }
 
         return [
           {
-            accountsReceivableId: id,
+            accountsPayableId: id,
             amount,
             paymentMethod: method,
             notes: draft.notes,
@@ -432,7 +425,7 @@ export default function AccountsReceivableCustomerPaymentsView() {
           string | null,
           {
             notes: string | null;
-            items: { accountsReceivableId: number; amount: number }[];
+            items: { accountsPayableId: number; amount: number }[];
           }
         >
       >();
@@ -453,14 +446,14 @@ export default function AccountsReceivableCustomerPaymentsView() {
         }
 
         group.items.push({
-          accountsReceivableId: p.accountsReceivableId,
+          accountsPayableId: p.accountsPayableId,
           amount: p.amount,
         });
       }
 
       for (const [paymentMethod, byNotes] of groups.entries()) {
         for (const group of byNotes.values()) {
-          const response = await addAccountsReceivableBulkPayments(
+          const response = await addAccountsPayableBulkPayments(
             { paymentMethod, notes: group.notes, items: group.items },
             token
           );
@@ -474,12 +467,12 @@ export default function AccountsReceivableCustomerPaymentsView() {
     } finally {
       setSending(false);
     }
-  }, [backTo, data, drafts, navigate, parsedCustomerId, token]);
+  }, [backTo, data, drafts, navigate, parsedSupplierId, token]);
 
   return (
     <Card>
       <CardContent className="space-y-4">
-        <AccountsReceivableCustomerPaymentsHeader
+        <AccountsPayableSupplierPaymentsHeader
           backTo={backTo}
           keyword={keyword}
           sending={sending}

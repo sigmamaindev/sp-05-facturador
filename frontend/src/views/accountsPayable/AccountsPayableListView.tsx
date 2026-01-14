@@ -2,9 +2,12 @@ import { useCallback, useEffect, useState } from "react";
 
 import { useAuth } from "@/contexts/AuthContext";
 
-import { getAccountsPayable } from "@/api/accountsPayable";
+import { getAccountsPayable, getAccountsPayableBySupplier } from "@/api/accountsPayable";
 
-import type { AccountsPayable } from "@/types/accountsPayable.types";
+import type {
+  AccountsPayable,
+  AccountsPayableSupplierSummary,
+} from "@/types/accountsPayable.types";
 
 import { Card, CardContent } from "@/components/ui/card";
 
@@ -13,11 +16,16 @@ import DataTable from "@/components/shared/DataTable";
 
 import AccountsPayableListHeader from "./AccountsPayableListHeader";
 import { columns } from "./AccountsPayableListColumns";
+import { bySupplierColumns } from "./AccountsPayableBySupplierColumns";
 
 export default function AccountsPayableListView() {
   const { token } = useAuth();
 
-  const [data, setData] = useState<AccountsPayable[]>([]);
+  const [viewMode, setViewMode] = useState<"purchase" | "supplier">("purchase");
+  const [purchaseData, setPurchaseData] = useState<AccountsPayable[]>([]);
+  const [supplierData, setSupplierData] = useState<
+    AccountsPayableSupplierSummary[]
+  >([]);
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
   const [totalPages, setTotalPages] = useState(1);
@@ -29,31 +37,44 @@ export default function AccountsPayableListView() {
     if (!token) return;
 
     setLoading(true);
+    setError(null);
 
     try {
-      const accountsPayables = await getAccountsPayable(
-        keyword,
-        page,
-        pageSize,
-        token
-      );
+      if (viewMode === "purchase") {
+        const accountsPayables = await getAccountsPayable(
+          keyword,
+          page,
+          pageSize,
+          token
+        );
 
-      if (!accountsPayables) return;
+        if (!accountsPayables) return;
 
-      setData(accountsPayables.data);
-      setPage(accountsPayables.pagination.page);
-      setPageSize(accountsPayables.pagination.limit);
-      setTotalPages(accountsPayables.pagination.totalPages);
+        setPurchaseData(accountsPayables.data);
+        setPage(accountsPayables.pagination.page);
+        setPageSize(accountsPayables.pagination.limit);
+        setTotalPages(accountsPayables.pagination.totalPages);
+      } else {
+        const accountsPayablesBySupplier = await getAccountsPayableBySupplier(
+          keyword,
+          page,
+          pageSize,
+          token
+        );
+
+        if (!accountsPayablesBySupplier) return;
+
+        setSupplierData(accountsPayablesBySupplier.data);
+        setPage(accountsPayablesBySupplier.pagination.page);
+        setPageSize(accountsPayablesBySupplier.pagination.limit);
+        setTotalPages(accountsPayablesBySupplier.pagination.totalPages);
+      }
     } catch (err: unknown) {
-      setError(
-        err instanceof Error
-          ? err.message
-          : "Aún no hay un endpoint público para listar cuentas por pagar, pero la vista ya está disponible"
-      );
+      setError(err instanceof Error ? err.message : "Error desconocido");
     } finally {
       setLoading(false);
     }
-  }, [keyword, page, pageSize, token]);
+  }, [keyword, page, pageSize, token, viewMode]);
 
   useEffect(() => {
     fetchData();
@@ -64,15 +85,17 @@ export default function AccountsPayableListView() {
       <CardContent>
         <AccountsPayableListHeader
           keyword={keyword}
+          viewMode={viewMode}
           setKeyword={setKeyword}
           setPage={setPage}
+          setViewMode={setViewMode}
         />
         {error ? (
           <AlertMessage message={error} variant="destructive" />
         ) : (
           <DataTable
-            columns={columns}
-            data={data}
+            columns={viewMode === "purchase" ? columns : bySupplierColumns}
+            data={viewMode === "purchase" ? purchaseData : supplierData}
             page={page}
             pageSize={pageSize}
             totalPages={totalPages}

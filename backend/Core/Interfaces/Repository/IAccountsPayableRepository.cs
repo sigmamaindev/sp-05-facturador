@@ -6,6 +6,9 @@ namespace Core.Interfaces.Repository;
 public interface IAccountsPayableRepository
 {
     Task<ApiResponse<List<APSimpleResDto>>> GetAccountsPayablesAsync(string? keyword, int page, int limit);
+    Task<ApiResponse<List<APSupplierSummaryResDto>>> GetAccountsPayablesBySupplierAsync(string? keyword, int page, int limit);
+    Task<ApiResponse<List<APSimpleResDto>>> GetAccountsPayablesBySupplierIdAsync(int supplierId, string? keyword, int page, int limit);
     Task<ApiResponse<APComplexResDto>> GetAccountsPayableByIdAsync(int id);
     Task<ApiResponse<APComplexResDto>> AddTransactionAsync(int accountsPayableId, APTransactionCreateReqDto apTransactionCreateReqDto);
+    Task<ApiResponse<List<APSimpleResDto>>> AddBulkPaymentsAsync(APBulkPaymentCreateReqDto request);
 }

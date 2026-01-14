@@ -56,6 +56,7 @@ import AccountsReceivableCustomerPaymentsView from "@/views/accountsReceivable/A
 import AccountsPayableListView from "@/views/accountsPayable/AccountsPayableListView";
 import AccountsPayableDetailView from "@/views/accountsPayable/AccountsPayableDetailView";
 import AccountsPayableUpdateView from "@/views/accountsPayable/AccountsPayableUpdateView";
+import AccountsPayableSupplierPaymentsView from "@/views/accountsPayable/AccountsPayableSupplierPaymentsView";
 import NotFoundRoute from "./notFoundRoute";
 
 export default function Router() {
@@ -167,6 +168,10 @@ export default function Router() {
               <Route
                 path="/cuentas-por-pagar"
                 element={<AccountsPayableListView />}
+              />
+              <Route
+                path="/cuentas-por-pagar/proveedor/:supplierId/pagos"
+                element={<AccountsPayableSupplierPaymentsView />}
               />
               <Route
                 path="/cuentas-por-pagar/:id"

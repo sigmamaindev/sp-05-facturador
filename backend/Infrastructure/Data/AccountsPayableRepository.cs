@@ -6,6 +6,7 @@ using Core.Interfaces.Services.IAPService;
 using Core.Interfaces.Repository;
 using Core.DTOs;
 using Core.DTOs.APDto;
+using Core.DTOs.SupplierDto;
 
 namespace Infrastructure.Data;
 
@@ -126,6 +127,164 @@ public class AccountsPayableRepository(
         return response;
     }
 
+    public async Task<ApiResponse<List<APSupplierSummaryResDto>>> GetAccountsPayablesBySupplierAsync(string? keyword, int page, int limit)
+    {
+        var response = new ApiResponse<List<APSupplierSummaryResDto>>();
+
+        try
+        {
+            if (currentUser.BusinessId == 0)
+            {
+                response.Success = false;
+                response.Message = "Negocio no asociado a esta usuario";
+                response.Error = "Error de asociación";
+
+                return response;
+            }
+
+            var query = context.AccountsPayables
+                .AsNoTracking()
+                .Where(ap =>
+                    ap.BusinessId == currentUser.BusinessId &&
+                    ap.Supplier != null &&
+                    ap.Purchase != null &&
+                    ap.Purchase.UserId == currentUser.UserId);
+
+            if (!string.IsNullOrWhiteSpace(keyword))
+            {
+                var normalizedKeyword = keyword.Trim().ToLowerInvariant();
+
+                query = query.Where(ap =>
+                    EF.Functions.ILike(ap.Supplier!.BusinessName, $"%{normalizedKeyword}%") ||
+                    EF.Functions.ILike(ap.Supplier!.Document, $"%{normalizedKeyword}%"));
+            }
+
+            var supplierGroups = query.GroupBy(ap => new
+            {
+                ap.Supplier!.Id,
+                ap.Supplier.BusinessName,
+                ap.Supplier.Document,
+                ap.Supplier.Address,
+                ap.Supplier.Email,
+                ap.Supplier.Cellphone,
+                ap.Supplier.Telephone,
+                ap.Supplier.IsActive,
+                ap.Supplier.CreatedAt
+            });
+
+            var total = await supplierGroups.CountAsync();
+            var skip = (page - 1) * limit;
+
+            var suppliers = await supplierGroups
+                .OrderBy(g => g.Key.BusinessName)
+                .Skip(skip)
+                .Take(limit)
+                .Select(g => new APSupplierSummaryResDto
+                {
+                    Supplier = new SupplierResDto
+                    {
+                        Id = g.Key.Id,
+                        BusinessName = g.Key.BusinessName,
+                        Document = g.Key.Document,
+                        Address = g.Key.Address,
+                        Email = g.Key.Email,
+                        Cellphone = g.Key.Cellphone,
+                        Telephone = g.Key.Telephone,
+                        IsActive = g.Key.IsActive,
+                        CreatedAt = g.Key.CreatedAt
+                    },
+                    TotalBalance = g.Sum(ap => ap.Balance)
+                })
+                .ToListAsync();
+
+            response.Success = true;
+            response.Message = "Listado de cuentas por pagar por proveedor obtenido correctamente.";
+            response.Data = suppliers;
+            response.Pagination = new Pagination
+            {
+                Total = total,
+                Page = page,
+                Limit = limit
+            };
+
+            return response;
+        }
+        catch (Exception ex)
+        {
+            response.Success = false;
+            response.Message = "Error al obtener las cuentas por pagar por proveedor";
+            response.Error = ex.Message;
+
+            return response;
+        }
+    }
+
+    public async Task<ApiResponse<List<APSimpleResDto>>> GetAccountsPayablesBySupplierIdAsync(int supplierId, string? keyword, int page, int limit)
+    {
+        var response = new ApiResponse<List<APSimpleResDto>>();
+
+        try
+        {
+            if (currentUser.BusinessId == 0)
+            {
+                response.Success = false;
+                response.Message = "Negocio no asociado a esta usuario";
+                response.Error = "Error de asociación";
+
+                return response;
+            }
+
+            var query = context.AccountsPayables
+                .AsNoTracking()
+                .Include(ap => ap.Supplier)
+                .Include(ap => ap.Purchase)
+                .Where(ap =>
+                    ap.BusinessId == currentUser.BusinessId &&
+                    ap.SupplierId == supplierId &&
+                    ap.Purchase != null &&
+                    ap.Purchase.UserId == currentUser.UserId);
+
+            if (!string.IsNullOrWhiteSpace(keyword))
+            {
+                var normalizedKeyword = keyword.Trim().ToLowerInvariant();
+
+                query = query.Where(ap =>
+                    (ap.Purchase != null && EF.Functions.ILike(ap.Purchase.Sequential, $"%{normalizedKeyword}%")) ||
+                    EF.Functions.ILike(ap.DocumentNumber, $"%{normalizedKeyword}%") ||
+                    EF.Functions.ILike(ap.Status, $"%{normalizedKeyword}%"));
+            }
+
+            var total = await query.CountAsync();
+            var skip = (page - 1) * limit;
+
+            var apList = await query
+                .OrderByDescending(ap => ap.IssueDate)
+                .Skip(skip)
+                .Take(limit)
+                .ToListAsync();
+
+            response.Success = true;
+            response.Message = "Listado de cuentas por pagar del proveedor obtenido correctamente.";
+            response.Data = apList.Select(apDtoFactory.APSimpleRes).ToList();
+            response.Pagination = new Pagination
+            {
+                Total = total,
+                Page = page,
+                Limit = limit
+            };
+
+            return response;
+        }
+        catch (Exception ex)
+        {
+            response.Success = false;
+            response.Message = "Error al obtener las cuentas por pagar del proveedor";
+            response.Error = ex.Message;
+
+            return response;
+        }
+    }
+
     public async Task<ApiResponse<APComplexResDto>> AddTransactionAsync(int accountsPayableId, APTransactionCreateReqDto apTransactionCreateReqDto)
     {
         var response = new ApiResponse<APComplexResDto>();
@@ -225,6 +384,121 @@ public class AccountsPayableRepository(
 
             response.Success = false;
             response.Message = "Error al agregar la transacción";
+            response.Error = ex.Message;
+        }
+
+        return response;
+    }
+
+    public async Task<ApiResponse<List<APSimpleResDto>>> AddBulkPaymentsAsync(APBulkPaymentCreateReqDto request)
+    {
+        var response = new ApiResponse<List<APSimpleResDto>>();
+
+        await using var transaction = await context.Database.BeginTransactionAsync();
+
+        try
+        {
+            ValidateCurrentUser();
+
+            if (request.Items.Count == 0)
+            {
+                response.Success = false;
+                response.Message = "Listado de pagos vacío";
+                response.Error = "Debe enviar al menos un pago";
+                return response;
+            }
+
+            if (string.IsNullOrWhiteSpace(request.PaymentMethod))
+            {
+                response.Success = false;
+                response.Message = "Método de pago requerido";
+                response.Error = "Debe especificar un método de pago para registrar un pago";
+                return response;
+            }
+
+            var paymentMethod = request.PaymentMethod.Trim();
+            var notes = string.IsNullOrWhiteSpace(request.Notes) ? null : request.Notes.Trim();
+
+            var paymentsByApId = request.Items
+                .GroupBy(i => i.AccountsPayableId)
+                .Select(g => new { AccountsPayableId = g.Key, Amount = g.Sum(x => x.Amount) })
+                .ToDictionary(x => x.AccountsPayableId, x => x.Amount);
+
+            if (paymentsByApId.Any(p => p.Key <= 0))
+            {
+                response.Success = false;
+                response.Message = "ID inválido";
+                response.Error = "Todos los IDs de cuentas por pagar deben ser mayores a 0";
+                return response;
+            }
+
+            if (paymentsByApId.Any(p => p.Value <= 0))
+            {
+                response.Success = false;
+                response.Message = "Monto inválido";
+                response.Error = "Todos los montos deben ser mayores a 0";
+                return response;
+            }
+
+            var apIds = paymentsByApId.Keys.ToList();
+
+            var accountsPayables = await context.AccountsPayables
+                .Include(ap => ap.Supplier)
+                .Include(ap => ap.Purchase)
+                .Include(ap => ap.Transactions)
+                .Where(ap =>
+                    ap.BusinessId == currentUser.BusinessId &&
+                    ap.Purchase != null &&
+                    ap.Purchase.UserId == currentUser.UserId &&
+                    apIds.Contains(ap.Id))
+                .ToListAsync();
+
+            var foundIds = accountsPayables.Select(ap => ap.Id).ToHashSet();
+            var missingIds = apIds.Where(id => !foundIds.Contains(id)).ToList();
+
+            if (missingIds.Count != 0)
+            {
+                response.Success = false;
+                response.Message = "Cuenta por pagar no encontrada";
+                response.Error = $"No existe una Cuenta por pagar con los IDs: {string.Join(", ", missingIds)}";
+                return response;
+            }
+
+            foreach (var accountsPayable in accountsPayables)
+            {
+                var amount = paymentsByApId[accountsPayable.Id];
+
+                var newTransaction = new APTransaction
+                {
+                    APTransactionType = APTransactionType.PAYMENT,
+                    Amount = amount,
+                    PaymentMethod = paymentMethod,
+                    Notes = notes,
+                    AccountsPayableId = accountsPayable.Id,
+                    AccountsPayable = accountsPayable,
+                    CreatedAt = DateTime.UtcNow,
+                    UpdatedAt = DateTime.UtcNow
+                };
+
+                accountsPayable.Transactions.Add(newTransaction);
+                context.APTransactions.Add(newTransaction);
+
+                RecalculateTotalsOrThrow(accountsPayable);
+            }
+
+            await context.SaveChangesAsync();
+            await transaction.CommitAsync();
+
+            response.Success = true;
+            response.Message = "Pagos registrados correctamente";
+            response.Data = accountsPayables.Select(apDtoFactory.APSimpleRes).ToList();
+        }
+        catch (Exception ex)
+        {
+            await transaction.RollbackAsync();
+
+            response.Success = false;
+            response.Message = "Error al registrar los pagos";
             response.Error = ex.Message;
         }
 

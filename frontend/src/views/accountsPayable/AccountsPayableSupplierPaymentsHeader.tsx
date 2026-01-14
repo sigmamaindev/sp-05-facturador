@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardHeader, CardTitle } from "@/components/ui/card";
 
-interface AccountsReceivableCustomerPaymentsHeaderProps {
+interface AccountsPayableSupplierPaymentsHeaderProps {
   backTo: string;
   keyword: string;
   sending: boolean;
@@ -15,7 +15,7 @@ interface AccountsReceivableCustomerPaymentsHeaderProps {
   onSendPayments: () => void;
 }
 
-export default function AccountsReceivableCustomerPaymentsHeader({
+export default function AccountsPayableSupplierPaymentsHeader({
   backTo,
   keyword,
   sending,
@@ -23,7 +23,7 @@ export default function AccountsReceivableCustomerPaymentsHeader({
   setPage,
   setKeyword,
   onSendPayments,
-}: AccountsReceivableCustomerPaymentsHeaderProps) {
+}: AccountsPayableSupplierPaymentsHeaderProps) {
   const navigate = useNavigate();
 
   return (
@@ -33,7 +33,7 @@ export default function AccountsReceivableCustomerPaymentsHeader({
           <Button variant="ghost" onClick={() => navigate(backTo)}>
             <ArrowLeft className="h-4 w-4" />
           </Button>
-          <CardTitle>Pagos de cuentas por cobrar</CardTitle>
+          <CardTitle>Pagos de cuentas por pagar</CardTitle>
         </div>
 
         <div className="flex flex-col md:flex-row md:items-center gap-3 md:gap-4 w-full md:w-auto">
@@ -62,3 +62,4 @@ export default function AccountsReceivableCustomerPaymentsHeader({
     </Card>
   );
 }
+

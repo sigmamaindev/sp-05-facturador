@@ -35,6 +35,10 @@ export type Purchase = {
   discountTotal: number;
   taxTotal: number;
   totalPurchase: number;
+  paymentMethod?: string | null;
+  paymentType?: string | null;
+  paymentTermDays?: number | null;
+  dueDate?: string | Date | null;
   status: string;
   isElectronic: boolean;
   authorizationNumber: string | null;
@@ -162,6 +166,12 @@ export const createPurchaseSchema = z.object({
   totalPurchase: z
     .number()
     .min(0, "El total de la compra no puede ser negativo"),
+  paymentMethod: z.string().min(1, "Debe seleccionar un método de pago"),
+  paymentTermDays: z
+    .number()
+    .int("Los días de plazo deben ser un número entero")
+    .min(0, "Los días de plazo no pueden ser negativos")
+    .max(365, "El plazo no puede ser mayor a 365 días"),
   reference: z
     .string()
     .max(100, "La referencia es demasiado larga")
@@ -205,6 +215,8 @@ export type CreatePurchasePayload = {
   isElectronic: boolean;
   authorizationNumber: string;
   authorizationDate: Date | null;
+  paymentMethod: string;
+  paymentTermDays: number;
   subtotalWithoutTaxes?: number;
   subtotalWithTaxes?: number;
   discountTotal?: number;
