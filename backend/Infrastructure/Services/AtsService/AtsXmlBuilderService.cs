@@ -30,6 +30,26 @@ public class AtsXmlBuilderService : IAtsXmlBuilderService
         return document.ToString();
     }
 
+    public string BuildAtsSalesXml(int year, int month, Business business, IEnumerable<AtsSaleResDto> sales)
+    {
+        ArgumentOutOfRangeException.ThrowIfLessThan(year, 1900);
+        ArgumentOutOfRangeException.ThrowIfGreaterThan(month, 12);
+        ArgumentOutOfRangeException.ThrowIfLessThan(month, 1);
+        ArgumentNullException.ThrowIfNull(business);
+        ArgumentNullException.ThrowIfNull(sales);
+
+        var root = new XElement("iva",
+            new XElement("TipoIDInformante", InferTipoIdInformante(business.Document)),
+            new XElement("IdInformante", business.Document),
+            new XElement("razonSocial", business.Name),
+            new XElement("Anio", year),
+            new XElement("Mes", month.ToString("D2", Culture)),
+            new XElement("ventas", sales.Select(BuildVenta)));
+
+        var document = new XDocument(new XDeclaration("1.0", "UTF-8", null), root);
+        return document.ToString();
+    }
+
     private static XElement BuildCompra(AtsPurchaseResDto purchase)
     {
         return new XElement("detalleCompras",
@@ -50,6 +70,23 @@ public class AtsXmlBuilderService : IAtsXmlBuilderService
             new XElement("baseImpExe", FormatDecimal(purchase.BaseImpExe)),
             new XElement("montoIce", FormatDecimal(purchase.MontoIce)),
             new XElement("montoIva", FormatDecimal(purchase.MontoIva)));
+    }
+
+    private static XElement BuildVenta(AtsSaleResDto sale)
+    {
+        return new XElement("detalleVentas",
+            new XElement("tpIdCliente", sale.TpIdCliente),
+            new XElement("idCliente", sale.IdCliente),
+            new XElement("parteRelVtas", sale.ParteRelVtas),
+            new XElement("tipoComprobante", sale.TipoComprobante),
+            new XElement("tipoEmision", sale.TipoEmision),
+            new XElement("numeroComprobantes", sale.NumeroComprobantes),
+            new XElement("baseNoGraIva", FormatDecimal(sale.BaseNoGraIva)),
+            new XElement("baseImponible", FormatDecimal(sale.BaseImponible)),
+            new XElement("baseImpGrav", FormatDecimal(sale.BaseImpGrav)),
+            new XElement("baseImpExe", FormatDecimal(sale.BaseImpExe)),
+            new XElement("montoIce", FormatDecimal(sale.MontoIce)),
+            new XElement("montoIva", FormatDecimal(sale.MontoIva)));
     }
 
     private static string InferTipoIdInformante(string document)
@@ -76,4 +113,3 @@ public class AtsXmlBuilderService : IAtsXmlBuilderService
         return decimal.Round(value, decimals, MidpointRounding.AwayFromZero).ToString(format, Culture);
     }
 }
-

@@ -2,7 +2,7 @@ import type { ColumnDef } from "@tanstack/react-table";
 
 import type { AtsPurchase } from "@/types/ats.types";
 
-export const atsColumns: ColumnDef<AtsPurchase>[] = [
+export const atsPurchasesColumns: ColumnDef<AtsPurchase>[] = [
   {
     accessorKey: "fechaEmision",
     header: "Emisión",

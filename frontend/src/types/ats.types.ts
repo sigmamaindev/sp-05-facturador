@@ -21,3 +21,19 @@ export interface AtsPurchase {
   proveedorRazonSocial: string;
 }
 
+export interface AtsSale {
+  tpIdCliente: string;
+  idCliente: string;
+  parteRelVtas: string;
+  tipoComprobante: string;
+  tipoEmision: string;
+  numeroComprobantes: number;
+  baseNoGraIva: number;
+  baseImponible: number;
+  baseImpGrav: number;
+  baseImpExe: number;
+  montoIce: number;
+  montoIva: number;
+  total: number;
+  clienteRazonSocial: string;
+}

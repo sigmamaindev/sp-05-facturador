@@ -40,4 +40,34 @@ public class AtsController(IAtsRepository atsRepository) : ControllerBase
         var fileName = $"ATS_Compras_{year}_{month:D2}.xml";
         return File(Encoding.UTF8.GetBytes(xml), "application/xml", fileName);
     }
+
+    [HttpGet("sales")]
+    [Authorize]
+    public async Task<ActionResult<ApiResponse<List<AtsSaleResDto>>>> GetAtsSales([FromQuery] int year, [FromQuery] int month)
+    {
+        var response = await atsRepository.GetAtsSalesAsync(year, month);
+
+        if (!response.Success)
+        {
+            return BadRequest(response);
+        }
+
+        return Ok(response);
+    }
+
+    [HttpGet("sales/xml")]
+    [Authorize]
+    public async Task<IActionResult> GetAtsSalesXml([FromQuery] int year, [FromQuery] int month)
+    {
+        var response = await atsRepository.GetAtsSalesXmlAsync(year, month);
+
+        if (!response.Success)
+        {
+            return BadRequest(response);
+        }
+
+        var xml = response.Data ?? string.Empty;
+        var fileName = $"ATS_Ventas_{year}_{month:D2}.xml";
+        return File(Encoding.UTF8.GetBytes(xml), "application/xml", fileName);
+    }
 }

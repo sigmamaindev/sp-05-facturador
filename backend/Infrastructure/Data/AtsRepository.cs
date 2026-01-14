@@ -4,6 +4,7 @@ using Core.Entities;
 using Core.Interfaces.Repository;
 using Core.Interfaces.Services.IAtsService;
 using Core.Interfaces.Services.IUtilService;
+using Core.Constants;
 using Microsoft.EntityFrameworkCore;
 
 namespace Infrastructure.Data;
@@ -68,6 +69,62 @@ public class AtsRepository(
         return response;
     }
 
+    public async Task<ApiResponse<List<AtsSaleResDto>>> GetAtsSalesAsync(int year, int month)
+    {
+        var response = new ApiResponse<List<AtsSaleResDto>>();
+
+        try
+        {
+            ValidateCurrentUser();
+            ValidatePeriod(year, month);
+
+            var invoices = await LoadInvoicesAsync(year, month);
+            var sales = GroupInvoicesToAtsSales(invoices);
+
+            response.Success = true;
+            response.Message = "Valores ATS de ventas obtenidos correctamente";
+            response.Data = sales;
+        }
+        catch (Exception ex)
+        {
+            response.Success = false;
+            response.Message = "Error al obtener valores ATS de ventas";
+            response.Error = ex.Message;
+        }
+
+        return response;
+    }
+
+    public async Task<ApiResponse<string>> GetAtsSalesXmlAsync(int year, int month)
+    {
+        var response = new ApiResponse<string>();
+
+        try
+        {
+            ValidateCurrentUser();
+            ValidatePeriod(year, month);
+
+            var business = await context.Businesses
+                .FirstOrDefaultAsync(b => b.Id == currentUser.BusinessId)
+                ?? throw new InvalidOperationException("Negocio no encontrado");
+
+            var invoices = await LoadInvoicesAsync(year, month);
+            var sales = GroupInvoicesToAtsSales(invoices);
+
+            response.Success = true;
+            response.Message = "XML ATS (ventas) generado correctamente";
+            response.Data = xmlBuilder.BuildAtsSalesXml(year, month, business, sales);
+        }
+        catch (Exception ex)
+        {
+            response.Success = false;
+            response.Message = "Error al generar el XML ATS (ventas)";
+            response.Error = ex.Message;
+        }
+
+        return response;
+    }
+
     private async Task<List<Purchase>> LoadPurchasesAsync(int year, int month)
     {
         var start = new DateTime(year, month, 1);
@@ -82,6 +139,25 @@ public class AtsRepository(
                 p.IssueDate < end)
             .OrderBy(p => p.IssueDate)
             .ThenBy(p => p.Id)
+            .ToListAsync();
+    }
+
+    private async Task<List<Invoice>> LoadInvoicesAsync(int year, int month)
+    {
+        var start = new DateTime(year, month, 1);
+        var end = start.AddMonths(1);
+
+        return await context.Invoices
+            .Include(i => i.Customer)
+            .Include(i => i.InvoiceDetails)
+                .ThenInclude(d => d.Tax)
+            .Where(i =>
+                i.BusinessId == currentUser.BusinessId &&
+                i.InvoiceDate >= start &&
+                i.InvoiceDate < end &&
+                i.Status != InvoiceStatus.DRAFT)
+            .OrderBy(i => i.InvoiceDate)
+            .ThenBy(i => i.Id)
             .ToListAsync();
     }
 
@@ -134,7 +210,65 @@ public class AtsRepository(
         };
     }
 
+    private static List<AtsSaleResDto> GroupInvoicesToAtsSales(IEnumerable<Invoice> invoices)
+    {
+        return [.. invoices
+            .Where(i => i.Customer != null)
+            .GroupBy(i => new
+            {
+                TpIdCliente = i.Customer!.DocumentType,
+                IdCliente = i.Customer.Document,
+                TipoComprobante = i.ReceiptType,
+                TipoEmision = EmissionType.NORMAL,
+                ParteRelVtas = "NO",
+                ClienteRazonSocial = i.Customer.Name
+            })
+            .Select(group =>
+            {
+                var baseImponible = group
+                    .SelectMany(i => i.InvoiceDetails ?? [])
+                    .Where(d => ResolveTaxRate(d) == 0)
+                    .Sum(d => d.Subtotal);
+
+                var baseImpGrav = group
+                    .SelectMany(i => i.InvoiceDetails ?? [])
+                    .Where(d => ResolveTaxRate(d) > 0)
+                    .Sum(d => d.Subtotal);
+
+                var montoIva = group
+                    .SelectMany(i => i.InvoiceDetails ?? [])
+                    .Where(d => ResolveTaxRate(d) > 0)
+                    .Sum(d => d.TaxValue);
+
+                var total = group.Sum(i => i.TotalInvoice);
+
+                return new AtsSaleResDto
+                {
+                    TpIdCliente = group.Key.TpIdCliente,
+                    IdCliente = group.Key.IdCliente,
+                    ParteRelVtas = group.Key.ParteRelVtas,
+                    TipoComprobante = group.Key.TipoComprobante,
+                    TipoEmision = group.Key.TipoEmision,
+                    NumeroComprobantes = group.Count(),
+                    BaseNoGraIva = 0m,
+                    BaseImponible = baseImponible,
+                    BaseImpGrav = baseImpGrav,
+                    BaseImpExe = 0m,
+                    MontoIce = 0m,
+                    MontoIva = montoIva,
+                    Total = total,
+                    ClienteRazonSocial = group.Key.ClienteRazonSocial
+                };
+            })
+            .OrderBy(x => x.TpIdCliente)
+            .ThenBy(x => x.IdCliente)
+            .ThenBy(x => x.TipoComprobante)];
+    }
+
     private static decimal ResolveTaxRate(PurchaseDetail detail)
+        => detail.Tax?.Rate ?? detail.TaxRate;
+
+    private static decimal ResolveTaxRate(InvoiceDetail detail)
         => detail.Tax?.Rate ?? detail.TaxRate;
 
     private static void ValidatePeriod(int year, int month)
@@ -161,4 +295,3 @@ public class AtsRepository(
         }
     }
 }
-

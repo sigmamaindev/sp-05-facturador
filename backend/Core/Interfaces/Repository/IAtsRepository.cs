@@ -7,5 +7,6 @@ public interface IAtsRepository
 {
     Task<ApiResponse<List<AtsPurchaseResDto>>> GetAtsPurchasesAsync(int year, int month);
     Task<ApiResponse<string>> GetAtsPurchasesXmlAsync(int year, int month);
+    Task<ApiResponse<List<AtsSaleResDto>>> GetAtsSalesAsync(int year, int month);
+    Task<ApiResponse<string>> GetAtsSalesXmlAsync(int year, int month);
 }
-

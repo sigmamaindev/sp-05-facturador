@@ -6,5 +6,5 @@ namespace Core.Interfaces.Services.IAtsService;
 public interface IAtsXmlBuilderService
 {
     string BuildAtsPurchasesXml(int year, int month, Business business, IEnumerable<AtsPurchaseResDto> purchases);
+    string BuildAtsSalesXml(int year, int month, Business business, IEnumerable<AtsSaleResDto> sales);
 }
-

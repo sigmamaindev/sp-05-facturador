@@ -16,6 +16,7 @@ import {
   BadgeCheck,
   Edit,
   ClipboardList,
+  FileText,
 } from "lucide-react";
 
 import {
@@ -91,7 +92,10 @@ export default function AppSidebar() {
     "organization" | "invoices" | "purchases" | null
   >(null);
 
-  const { logout } = useAuth();
+  const { logout, user } = useAuth();
+
+  const showAts =
+    user?.roles?.includes("SuperAdmin") || user?.roles?.includes("Admin");
 
   return (
     <Sidebar collapsible="icon">
@@ -163,6 +167,19 @@ export default function AppSidebar() {
                   </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>
+              {showAts && (
+                <SidebarMenuItem key="/ats">
+                  <SidebarMenuButton
+                    asChild
+                    isActive={isPathActive(pathname, "/ats")}
+                  >
+                    <Link to="/ats">
+                      <FileText />
+                      <span>ATS</span>
+                    </Link>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              )}
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
