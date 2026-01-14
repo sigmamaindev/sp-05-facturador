@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 
 import { getPurchases } from "@/api/purchase";
+import { downloadAtsPurchasesXml } from "@/api/ats";
 
 import type { Purchase } from "@/types/purchase.type";
 
@@ -13,6 +14,7 @@ import DataTable from "@/components/shared/DataTable";
 
 import PurchaseListHeader from "./PurchaseListHeader";
 import { columns } from "./PurchaseListColumns";
+import PurchaseAtsModal from "./PurchaseAtsModal";
 
 export default function PurchaseListView() {
   const { token } = useAuth();
@@ -24,6 +26,11 @@ export default function PurchaseListView() {
   const [keyword, setKeyword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [openAtsModal, setOpenAtsModal] = useState(false);
+
+  const now = new Date();
+  const [atsYear, setAtsYear] = useState(now.getFullYear());
+  const [atsMonth, setAtsMonth] = useState(now.getMonth() + 1);
 
   const fetchData = async () => {
     if (!token) return;
@@ -53,6 +60,26 @@ export default function PurchaseListView() {
     fetchData();
   }, [keyword, page, pageSize, token]);
 
+  const handleDownloadAtsXml = async () => {
+    if (!token) return;
+
+    try {
+      const file = await downloadAtsPurchasesXml(atsYear, atsMonth, token);
+      const url = window.URL.createObjectURL(file);
+      const link = document.createElement("a");
+
+      link.href = url;
+      link.download = `ATS_Compras_${atsYear}_${String(atsMonth).padStart(2, "0")}.xml`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+
+      window.URL.revokeObjectURL(url);
+    } catch (err: any) {
+      alert(err.message ?? "No se pudo descargar el XML del ATS");
+    }
+  };
+
   return (
     <Card>
       <CardContent>
@@ -60,6 +87,12 @@ export default function PurchaseListView() {
           keyword={keyword}
           setKeyword={setKeyword}
           setPage={setPage}
+          atsYear={atsYear}
+          atsMonth={atsMonth}
+          setAtsYear={setAtsYear}
+          setAtsMonth={setAtsMonth}
+          onShowAtsData={() => setOpenAtsModal(true)}
+          onDownloadAtsXml={handleDownloadAtsXml}
         />
         {error ? (
           <AlertMessage message={error} variant="destructive" />
@@ -75,6 +108,15 @@ export default function PurchaseListView() {
             loading={loading}
           />
         )}
+
+        <PurchaseAtsModal
+          open={openAtsModal}
+          onClose={() => setOpenAtsModal(false)}
+          year={atsYear}
+          month={atsMonth}
+          setYear={setAtsYear}
+          setMonth={setAtsMonth}
+        />
       </CardContent>
     </Card>
   );

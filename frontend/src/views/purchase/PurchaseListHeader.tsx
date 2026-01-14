@@ -10,12 +10,24 @@ interface PurchaseListHeaderProps {
   keyword: string;
   setPage: React.Dispatch<React.SetStateAction<number>>;
   setKeyword: React.Dispatch<React.SetStateAction<string>>;
+  atsYear: number;
+  atsMonth: number;
+  setAtsYear: React.Dispatch<React.SetStateAction<number>>;
+  setAtsMonth: React.Dispatch<React.SetStateAction<number>>;
+  onShowAtsData: () => void;
+  onDownloadAtsXml: () => void;
 }
 
 export default function PurchaseListHeader({
   keyword,
   setKeyword,
   setPage,
+  atsYear,
+  atsMonth,
+  setAtsYear,
+  setAtsMonth,
+  onShowAtsData,
+  onDownloadAtsXml,
 }: PurchaseListHeaderProps) {
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -38,8 +50,51 @@ export default function PurchaseListHeader({
           }}
           className="max-w-sm"
         />
+
         {hasPermission && (
-          <div className="flex justify-end w-full md:w-auto">
+          <div className="flex flex-col sm:flex-row justify-end w-full md:w-auto gap-2">
+            <div className="flex flex-row items-center justify-end gap-2">
+              <Input
+                type="number"
+                inputMode="numeric"
+                min={2000}
+                max={2100}
+                value={atsYear}
+                onChange={(e) => {
+                  if (e.target.value === "") return;
+                  const next = Number(e.target.value);
+                  if (!Number.isFinite(next)) return;
+                  setAtsYear(Math.min(2100, Math.max(2000, next)));
+                }}
+                className="w-24"
+                aria-label="Año ATS"
+                placeholder="Año"
+              />
+              <Input
+                type="number"
+                inputMode="numeric"
+                min={1}
+                max={12}
+                value={atsMonth}
+                onChange={(e) => {
+                  if (e.target.value === "") return;
+                  const next = Number(e.target.value);
+                  if (!Number.isFinite(next)) return;
+                  setAtsMonth(Math.min(12, Math.max(1, next)));
+                }}
+                className="w-20"
+                aria-label="Mes ATS"
+                placeholder="Mes"
+              />
+
+              <Button variant="outline" onClick={onShowAtsData}>
+                Show ATS Data
+              </Button>
+              <Button variant="outline" onClick={onDownloadAtsXml}>
+                Download ATS XML
+              </Button>
+            </div>
+
             <Button onClick={() => navigate("/compras/crear")}>
               <PlusIcon />
               Compra

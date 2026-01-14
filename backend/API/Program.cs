@@ -5,10 +5,12 @@ using Microsoft.IdentityModel.Tokens;
 using Microsoft.EntityFrameworkCore;
 using Infrastructure.Data;
 using Infrastructure.Services.InvoiceService;
+using Infrastructure.Services.AtsService;
 using Infrastructure.Services.UtilService;
 using Infrastructure.Services.SriService;
 using Infrastructure.Services.KardexService;
 using Core.Interfaces.Repository;
+using Core.Interfaces.Services.IAtsService;
 using Core.Interfaces.Services.IInvoiceService;
 using Core.Interfaces.Services.IUtilService;
 using Core.Interfaces.Services.IKardexService;
@@ -59,8 +61,10 @@ builder.Services.AddScoped<IAccountsPayableRepository, AccountsPayableRepository
 builder.Services.AddScoped<ISupplierRepository, SupplierRepository>();
 builder.Services.AddScoped<ICertificateRepository, CertificateRepository>();
 builder.Services.AddScoped<IPurchaseRepository, PurchaseRepository>();
+builder.Services.AddScoped<IAtsRepository, AtsRepository>();
 // Invoice Services
 builder.Services.AddScoped<IInvoiceXmlBuilderService, InvoiceXmlBuilderService>();
+builder.Services.AddScoped<IAtsXmlBuilderService, AtsXmlBuilderService>();
 builder.Services.AddScoped<IElectronicSignatureService, ElectronicSignatureService>();
 builder.Services.AddScoped<IAesEncryptionService, AesEncryptionService>();
 builder.Services.AddScoped<IInvoicePdfGeneratorService, InvoicePdfGeneratorService>();
