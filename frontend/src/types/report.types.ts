@@ -11,12 +11,14 @@ export interface SalesReport {
 }
 
 export interface SalesReportDetailItem {
-  sku: string;
+  id: number;
+  productCode: string;
   productName: string;
-  unitMeasure: string;
+  unitMeasureName: string;
   quantity: number;
   unitPrice: number;
   discount: number;
+  taxRate: number;
   taxValue: number;
   subtotal: number;
   total: number;
@@ -30,11 +32,55 @@ export interface SalesReportDetail {
   userFullName: string;
   customerName: string;
   customerDocument: string;
-  subtotal0: number;
-  subtotal12: number;
+  subtotalWithoutTaxes: number;
+  subtotalWithTaxes: number;
   discountTotal: number;
-  taxValue: number;
+  taxTotal: number;
   totalInvoice: number;
   status: string;
   items: SalesReportDetailItem[];
+}
+
+// ─── Purchases Report ────────────────────────────────────────────────────────
+
+export interface PurchasesReport {
+  id: number;
+  issueDate: string;
+  sequential: string;
+  userFullName: string;
+  supplierName: string;
+  supplierDocument: string;
+  totalPurchase: number;
+  status: string;
+}
+
+export interface PurchasesReportDetailItem {
+  id: number;
+  productCode: string;
+  productName: string;
+  unitMeasureName: string;
+  warehouseName: string;
+  quantity: number;
+  unitCost: number;
+  discount: number;
+  taxRate: number;
+  taxValue: number;
+  subtotal: number;
+  total: number;
+}
+
+export interface PurchasesReportDetail {
+  id: number;
+  issueDate: string;
+  sequential: string;
+  userFullName: string;
+  supplierName: string;
+  supplierDocument: string;
+  subtotalWithoutTaxes: number;
+  subtotalWithTaxes: number;
+  discountTotal: number;
+  taxTotal: number;
+  totalPurchase: number;
+  status: string;
+  items: PurchasesReportDetailItem[];
 }

@@ -117,6 +117,31 @@ public class InvoiceEditionService(StoreContext context) : IInvoiceEditionServic
             i.UserId == userId);
     }
 
+    public async Task<Invoice?> CheckInvoiceExistenceAsync(int invoiceId, int businessId)
+    {
+        return await context.Invoices
+        .Include(i => i.Customer)
+        .Include(i => i.Business)
+        .Include(i => i.Establishment)
+        .Include(i => i.EmissionPoint)
+        .Include(i => i.User)
+        .Include(i => i.InvoiceDetails)
+        .ThenInclude(d => d.Product)
+        .Include(i => i.InvoiceDetails)
+        .ThenInclude(d => d.ProductPresentation)
+        .ThenInclude(pp => pp!.UnitMeasure)
+        .Include(i => i.InvoiceDetails)
+        .ThenInclude(d => d.UnitMeasure)
+        .Include(i => i.InvoiceDetails)
+        .ThenInclude(d => d.Warehouse)
+        .Include(i => i.InvoiceDetails)
+        .ThenInclude(d => d.Tax)
+        .FirstOrDefaultAsync(
+            i =>
+            i.Id == invoiceId &&
+            i.BusinessId == businessId);
+    }
+
     public async Task UpsertInvoiceAsync(Invoice invoice, InvoiceUpdateReqDto dto, IEnumerable<InvoiceDetailUpdateReqDto> details)
     {
         if (invoice.BusinessId <= 0)

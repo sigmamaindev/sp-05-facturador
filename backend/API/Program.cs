@@ -20,6 +20,9 @@ using Core.Interfaces.Services.IARService;
 using Infrastructure.Services.ARService;
 using Core.Interfaces.Services.IAPService;
 using Infrastructure.Services.APService;
+using Core.Interfaces.Services.IReportService;
+using Core.Interfaces.Services.ISriService;
+using Infrastructure.Services.ReportService;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -63,6 +66,7 @@ builder.Services.AddScoped<ICertificateRepository, CertificateRepository>();
 builder.Services.AddScoped<IPurchaseRepository, PurchaseRepository>();
 builder.Services.AddScoped<IAtsRepository, AtsRepository>();
 builder.Services.AddScoped<IReportRepository, ReportRepository>();
+builder.Services.AddScoped<IPersonLookupRepository, PersonLookupRepository>();
 // Invoice Services
 builder.Services.AddScoped<IInvoiceXmlBuilderService, InvoiceXmlBuilderService>();
 builder.Services.AddScoped<IAtsXmlBuilderService, AtsXmlBuilderService>();
@@ -78,6 +82,7 @@ builder.Services.AddScoped<IInvoiceEditionService, InvoiceEditionService>();
 builder.Services.AddScoped<IInvoiceDtoFactory, InvoiceDtoFactory>();
 builder.Services.AddScoped<ISriSignService, SriSignService>();
 builder.Services.AddHttpClient<ISriReceptionService, SriReceptionService>();
+builder.Services.AddHttpClient<ISriPersonLookupService, SriPersonLookupService>();
 // Accounts Receivable Services
 builder.Services.AddScoped<IAccountsReceivableService, AccountsReceivableService>();
 builder.Services.AddScoped<IARDtoFactory, ARDtoFactory>();
@@ -90,6 +95,8 @@ builder.Services.AddScoped<IKardexService, KardexService>();
 builder.Services.AddScoped<IPurchaseValidationService, PurchaseValidationService>();
 builder.Services.AddScoped<IPurchaseCalculationService, PurchaseCalculationService>();
 builder.Services.AddScoped<IPurchaseEditionService, PurchaseEditionService>();
+// Report Services
+builder.Services.AddScoped<IReportExportService, ReportExportService>();
 // Backgroud Services
 builder.Services.AddHostedService<SriAuthorizationBackgroundService>();
 builder.Services.AddHostedService<SriReceptionBackgroundService>();

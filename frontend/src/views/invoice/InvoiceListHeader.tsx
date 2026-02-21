@@ -4,8 +4,6 @@ import { PlusIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
-import { useAuth } from "@/contexts/AuthContext";
-
 interface InvoiceListHeaderProps {
   keyword: string;
   setPage: React.Dispatch<React.SetStateAction<number>>;
@@ -17,11 +15,7 @@ export default function InvoiceListHeader({
   setPage,
   setKeyword,
 }: InvoiceListHeaderProps) {
-  const { user } = useAuth();
   const navigate = useNavigate();
-
-  const hasPermission =
-    user?.roles?.includes("SuperAdmin") || user?.roles?.includes("Admin");
 
   return (
     <div className="grid grid-cols-1 md:flex md:flex-row md:justify-between md:items-center items-center gap-4 pb-4">
@@ -38,14 +32,12 @@ export default function InvoiceListHeader({
           }}
           className="max-w-sm"
         />
-        {hasPermission && (
-          <div className="flex justify-end w-full md:w-auto">
-            <Button onClick={() => navigate("/facturas/crear")}>
-              <PlusIcon />
-              Factura
-            </Button>
-          </div>
-        )}
+        <div className="flex justify-end w-full md:w-auto">
+          <Button onClick={() => navigate("/facturas/crear")}>
+            <PlusIcon />
+            Factura
+          </Button>
+        </div>
       </div>
     </div>
   );

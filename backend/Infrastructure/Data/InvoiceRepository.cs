@@ -8,6 +8,7 @@ using Core.Interfaces.Services.IInvoiceService;
 using Core.Interfaces.Services.IKardexService;
 using Core.Interfaces.Services.IARService;
 using Core.DTOs.ARDto;
+using Core.Entities;
 
 namespace Infrastructure.Data;
 
@@ -30,12 +31,7 @@ public class InvoiceRepository(
 
         try
         {
-            var existingInvoice = await edition.CheckInvoiceExistenceAsync(
-                id,
-                currentUser.BusinessId,
-                currentUser.EstablishmentId,
-                currentUser.EmissionPointId,
-                currentUser.UserId);
+            var existingInvoice = await FindInvoiceAsync(id);
 
             if (existingInvoice == null)
             {
@@ -159,12 +155,7 @@ public class InvoiceRepository(
                 return response;
             }
 
-            var existingInvoice = await edition.CheckInvoiceExistenceAsync(
-                id,
-                currentUser.BusinessId,
-                currentUser.EstablishmentId,
-                currentUser.EmissionPointId,
-                currentUser.UserId);
+            var existingInvoice = await FindInvoiceAsync(id);
 
             if (existingInvoice == null)
             {
@@ -210,12 +201,15 @@ public class InvoiceRepository(
             .Include(i => i.Establishment)
             .Include(i => i.EmissionPoint)
             .Include(i => i.User)
-            .Where(
-                i =>
-                i.BusinessId == currentUser.BusinessId &&
-                i.EmissionPointId == currentUser.EmissionPointId &&
-                i.EstablishmentId == currentUser.EstablishmentId &&
-                i.UserId == currentUser.UserId);
+            .Where(i => i.BusinessId == currentUser.BusinessId);
+
+            if (!currentUser.IsAdmin)
+            {
+                query = query.Where(i =>
+                    i.EmissionPointId == currentUser.EmissionPointId &&
+                    i.EstablishmentId == currentUser.EstablishmentId &&
+                    i.UserId == currentUser.UserId);
+            }
 
             if (!string.IsNullOrEmpty(keyword))
             {
@@ -269,12 +263,7 @@ public class InvoiceRepository(
         {
             ValidateCurrentUser();
 
-            var existingInvoice = await edition.CheckInvoiceExistenceAsync(
-                invoiceId,
-                currentUser.BusinessId,
-                currentUser.EstablishmentId,
-                currentUser.EmissionPointId,
-                currentUser.UserId);
+            var existingInvoice = await FindInvoiceAsync(invoiceId);
 
             if (existingInvoice == null)
             {
@@ -337,12 +326,7 @@ public class InvoiceRepository(
         {
             ValidateCurrentUser();
 
-            var existingInvoice = await edition.CheckInvoiceExistenceAsync(
-                invoiceId,
-                currentUser.BusinessId,
-                currentUser.EstablishmentId,
-                currentUser.EmissionPointId,
-                currentUser.UserId);
+            var existingInvoice = await FindInvoiceAsync(invoiceId);
 
             if (existingInvoice == null)
             {
@@ -449,6 +433,19 @@ public class InvoiceRepository(
         }
 
         return response;
+    }
+
+    private async Task<Invoice?> FindInvoiceAsync(int invoiceId)
+    {
+        if (currentUser.IsAdmin)
+            return await edition.CheckInvoiceExistenceAsync(invoiceId, currentUser.BusinessId);
+
+        return await edition.CheckInvoiceExistenceAsync(
+            invoiceId,
+            currentUser.BusinessId,
+            currentUser.EstablishmentId,
+            currentUser.EmissionPointId,
+            currentUser.UserId);
     }
 
     private void ValidateCurrentUser()

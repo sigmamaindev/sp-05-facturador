@@ -48,6 +48,7 @@ interface InvoiceUpdateFormProps {
   onContinue: () => void;
   savingDraft: boolean;
   savingAndContinuing: boolean;
+  canConfirmPayment?: boolean;
 }
 
 export default function InvoiceUpdateForm({
@@ -71,6 +72,7 @@ export default function InvoiceUpdateForm({
   onContinue,
   savingDraft,
   savingAndContinuing,
+  canConfirmPayment = true,
 }: InvoiceUpdateFormProps) {
   const canProceed = customer !== null && products.length > 0;
 
@@ -304,7 +306,7 @@ export default function InvoiceUpdateForm({
             <div className="flex flex-col gap-2 mt-4">
               <Button
                 type="button"
-                variant="outline"
+                variant={canConfirmPayment ? "outline" : "default"}
                 onClick={onSaveDraft}
                 disabled={savingDraft || !canProceed}
               >
@@ -312,13 +314,15 @@ export default function InvoiceUpdateForm({
                   ? "Actualizando borrador..."
                   : "Actualizar borrador"}
               </Button>
-              <Button
-                type="button"
-                onClick={onContinue}
-                disabled={savingAndContinuing || !canProceed}
-              >
-                {savingAndContinuing ? "Cargando pago..." : "Método de pago"}
-              </Button>
+              {canConfirmPayment && (
+                <Button
+                  type="button"
+                  onClick={onContinue}
+                  disabled={savingAndContinuing || !canProceed}
+                >
+                  {savingAndContinuing ? "Cargando pago..." : "Método de pago"}
+                </Button>
+              )}
             </div>
           </CardContent>
         </Card>

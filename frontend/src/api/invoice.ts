@@ -128,6 +128,28 @@ export async function updateInvoice(
   }
 }
 
+export async function confirmInvoice(
+  id: number,
+  token: string
+): Promise<ApiResponseSingle<Invoice>> {
+  try {
+    const url = `/invoice/${id}/confirm`;
+
+    const { data } = await api.put<ApiResponseSingle<Invoice>>(url, null, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    return data;
+  } catch (error) {
+    if (isAxiosError(error) && error.response) {
+      throw new Error(error.response.data.error ?? "Error en la API");
+    }
+    throw new Error("Error desconocido");
+  }
+}
+
 export async function updateInvoicePayment(
   id: number,
   body: InvoicePaymentUpdate,

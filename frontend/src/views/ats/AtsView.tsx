@@ -3,8 +3,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 
 import {
-  downloadAtsPurchasesXml,
-  downloadAtsSalesXml,
+  downloadAtsXml,
   getAtsPurchases,
   getAtsSales,
 } from "@/api/ats";
@@ -151,33 +150,19 @@ export default function AtsView() {
     setLoadingSales(false);
   };
 
-  const handleDownloadPurchasesXml = async () => {
+  const handleDownloadXml = async () => {
     if (!token) return;
 
     try {
-      const file = await downloadAtsPurchasesXml(year, month, token);
+      const file = await downloadAtsXml(year, month, token);
       downloadBlob(
         file,
-        `ATS_Compras_${year}_${String(month).padStart(2, "0")}.xml`,
+        `${String(month).padStart(2, "0")}${year}.xml`,
       );
     } catch (err: unknown) {
       alert(
-        getErrorMessage(err, "No se pudo descargar el XML del ATS (compras)"),
+        getErrorMessage(err, "No se pudo descargar el XML del ATS"),
       );
-    }
-  };
-
-  const handleDownloadSalesXml = async () => {
-    if (!token) return;
-
-    try {
-      const file = await downloadAtsSalesXml(year, month, token);
-      downloadBlob(
-        file,
-        `ATS_Ventas_${year}_${String(month).padStart(2, "0")}.xml`,
-      );
-    } catch (err: unknown) {
-      alert(getErrorMessage(err, "No se pudo descargar el XML del ATS (ventas)"));
     }
   };
 
@@ -231,6 +216,13 @@ export default function AtsView() {
               >
                 Actualizar
               </Button>
+              <Button
+                variant="outline"
+                onClick={handleDownloadXml}
+                disabled={!token || !hasPermission}
+              >
+                Descargar XML
+              </Button>
             </div>
           </div>
 
@@ -242,11 +234,8 @@ export default function AtsView() {
           ) : (
             <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
               <Card>
-                <CardHeader className="flex flex-row items-center justify-between">
+                <CardHeader>
                   <CardTitle>ATS - Compras</CardTitle>
-                  <Button variant="outline" onClick={handleDownloadPurchasesXml}>
-                    Descargar XML
-                  </Button>
                 </CardHeader>
                 <CardContent>
                   {purchaseError ? (
@@ -270,11 +259,8 @@ export default function AtsView() {
               </Card>
 
               <Card>
-                <CardHeader className="flex flex-row items-center justify-between">
+                <CardHeader>
                   <CardTitle>ATS - Ventas</CardTitle>
-                  <Button variant="outline" onClick={handleDownloadSalesXml}>
-                    Descargar XML
-                  </Button>
                 </CardHeader>
                 <CardContent>
                   {salesError ? (

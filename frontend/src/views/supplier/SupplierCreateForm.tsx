@@ -2,7 +2,9 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
-import { Loader2 } from "lucide-react";
+import { Loader2, Search } from "lucide-react";
+
+import { useDocumentLookup } from "@/hooks/useDocumentLookup";
 
 import type { CreateSupplierForm } from "@/types/supplier.types";
 
@@ -24,8 +26,12 @@ export default function SupplierCreateForm({ token }: SupplierCreateFormProps) {
   const {
     register,
     handleSubmit,
+    setValue,
+    getValues,
     formState: { errors },
   } = useForm<CreateSupplierForm>();
+
+  const { lookup, isSearching } = useDocumentLookup(token);
 
   const onSubmit = async (data: CreateSupplierForm) => {
     try {
@@ -50,12 +56,44 @@ export default function SupplierCreateForm({ token }: SupplierCreateFormProps) {
     >
       <div className="grid gap-2">
         <Label htmlFor="document">Documento</Label>
-        <Input
-          id="document"
-          type="text"
-          placeholder="Documento de identidad"
-          {...register("document", { required: "El documento es obligatorio" })}
-        />
+        <div className="flex gap-2">
+          <Input
+            id="document"
+            type="text"
+            placeholder="Documento de identidad"
+            {...register("document", {
+              required: "El documento es obligatorio",
+              onBlur: async (e) => {
+                const doc = e.target.value;
+                if (doc && doc.length >= 10) {
+                  const result = await lookup(doc);
+                  if (result) {
+                    setValue("businessName", result.name);
+                    setValue("document", result.document);
+                  }
+                }
+              },
+            })}
+          />
+          <Button
+            type="button"
+            variant="outline"
+            disabled={isSearching}
+            onClick={async () => {
+              const result = await lookup(getValues("document"));
+              if (result) {
+                setValue("businessName", result.name);
+                setValue("document", result.document);
+              }
+            }}
+          >
+            {isSearching ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <Search className="h-4 w-4" />
+            )}
+          </Button>
+        </div>
         {errors.document && (
           <p className="text-red-500 text-sm">{errors.document.message}</p>
         )}

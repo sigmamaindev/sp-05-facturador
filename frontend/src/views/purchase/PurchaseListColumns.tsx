@@ -2,6 +2,8 @@ import type { ColumnDef } from "@tanstack/react-table";
 
 import type { Purchase } from "@/types/purchase.type";
 
+import { useAuth } from "@/contexts/AuthContext";
+
 import RowActions from "@/components/shared/RowActions";
 import { Badge } from "@/components/ui/badge";
 
@@ -98,17 +100,25 @@ export const columns: ColumnDef<Purchase>[] = [
     id: "actions",
     header: () => <div className="text-right">Acciones</div>,
     cell: ({ row }) => {
+      const { user } = useAuth();
       const purchase = row.original;
+
+      const hasPermission =
+        user?.roles?.includes("SuperAdmin") || user?.roles?.includes("Admin");
 
       const actions = [
         {
           label: "Detalles",
           to: `/compras/${purchase.id}`,
         },
-        {
-          label: "Editar",
-          to: `/compras/actualizar/${purchase.id}`,
-        },
+        ...(hasPermission
+          ? [
+              {
+                label: "Editar",
+                to: `/compras/actualizar/${purchase.id}`,
+              },
+            ]
+          : []),
       ];
 
       return (

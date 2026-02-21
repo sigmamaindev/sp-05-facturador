@@ -60,6 +60,8 @@ import AccountsPayableUpdateView from "@/views/accountsPayable/AccountsPayableUp
 import AccountsPayableSupplierPaymentsView from "@/views/accountsPayable/AccountsPayableSupplierPaymentsView";
 import SalesReportListView from "@/views/report/SalesReportListView";
 import SalesReportDetailView from "@/views/report/SalesReportDetailView";
+import PurchasesReportListView from "@/views/report/PurchasesReportListView";
+import PurchasesReportDetailView from "@/views/report/PurchasesReportDetailView";
 import NotFoundRoute from "./notFoundRoute";
 
 export default function Router() {
@@ -192,6 +194,14 @@ export default function Router() {
               <Route
                 path="/reportes/ventas/:id"
                 element={<SalesReportDetailView />}
+              />
+              <Route
+                path="/reportes/compras"
+                element={<PurchasesReportListView />}
+              />
+              <Route
+                path="/reportes/compras/:id"
+                element={<PurchasesReportDetailView />}
               />
               <Route path="/facturas" element={<InvoiceListView />} />
               <Route path="/facturas/:id" element={<InvoiceDetailView />} />

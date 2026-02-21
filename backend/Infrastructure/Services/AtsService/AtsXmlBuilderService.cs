@@ -10,32 +10,15 @@ public class AtsXmlBuilderService : IAtsXmlBuilderService
 {
     private static readonly CultureInfo Culture = CultureInfo.InvariantCulture;
 
-    public string BuildAtsPurchasesXml(int year, int month, Business business, IEnumerable<AtsPurchaseResDto> purchases)
+    public string BuildAtsXml(int year, int month, Business business, string numEstabRuc,
+        IEnumerable<AtsPurchaseResDto> purchases, IEnumerable<AtsSaleResDto> sales,
+        decimal totalVentas)
     {
         ArgumentOutOfRangeException.ThrowIfLessThan(year, 1900);
         ArgumentOutOfRangeException.ThrowIfGreaterThan(month, 12);
         ArgumentOutOfRangeException.ThrowIfLessThan(month, 1);
         ArgumentNullException.ThrowIfNull(business);
         ArgumentNullException.ThrowIfNull(purchases);
-
-        var root = new XElement("iva",
-            new XElement("TipoIDInformante", InferTipoIdInformante(business.Document)),
-            new XElement("IdInformante", business.Document),
-            new XElement("razonSocial", business.Name),
-            new XElement("Anio", year),
-            new XElement("Mes", month.ToString("D2", Culture)),
-            new XElement("compras", purchases.Select(BuildCompra)));
-
-        var document = new XDocument(new XDeclaration("1.0", "UTF-8", null), root);
-        return document.ToString();
-    }
-
-    public string BuildAtsSalesXml(int year, int month, Business business, IEnumerable<AtsSaleResDto> sales)
-    {
-        ArgumentOutOfRangeException.ThrowIfLessThan(year, 1900);
-        ArgumentOutOfRangeException.ThrowIfGreaterThan(month, 12);
-        ArgumentOutOfRangeException.ThrowIfLessThan(month, 1);
-        ArgumentNullException.ThrowIfNull(business);
         ArgumentNullException.ThrowIfNull(sales);
 
         var root = new XElement("iva",
@@ -44,49 +27,131 @@ public class AtsXmlBuilderService : IAtsXmlBuilderService
             new XElement("razonSocial", business.Name),
             new XElement("Anio", year),
             new XElement("Mes", month.ToString("D2", Culture)),
-            new XElement("ventas", sales.Select(BuildVenta)));
+            new XElement("numEstabRuc", numEstabRuc),
+            new XElement("totalVentas", FormatDecimal(totalVentas)),
+            new XElement("codigoOperativo", "IVA"),
+            BuildCompras(purchases),
+            BuildVentas(sales),
+            BuildVentasEstablecimiento(numEstabRuc, totalVentas));
 
-        var document = new XDocument(new XDeclaration("1.0", "UTF-8", null), root);
+        var document = new XDocument(new XDeclaration("1.0", "UTF-8", "no"), root);
         return document.ToString();
+    }
+
+    private static XElement BuildCompras(IEnumerable<AtsPurchaseResDto> purchases)
+    {
+        return new XElement("compras", purchases.Select(BuildCompra));
     }
 
     private static XElement BuildCompra(AtsPurchaseResDto purchase)
     {
-        return new XElement("detalleCompras",
-            new XElement("codSustento", purchase.CodSustento),
-            new XElement("tpIdProv", purchase.TpIdProv),
-            new XElement("idProv", purchase.IdProv),
-            new XElement("tipoComprobante", purchase.TipoComprobante),
-            new XElement("parteRel", purchase.ParteRel),
-            new XElement("fechaRegistro", FormatDate(purchase.FechaRegistro)),
-            new XElement("establecimiento", purchase.Establecimiento),
-            new XElement("puntoEmision", purchase.PuntoEmision),
-            new XElement("secuencial", purchase.Secuencial),
-            new XElement("fechaEmision", FormatDate(purchase.FechaEmision)),
-            new XElement("autorizacion", purchase.Autorizacion),
-            new XElement("baseNoGraIva", FormatDecimal(purchase.BaseNoGraIva)),
-            new XElement("baseImponible", FormatDecimal(purchase.BaseImponible)),
-            new XElement("baseImpGrav", FormatDecimal(purchase.BaseImpGrav)),
-            new XElement("baseImpExe", FormatDecimal(purchase.BaseImpExe)),
-            new XElement("montoIce", FormatDecimal(purchase.MontoIce)),
-            new XElement("montoIva", FormatDecimal(purchase.MontoIva)));
+        var elements = new List<XElement>
+        {
+            new("codSustento", purchase.CodSustento),
+            new("tpIdProv", purchase.TpIdProv),
+            new("idProv", purchase.IdProv),
+            new("tipoComprobante", purchase.TipoComprobante),
+            new("parteRel", purchase.ParteRel),
+            new("fechaRegistro", FormatDate(purchase.FechaRegistro)),
+            new("establecimiento", purchase.Establecimiento),
+            new("puntoEmision", purchase.PuntoEmision),
+            new("secuencial", purchase.Secuencial),
+            new("fechaEmision", FormatDate(purchase.FechaEmision)),
+            new("autorizacion", purchase.Autorizacion),
+            new("baseNoGraIva", FormatDecimal(purchase.BaseNoGraIva)),
+            new("baseImponible", FormatDecimal(purchase.BaseImponible)),
+            new("baseImpGrav", FormatDecimal(purchase.BaseImpGrav)),
+            new("baseImpExe", FormatDecimal(purchase.BaseImpExe)),
+            new("montoIce", FormatDecimal(purchase.MontoIce)),
+            new("montoIva", FormatDecimal(purchase.MontoIva)),
+            new("valRetBien10", FormatDecimal(purchase.ValRetBien10)),
+            new("valRetServ20", FormatDecimal(purchase.ValRetServ20)),
+            new("valorRetBienes", FormatDecimal(purchase.ValorRetBienes)),
+            new("valRetServ50", FormatDecimal(purchase.ValRetServ50)),
+            new("valorRetServicios", FormatDecimal(purchase.ValorRetServicios)),
+            new("valRetServ100", FormatDecimal(purchase.ValRetServ100)),
+            new("totbasesImpReemb", FormatDecimal(purchase.TotbasesImpReemb)),
+            new("pagoExterior",
+                new XElement("pagoLocExt", purchase.PagoLocExt),
+                new XElement("paisEfecPago", purchase.PaisEfecPago),
+                new XElement("aplicConvDobTrib", purchase.AplicConvDobTrib),
+                new XElement("pagExtSujRetNorLeg", purchase.PagExtSujRetNorLeg),
+                new XElement("pagoRegFis", purchase.PagoRegFis))
+        };
+
+        if (!string.IsNullOrEmpty(purchase.FormaPago))
+        {
+            elements.Add(new XElement("formasDePago",
+                new XElement("formaPago", purchase.FormaPago)));
+        }
+
+        if (purchase.AirDetails.Count > 0)
+        {
+            elements.Add(new XElement("air",
+                purchase.AirDetails.Select(d => new XElement("detalleAir",
+                    new XElement("codRetAir", d.CodRetAir),
+                    new XElement("baseImpAir", FormatDecimal(d.BaseImpAir)),
+                    new XElement("porcentajeAir", FormatDecimal(d.PorcentajeAir)),
+                    new XElement("valRetAir", FormatDecimal(d.ValRetAir))))));
+        }
+        else
+        {
+            elements.Add(new XElement("air"));
+        }
+
+        if (!string.IsNullOrEmpty(purchase.EstabRetencion1))
+        {
+            elements.Add(new XElement("estabRetencion1", purchase.EstabRetencion1));
+            elements.Add(new XElement("ptoEmiRetencion1", purchase.PtoEmiRetencion1));
+            elements.Add(new XElement("secRetencion1", purchase.SecRetencion1));
+            elements.Add(new XElement("autRetencion1", purchase.AutRetencion1));
+            elements.Add(new XElement("fechaEmiRet1", purchase.FechaEmiRet1.HasValue
+                ? FormatDate(purchase.FechaEmiRet1.Value)
+                : string.Empty));
+        }
+
+        return new XElement("detalleCompras", elements);
+    }
+
+    private static XElement BuildVentas(IEnumerable<AtsSaleResDto> sales)
+    {
+        return new XElement("ventas", sales.Select(BuildVenta));
     }
 
     private static XElement BuildVenta(AtsSaleResDto sale)
     {
-        return new XElement("detalleVentas",
-            new XElement("tpIdCliente", sale.TpIdCliente),
-            new XElement("idCliente", sale.IdCliente),
-            new XElement("parteRelVtas", sale.ParteRelVtas),
-            new XElement("tipoComprobante", sale.TipoComprobante),
-            new XElement("tipoEmision", sale.TipoEmision),
-            new XElement("numeroComprobantes", sale.NumeroComprobantes),
-            new XElement("baseNoGraIva", FormatDecimal(sale.BaseNoGraIva)),
-            new XElement("baseImponible", FormatDecimal(sale.BaseImponible)),
-            new XElement("baseImpGrav", FormatDecimal(sale.BaseImpGrav)),
-            new XElement("baseImpExe", FormatDecimal(sale.BaseImpExe)),
-            new XElement("montoIce", FormatDecimal(sale.MontoIce)),
-            new XElement("montoIva", FormatDecimal(sale.MontoIva)));
+        var elements = new List<XElement>
+        {
+            new("tpIdCliente", sale.TpIdCliente),
+            new("idCliente", sale.IdCliente),
+            new("parteRelVtas", sale.ParteRelVtas),
+            new("tipoComprobante", sale.TipoComprobante),
+            new("tipoEmision", sale.TipoEmision),
+            new("numeroComprobantes", sale.NumeroComprobantes),
+            new("baseNoGraIva", FormatDecimal(sale.BaseNoGraIva)),
+            new("baseImponible", FormatDecimal(sale.BaseImponible)),
+            new("baseImpGrav", FormatDecimal(sale.BaseImpGrav)),
+            new("montoIva", FormatDecimal(sale.MontoIva)),
+            new("montoIce", FormatDecimal(sale.MontoIce)),
+            new("valorRetIva", FormatDecimal(sale.ValorRetIva)),
+            new("valorRetRenta", FormatDecimal(sale.ValorRetRenta))
+        };
+
+        if (!string.IsNullOrEmpty(sale.FormaPago))
+        {
+            elements.Add(new XElement("formasDePago",
+                new XElement("formaPago", sale.FormaPago)));
+        }
+
+        return new XElement("detalleVentas", elements);
+    }
+
+    private static XElement BuildVentasEstablecimiento(string codEstab, decimal totalVentas)
+    {
+        return new XElement("ventasEstablecimiento",
+            new XElement("ventaEst",
+                new XElement("codEstab", codEstab),
+                new XElement("ventasEstab", FormatDecimal(totalVentas))));
     }
 
     private static string InferTipoIdInformante(string document)

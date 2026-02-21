@@ -272,6 +272,256 @@ public class ReportExportService : IReportExportService
         return stream.ToArray();
     }
 
+    // ─── Compras PDF ────────────────────────────────────────────────────────
+
+    public byte[] GeneratePurchasesDetailPdf(PurchasesReportDetailResDto detail)
+    {
+        QuestPDF.Settings.License = LicenseType.Community;
+
+        return Document.Create(document =>
+        {
+            document.Page(page =>
+            {
+                page.Size(PageSizes.A4);
+                page.Margin(40);
+                page.DefaultTextStyle(x => x.FontSize(10));
+
+                page.Header().Column(header =>
+                {
+                    header.Item().Row(row =>
+                    {
+                        row.RelativeItem().Column(col =>
+                        {
+                            col.Item().Text("REPORTE DE COMPRA").FontSize(16).SemiBold();
+                            col.Item().Text($"Compra N°: {detail.Sequential}").FontSize(12);
+                            col.Item().Text($"Fecha: {detail.IssueDate:dd/MM/yyyy HH:mm}");
+                            col.Item().Text($"Estado: {detail.Status}");
+                        });
+
+                        row.ConstantItem(180).Column(col =>
+                        {
+                            col.Item().Text($"Proveedor: {detail.SupplierName}").SemiBold();
+                            col.Item().Text($"Documento: {detail.SupplierDocument}");
+                            col.Item().Text($"Usuario: {detail.UserFullName}");
+                        });
+                    });
+
+                    header.Item().PaddingTop(8).LineHorizontal(1);
+                });
+
+                page.Content().PaddingTop(12).Column(content =>
+                {
+                    content.Spacing(12);
+
+                    content.Item().Text("Detalle de Productos").FontSize(11).SemiBold();
+
+                    content.Item().Table(table =>
+                    {
+                        table.ColumnsDefinition(cols =>
+                        {
+                            cols.ConstantColumn(55);
+                            cols.RelativeColumn(3);
+                            cols.RelativeColumn();
+                            cols.RelativeColumn();
+                            cols.ConstantColumn(55);
+                            cols.ConstantColumn(70);
+                            cols.ConstantColumn(65);
+                            cols.ConstantColumn(55);
+                            cols.ConstantColumn(65);
+                            cols.ConstantColumn(70);
+                        });
+
+                        static IContainer HeaderCell(IContainer c) =>
+                            c.Background(Colors.Green.Lighten4).Padding(4);
+
+                        table.Header(h =>
+                        {
+                            h.Cell().Element(HeaderCell).Text("Código").SemiBold();
+                            h.Cell().Element(HeaderCell).Text("Descripción").SemiBold();
+                            h.Cell().Element(HeaderCell).Text("Unidad").SemiBold();
+                            h.Cell().Element(HeaderCell).Text("Bodega").SemiBold();
+                            h.Cell().Element(HeaderCell).AlignRight().Text("Cantidad").SemiBold();
+                            h.Cell().Element(HeaderCell).AlignRight().Text("C. Unit.").SemiBold();
+                            h.Cell().Element(HeaderCell).AlignRight().Text("Desc.").SemiBold();
+                            h.Cell().Element(HeaderCell).AlignRight().Text("IVA %").SemiBold();
+                            h.Cell().Element(HeaderCell).AlignRight().Text("IVA $").SemiBold();
+                            h.Cell().Element(HeaderCell).AlignRight().Text("Total").SemiBold();
+                        });
+
+                        var rowIndex = 0;
+                        foreach (var item in detail.Items)
+                        {
+                            var bg = rowIndex % 2 == 0 ? Colors.White : Colors.Grey.Lighten5;
+                            rowIndex++;
+
+                            static IContainer DataCell(IContainer c, string color) =>
+                                c.Background(color).Padding(4);
+
+                            table.Cell().Element(c => DataCell(c, bg)).Text(item.ProductCode);
+                            table.Cell().Element(c => DataCell(c, bg)).Text(item.ProductName);
+                            table.Cell().Element(c => DataCell(c, bg)).Text(item.UnitMeasureName);
+                            table.Cell().Element(c => DataCell(c, bg)).Text(item.WarehouseName);
+                            table.Cell().Element(c => DataCell(c, bg)).AlignRight().Text(item.Quantity.ToString("0.##"));
+                            table.Cell().Element(c => DataCell(c, bg)).AlignRight().Text(FormatCurrency(item.UnitCost));
+                            table.Cell().Element(c => DataCell(c, bg)).AlignRight().Text(FormatCurrency(item.Discount));
+                            table.Cell().Element(c => DataCell(c, bg)).AlignRight().Text($"{item.TaxRate:0.##}%");
+                            table.Cell().Element(c => DataCell(c, bg)).AlignRight().Text(FormatCurrency(item.TaxValue));
+                            table.Cell().Element(c => DataCell(c, bg)).AlignRight().Text(FormatCurrency(item.Total));
+                        }
+                    });
+
+                    content.Item().AlignRight().Column(totals =>
+                    {
+                        totals.Spacing(3);
+
+                        TotalRow(totals, "Subtotal sin impuestos:", detail.SubtotalWithoutTaxes);
+                        TotalRow(totals, "Subtotal con impuestos:", detail.SubtotalWithTaxes);
+                        TotalRow(totals, "Descuento:", detail.DiscountTotal);
+                        TotalRow(totals, "Impuestos:", detail.TaxTotal);
+
+                        totals.Item().LineHorizontal(1);
+
+                        totals.Item().Row(row =>
+                        {
+                            row.RelativeItem().AlignRight().Text("TOTAL:").FontSize(12).SemiBold();
+                            row.ConstantItem(110).AlignRight().Text(FormatCurrency(detail.TotalPurchase)).FontSize(12).SemiBold();
+                        });
+                    });
+                });
+
+                page.Footer().AlignCenter().Text(text =>
+                {
+                    text.Span("Reporte generado el ").FontSize(9).FontColor(Colors.Grey.Medium);
+                    text.Span(DateTime.Now.ToString("dd/MM/yyyy HH:mm")).FontSize(9).SemiBold();
+                });
+            });
+        }).GeneratePdf();
+    }
+
+    // ─── Compras Excel ──────────────────────────────────────────────────────
+
+    public byte[] GeneratePurchasesDetailExcel(PurchasesReportDetailResDto detail)
+    {
+        using var workbook = new XLWorkbook();
+        var ws = workbook.Worksheets.Add("Detalle Compra");
+
+        ws.Cell(1, 1).Value = "REPORTE DE COMPRA";
+        ws.Range(1, 1, 1, 10).Merge().Style
+            .Font.SetBold(true)
+            .Font.SetFontSize(14)
+            .Alignment.SetHorizontal(XLAlignmentHorizontalValues.Center)
+            .Fill.SetBackgroundColor(XLColor.FromHtml("#1B5E20"));
+        ws.Cell(1, 1).Style.Font.SetFontColor(XLColor.White);
+
+        var infoLabels = new (int Row, string Label, string Value)[]
+        {
+            (3, "Compra N°:", detail.Sequential),
+            (4, "Fecha:", detail.IssueDate.ToString("dd/MM/yyyy HH:mm")),
+            (5, "Estado:", detail.Status),
+            (6, "Proveedor:", detail.SupplierName),
+            (7, "Documento:", detail.SupplierDocument),
+            (8, "Usuario:", detail.UserFullName),
+        };
+
+        foreach (var (row, label, value) in infoLabels)
+        {
+            ws.Cell(row, 1).Value = label;
+            ws.Cell(row, 1).Style.Font.SetBold(true);
+            ws.Cell(row, 2).Value = value;
+        }
+
+        int tableStart = 10;
+
+        var headers = new[]
+        {
+            "Código", "Descripción", "Unidad", "Bodega", "Cantidad",
+            "C. Unitario", "Descuento", "IVA %", "IVA $", "Total"
+        };
+
+        for (int col = 1; col <= headers.Length; col++)
+        {
+            var cell = ws.Cell(tableStart, col);
+            cell.Value = headers[col - 1];
+            cell.Style
+                .Font.SetBold(true)
+                .Font.SetFontColor(XLColor.White)
+                .Fill.SetBackgroundColor(XLColor.FromHtml("#1B5E20"))
+                .Alignment.SetHorizontal(XLAlignmentHorizontalValues.Center);
+        }
+
+        int dataRow = tableStart + 1;
+        bool altRow = false;
+
+        foreach (var item in detail.Items)
+        {
+            var rowColor = altRow ? XLColor.FromHtml("#E8F5E9") : XLColor.White;
+            altRow = !altRow;
+
+            ws.Cell(dataRow, 1).Value = item.ProductCode;
+            ws.Cell(dataRow, 2).Value = item.ProductName;
+            ws.Cell(dataRow, 3).Value = item.UnitMeasureName;
+            ws.Cell(dataRow, 4).Value = item.WarehouseName;
+            ws.Cell(dataRow, 5).Value = (double)item.Quantity;
+            ws.Cell(dataRow, 6).Value = (double)item.UnitCost;
+            ws.Cell(dataRow, 7).Value = (double)item.Discount;
+            ws.Cell(dataRow, 8).Value = (double)item.TaxRate;
+            ws.Cell(dataRow, 9).Value = (double)item.TaxValue;
+            ws.Cell(dataRow, 10).Value = (double)item.Total;
+
+            var dataRange = ws.Range(dataRow, 1, dataRow, 10);
+            dataRange.Style.Fill.SetBackgroundColor(rowColor);
+
+            foreach (int col in new[] { 6, 7, 9, 10 })
+                ws.Cell(dataRow, col).Style.NumberFormat.Format = "#,##0.00";
+
+            ws.Cell(dataRow, 8).Style.NumberFormat.Format = "0.##";
+
+            dataRow++;
+        }
+
+        int totalsStart = dataRow + 1;
+
+        var totals = new (string Label, decimal Value)[]
+        {
+            ("Subtotal sin impuestos:", detail.SubtotalWithoutTaxes),
+            ("Subtotal con impuestos:", detail.SubtotalWithTaxes),
+            ("Descuento:", detail.DiscountTotal),
+            ("Impuestos:", detail.TaxTotal),
+            ("TOTAL:", detail.TotalPurchase),
+        };
+
+        for (int i = 0; i < totals.Length; i++)
+        {
+            var (label, value) = totals[i];
+            int r = totalsStart + i;
+            bool isLastRow = i == totals.Length - 1;
+
+            ws.Cell(r, 8).Value = label;
+            ws.Cell(r, 8).Style.Font.SetBold(isLastRow).Alignment.SetHorizontal(XLAlignmentHorizontalValues.Right);
+
+            ws.Cell(r, 10).Value = (double)value;
+            ws.Cell(r, 10).Style.NumberFormat.Format = "#,##0.00";
+            ws.Cell(r, 10).Style.Font.SetBold(isLastRow);
+
+            if (isLastRow)
+            {
+                ws.Range(r, 8, r, 10).Style.Fill.SetBackgroundColor(XLColor.FromHtml("#1B5E20"));
+                ws.Cell(r, 8).Style.Font.SetFontColor(XLColor.White);
+                ws.Cell(r, 10).Style.Font.SetFontColor(XLColor.White);
+            }
+        }
+
+        var tableRange = ws.Range(tableStart, 1, dataRow - 1, 10);
+        tableRange.Style.Border.OutsideBorder = XLBorderStyleValues.Thin;
+        tableRange.Style.Border.InsideBorder = XLBorderStyleValues.Hair;
+
+        ws.Columns().AdjustToContents();
+
+        using var stream = new MemoryStream();
+        workbook.SaveAs(stream);
+        return stream.ToArray();
+    }
+
     // ─── Helpers ────────────────────────────────────────────────────────────
 
     private static string FormatCurrency(decimal value)

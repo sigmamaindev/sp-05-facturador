@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 import { useAuth } from "@/contexts/AuthContext";
 
@@ -12,7 +12,7 @@ import AlertMessage from "@/components/shared/AlertMessage";
 import DataTable from "@/components/shared/DataTable";
 
 import InvoiceListHeader from "./InvoiceListHeader";
-import { columns } from "./InvoiceListColumns";
+import { getColumns } from "./InvoiceListColumns";
 
 export default function InvoiceListView() {
   const { token } = useAuth();
@@ -62,7 +62,7 @@ export default function InvoiceListView() {
           <AlertMessage message={error} variant="destructive" />
         ) : (
           <DataTable
-            columns={columns}
+            columns={getColumns(fetchData)}
             data={data}
             page={page}
             pageSize={pageSize}

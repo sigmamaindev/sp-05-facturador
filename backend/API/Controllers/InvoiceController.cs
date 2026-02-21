@@ -28,7 +28,7 @@ namespace API.Controllers
         }
 
         [HttpPost]
-        [Authorize(Roles = "SuperAdmin, Admin")]
+        [Authorize]
         public async Task<ActionResult<ApiResponse<InvoiceSimpleResDto>>> CreateInvoice([FromBody] InvoiceCreateReqDto invoiceCreateReqDto)
         {
             var response = await invoiceRepository.CreateInvoiceAsync(invoiceCreateReqDto);
@@ -56,7 +56,7 @@ namespace API.Controllers
         }
 
         [HttpPut("{id:int}/payment")]
-        [Authorize]
+        [Authorize(Roles = "SuperAdmin, Admin")]
         public async Task<ActionResult<ApiResponse<InvoiceComplexResDto>>> UpdateInvoicePayment(int id, [FromBody] InvoicePaymentUpdateReqDto invoicePaymentUpdateReqDto)
         {
             var response = await invoiceRepository.UpdateInvoicePaymentAsync(id, invoicePaymentUpdateReqDto);
@@ -97,7 +97,7 @@ namespace API.Controllers
         }
 
         [HttpPut("{id:int}")]
-        [Authorize]
+        [Authorize(Roles = "SuperAdmin, Admin")]
         public async Task<ActionResult<ApiResponse<InvoiceComplexResDto>>> UpdateInvoiceById(int id, [FromBody] InvoiceUpdateReqDto invoiceUpdateReqDto)
         {
             var response = await invoiceRepository.UpdateInvoiceAsync(id, invoiceUpdateReqDto);
@@ -111,7 +111,7 @@ namespace API.Controllers
         }
 
         [HttpPut("{id:int}/confirm")]
-        [Authorize]
+        [Authorize(Roles = "SuperAdmin, Admin")]
         public async Task<ActionResult<ApiResponse<InvoiceComplexResDto>>> ConfirmInvoice(int id)
         {
             var response = await invoiceRepository.ConfirmInvoiceAsync(id);

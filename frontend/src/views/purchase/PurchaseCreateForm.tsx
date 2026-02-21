@@ -65,6 +65,7 @@ interface PurchaseCreateFormProps {
   onCancel: () => void;
   saving: boolean;
   canProceed: boolean;
+  canConfirmPayment?: boolean;
 }
 
 export default function PurchaseCreateForm({
@@ -96,6 +97,7 @@ export default function PurchaseCreateForm({
   onCancel,
   saving,
   canProceed,
+  canConfirmPayment = true,
 }: PurchaseCreateFormProps) {
   return (
     <div className="flex flex-col md:flex-row gap-4">
@@ -332,62 +334,64 @@ export default function PurchaseCreateForm({
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>PAGO</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="space-y-2">
-              <Label>Tipo de pago</Label>
-              <Select
-                value={paymentCondition}
-                onValueChange={(value) =>
-                  onPaymentConditionChange(value === "CREDIT" ? "CREDIT" : "CASH")
-                }
-              >
-                <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Seleccionar tipo" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="CASH">Contado</SelectItem>
-                  <SelectItem value="CREDIT">Crédito</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-2">
-              <Label>Método de pago</Label>
-              <Select
-                value={paymentType}
-                onValueChange={(value) => onPaymentTypeChange(value as PaymentTypeValue)}
-              >
-                <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Seleccionar método" />
-                </SelectTrigger>
-                <SelectContent>
-                  {PAYMENT_TYPE_OPTIONS.map((option) => (
-                    <SelectItem key={option.value} value={option.value}>
-                      {option.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            {paymentCondition === "CREDIT" && (
+        {canConfirmPayment && (
+          <Card>
+            <CardHeader>
+              <CardTitle>PAGO</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
               <div className="space-y-2">
-                <Label>Plazo (días)</Label>
-                <Input
-                  type="number"
-                  min={0}
-                  max={365}
-                  value={paymentTermDays}
-                  onChange={(e) => onPaymentTermDaysChange(Number(e.target.value))}
-                />
+                <Label>Tipo de pago</Label>
+                <Select
+                  value={paymentCondition}
+                  onValueChange={(value) =>
+                    onPaymentConditionChange(value === "CREDIT" ? "CREDIT" : "CASH")
+                  }
+                >
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Seleccionar tipo" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="CASH">Contado</SelectItem>
+                    <SelectItem value="CREDIT">Crédito</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
-            )}
-          </CardContent>
-        </Card>
+
+              <div className="space-y-2">
+                <Label>Método de pago</Label>
+                <Select
+                  value={paymentType}
+                  onValueChange={(value) => onPaymentTypeChange(value as PaymentTypeValue)}
+                >
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Seleccionar método" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {PAYMENT_TYPE_OPTIONS.map((option) => (
+                      <SelectItem key={option.value} value={option.value}>
+                        {option.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {paymentCondition === "CREDIT" && (
+                <div className="space-y-2">
+                  <Label>Plazo (días)</Label>
+                  <Input
+                    type="number"
+                    min={0}
+                    max={365}
+                    value={paymentTermDays}
+                    onChange={(e) => onPaymentTermDaysChange(Number(e.target.value))}
+                  />
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        )}
 
         <Card>
           <CardHeader>

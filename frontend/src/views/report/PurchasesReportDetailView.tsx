@@ -3,23 +3,23 @@ import { useParams } from "react-router-dom";
 
 import { useAuth } from "@/contexts/AuthContext";
 
-import { getSalesReportDetail } from "@/api/report";
+import { getPurchasesReportDetail } from "@/api/report";
 
-import type { SalesReportDetail } from "@/types/report.types";
+import type { PurchasesReportDetail } from "@/types/report.types";
 
 import { Card, CardContent } from "@/components/ui/card";
 
 import Loading from "@/components/shared/Loading";
 import AlertMessage from "@/components/shared/AlertMessage";
 
-import SalesReportDetailHeader from "./SalesReportDetailHeader";
-import SalesReportDetailInfo from "./SalesReportDetailInfo";
+import PurchasesReportDetailHeader from "./PurchasesReportDetailHeader";
+import PurchasesReportDetailInfo from "./PurchasesReportDetailInfo";
 
-export default function SalesReportDetailView() {
+export default function PurchasesReportDetailView() {
   const { id } = useParams<{ id: string }>();
   const { token } = useAuth();
 
-  const [detail, setDetail] = useState<SalesReportDetail | null>(null);
+  const [detail, setDetail] = useState<PurchasesReportDetail | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -28,7 +28,7 @@ export default function SalesReportDetailView() {
       setLoading(true);
       setError(null);
 
-      const response = await getSalesReportDetail(Number(id), token!);
+      const response = await getPurchasesReportDetail(Number(id), token!);
 
       setDetail(response.data);
     } catch (err: unknown) {
@@ -40,7 +40,7 @@ export default function SalesReportDetailView() {
 
   useEffect(() => {
     if (!id) {
-      setError("Venta no encontrada");
+      setError("Compra no encontrada");
       setLoading(false);
       return;
     }
@@ -57,7 +57,7 @@ export default function SalesReportDetailView() {
   return (
     <Card>
       <CardContent>
-        <SalesReportDetailHeader
+        <PurchasesReportDetailHeader
           id={detail?.id}
           sequential={detail?.sequential}
           token={token ?? undefined}
@@ -68,11 +68,11 @@ export default function SalesReportDetailView() {
           <AlertMessage message={error} variant="destructive" />
         ) : !detail ? (
           <AlertMessage
-            message="Los datos de la venta no se han cargado completamente"
+            message="Los datos de la compra no se han cargado completamente"
             variant="destructive"
           />
         ) : (
-          <SalesReportDetailInfo detail={detail} />
+          <PurchasesReportDetailInfo detail={detail} />
         )}
       </CardContent>
     </Card>

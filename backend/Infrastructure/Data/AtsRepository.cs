@@ -39,36 +39,6 @@ public class AtsRepository(
         return response;
     }
 
-    public async Task<ApiResponse<string>> GetAtsPurchasesXmlAsync(int year, int month)
-    {
-        var response = new ApiResponse<string>();
-
-        try
-        {
-            ValidateCurrentUser();
-            ValidatePeriod(year, month);
-
-            var business = await context.Businesses
-                .FirstOrDefaultAsync(b => b.Id == currentUser.BusinessId)
-                ?? throw new InvalidOperationException("Negocio no encontrado");
-
-            var purchases = await LoadPurchasesAsync(year, month);
-            var atsPurchases = purchases.Select(MapToAtsPurchase).ToList();
-
-            response.Success = true;
-            response.Message = "XML ATS generado correctamente";
-            response.Data = xmlBuilder.BuildAtsPurchasesXml(year, month, business, atsPurchases);
-        }
-        catch (Exception ex)
-        {
-            response.Success = false;
-            response.Message = "Error al generar el XML ATS";
-            response.Error = ex.Message;
-        }
-
-        return response;
-    }
-
     public async Task<ApiResponse<List<AtsSaleResDto>>> GetAtsSalesAsync(int year, int month)
     {
         var response = new ApiResponse<List<AtsSaleResDto>>();
@@ -95,7 +65,7 @@ public class AtsRepository(
         return response;
     }
 
-    public async Task<ApiResponse<string>> GetAtsSalesXmlAsync(int year, int month)
+    public async Task<ApiResponse<string>> GetAtsXmlAsync(int year, int month)
     {
         var response = new ApiResponse<string>();
 
@@ -108,17 +78,27 @@ public class AtsRepository(
                 .FirstOrDefaultAsync(b => b.Id == currentUser.BusinessId)
                 ?? throw new InvalidOperationException("Negocio no encontrado");
 
+            var establishment = await context.Establishments
+                .FirstOrDefaultAsync(e => e.Id == currentUser.EstablishmentId)
+                ?? throw new InvalidOperationException("Establecimiento no encontrado");
+
+            var purchases = await LoadPurchasesAsync(year, month);
+            var atsPurchases = purchases.Select(MapToAtsPurchase).ToList();
+
             var invoices = await LoadInvoicesAsync(year, month);
-            var sales = GroupInvoicesToAtsSales(invoices);
+            var atsSales = GroupInvoicesToAtsSales(invoices);
+
+            var totalVentas = atsSales.Sum(s => s.Total);
 
             response.Success = true;
-            response.Message = "XML ATS (ventas) generado correctamente";
-            response.Data = xmlBuilder.BuildAtsSalesXml(year, month, business, sales);
+            response.Message = "XML ATS generado correctamente";
+            response.Data = xmlBuilder.BuildAtsXml(year, month, business, establishment.Code,
+                atsPurchases, atsSales, totalVentas);
         }
         catch (Exception ex)
         {
             response.Success = false;
-            response.Message = "Error al generar el XML ATS (ventas)";
+            response.Message = "Error al generar el XML ATS";
             response.Error = ex.Message;
         }
 
@@ -205,6 +185,13 @@ public class AtsRepository(
             BaseImpExe = 0m,
             MontoIce = 0m,
             MontoIva = montoIva,
+            ValRetBien10 = 0m,
+            ValRetServ20 = 0m,
+            ValorRetBienes = 0m,
+            ValRetServ50 = 0m,
+            ValorRetServicios = 0m,
+            ValRetServ100 = 0m,
+            TotbasesImpReemb = 0m,
             Total = purchase.TotalPurchase,
             ProveedorRazonSocial = purchase.BusinessName
         };
@@ -219,9 +206,10 @@ public class AtsRepository(
                 TpIdCliente = i.Customer!.DocumentType,
                 IdCliente = i.Customer.Document,
                 TipoComprobante = i.ReceiptType,
-                TipoEmision = EmissionType.NORMAL,
+                TipoEmision = i.IsElectronic ? "E" : "F",
                 ParteRelVtas = "NO",
-                ClienteRazonSocial = i.Customer.Name
+                ClienteRazonSocial = i.Customer.Name,
+                PaymentMethod = i.PaymentMethod
             })
             .Select(group =>
             {
@@ -253,9 +241,11 @@ public class AtsRepository(
                     BaseNoGraIva = 0m,
                     BaseImponible = baseImponible,
                     BaseImpGrav = baseImpGrav,
-                    BaseImpExe = 0m,
                     MontoIce = 0m,
                     MontoIva = montoIva,
+                    ValorRetIva = 0m,
+                    ValorRetRenta = 0m,
+                    FormaPago = group.Key.PaymentMethod,
                     Total = total,
                     ClienteRazonSocial = group.Key.ClienteRazonSocial
                 };

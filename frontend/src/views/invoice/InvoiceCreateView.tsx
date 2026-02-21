@@ -44,6 +44,9 @@ export default function InvoiceCreateView() {
 
   const { token, user } = useAuth();
 
+  const isAdmin =
+    user?.roles?.includes("SuperAdmin") || user?.roles?.includes("Admin");
+
   const [savingDraft, setSavingDraft] = useState(false);
   const [savingAndContinue, setSavingAndContinue] = useState(false);
   const [savingPayment, setSavingPayment] = useState(false);
@@ -500,6 +503,7 @@ export default function InvoiceCreateView() {
             onContinue={handleContinueToPayment}
             savingDraft={savingDraft}
             savingAndContinuing={savingAndContinue}
+            canConfirmPayment={!!isAdmin}
           />
         ) : (
           <InvoiceCreatePayment

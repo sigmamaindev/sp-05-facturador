@@ -6,4 +6,6 @@ public interface IUserContextService
     int EstablishmentId { get; }
     int EmissionPointId { get; }
     int UserId { get; }
+    string Role { get; }
+    bool IsAdmin { get; }
 }

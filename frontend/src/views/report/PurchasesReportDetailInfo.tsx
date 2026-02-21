@@ -1,23 +1,23 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 
-import type { SalesReportDetail } from "@/types/report.types";
+import type { PurchasesReportDetail } from "@/types/report.types";
 
-interface SalesReportDetailInfoProps {
-  detail: SalesReportDetail;
+interface PurchasesReportDetailInfoProps {
+  detail: PurchasesReportDetail;
 }
 
-export default function SalesReportDetailInfo({
+export default function PurchasesReportDetailInfo({
   detail,
-}: SalesReportDetailInfoProps) {
-  const invoiceDate = new Date(detail.invoiceDate);
+}: PurchasesReportDetailInfoProps) {
+  const issueDate = new Date(detail.issueDate);
 
   const normalized = (detail.status ?? "").toUpperCase();
-  const statusVariant = normalized.includes("AUTORIZADO")
+  const statusVariant = normalized.includes("ISSUED")
     ? "default"
-    : normalized.includes("RECIBIDO")
+    : normalized.includes("DRAFT")
     ? "secondary"
-    : normalized.includes("RECHAZADO") || normalized.includes("DEVUELTO")
+    : normalized.includes("RECHAZADO") || normalized.includes("CANCELED")
     ? "destructive"
     : "outline";
 
@@ -30,7 +30,7 @@ export default function SalesReportDetailInfo({
           </CardHeader>
           <CardContent>
             <div className="max-h-[400px] overflow-auto rounded-md border">
-              <div className="min-w-[650px]">
+              <div className="min-w-[700px]">
                 <table className="w-full">
                   <thead className="sticky top-0 bg-background z-10">
                     <tr className="border-b">
@@ -40,11 +40,14 @@ export default function SalesReportDetailInfo({
                       <th className="text-left py-2 px-2 font-semibold">
                         U.M.
                       </th>
+                      <th className="text-left py-2 px-2 font-semibold">
+                        Bodega
+                      </th>
                       <th className="text-right py-2 px-2 font-semibold">
                         Cantidad
                       </th>
                       <th className="text-right py-2 px-2 font-semibold">
-                        P. Unitario
+                        C. Unitario
                       </th>
                       <th className="text-right py-2 px-2 font-semibold">
                         Desc.
@@ -65,17 +68,17 @@ export default function SalesReportDetailInfo({
                     {detail.items.length === 0 ? (
                       <tr>
                         <td
-                          colSpan={8}
+                          colSpan={9}
                           className="text-center py-4 text-muted-foreground"
                         >
                           No hay productos
                         </td>
                       </tr>
                     ) : (
-                      detail.items.map((item, index) => (
-                        <tr key={index} className="border-b last:border-b-0">
+                      detail.items.map((item) => (
+                        <tr key={item.id} className="border-b last:border-b-0">
                           <td className="py-2 px-2">
-                            <div className="max-w-[220px] leading-tight">
+                            <div className="max-w-[200px] leading-tight">
                               <div className="text-xs text-muted-foreground whitespace-nowrap">
                                 {item.productCode}
                               </div>
@@ -85,11 +88,14 @@ export default function SalesReportDetailInfo({
                           <td className="py-2 px-2 text-sm text-muted-foreground whitespace-nowrap">
                             {item.unitMeasureName}
                           </td>
+                          <td className="py-2 px-2 text-sm text-muted-foreground whitespace-nowrap">
+                            {item.warehouseName}
+                          </td>
                           <td className="py-2 px-2 text-right whitespace-nowrap">
                             {Number(item.quantity).toFixed(2)}
                           </td>
                           <td className="py-2 px-2 text-right whitespace-nowrap">
-                            {Number(item.unitPrice).toFixed(2)}
+                            {Number(item.unitCost).toFixed(2)}
                           </td>
                           <td className="py-2 px-2 text-right whitespace-nowrap">
                             {Number(item.discount).toFixed(2)}
@@ -123,7 +129,7 @@ export default function SalesReportDetailInfo({
             <div className="flex justify-between gap-2">
               <span>Fecha:</span>
               <span>
-                {invoiceDate.toLocaleDateString("es-EC", {
+                {issueDate.toLocaleDateString("es-EC", {
                   year: "numeric",
                   month: "2-digit",
                   day: "2-digit",
@@ -140,27 +146,22 @@ export default function SalesReportDetailInfo({
               <span>Estado:</span>
               <Badge variant={statusVariant}>{detail.status}</Badge>
             </div>
-
-            <div className="flex justify-between gap-2">
-              <span>Plazo crédito:</span>
-              <span>{detail.paymentTermDays} días</span>
-            </div>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader>
-            <CardTitle>CLIENTE</CardTitle>
+            <CardTitle>PROVEEDOR</CardTitle>
           </CardHeader>
           <CardContent className="space-y-1 text-sm">
-            <p className="font-medium">{detail.customerName}</p>
-            <p className="text-muted-foreground">{detail.customerDocument}</p>
+            <p className="font-medium">{detail.supplierName}</p>
+            <p className="text-muted-foreground">{detail.supplierDocument}</p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader>
-            <CardTitle>VENDEDOR</CardTitle>
+            <CardTitle>COMPRADOR</CardTitle>
           </CardHeader>
           <CardContent className="text-sm">
             <p className="text-muted-foreground">{detail.userFullName}</p>
@@ -190,7 +191,7 @@ export default function SalesReportDetailInfo({
             </div>
             <div className="flex justify-between font-semibold text-base border-t pt-2">
               <span>Total:</span>
-              <span>${Number(detail.totalInvoice).toFixed(2)}</span>
+              <span>${Number(detail.totalPurchase).toFixed(2)}</span>
             </div>
           </CardContent>
         </Card>

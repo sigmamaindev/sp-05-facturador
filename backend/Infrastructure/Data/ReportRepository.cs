@@ -33,6 +33,8 @@ public class ReportRepository(
             var query = context.Invoices
                 .Include(i => i.Customer)
                 .Include(i => i.User)
+                .Include(i => i.Establishment)
+                .Include(i => i.EmissionPoint)
                 .Where(i =>
                     i.BusinessId == currentUser.BusinessId &&
                     i.EstablishmentId == currentUser.EstablishmentId &&
@@ -75,7 +77,7 @@ public class ReportRepository(
                 {
                     Id = i.Id,
                     InvoiceDate = i.InvoiceDate,
-                    Sequential = i.Sequential,
+                    Sequential = (i.Establishment != null ? i.Establishment.Code : "000") + "-" + (i.EmissionPoint != null ? i.EmissionPoint.Code : "000") + "-" + i.Sequential,
                     PaymentTermDays = i.PaymentTermDays,
                     UserFullName = i.User != null ? i.User.FullName : string.Empty,
                     CustomerName = i.Customer != null ? i.Customer.Name : string.Empty,
@@ -122,6 +124,8 @@ public class ReportRepository(
             var invoice = await context.Invoices
                 .Include(i => i.Customer)
                 .Include(i => i.User)
+                .Include(i => i.Establishment)
+                .Include(i => i.EmissionPoint)
                 .Include(i => i.InvoiceDetails)
                     .ThenInclude(d => d.Product)
                 .Include(i => i.InvoiceDetails)
@@ -148,7 +152,7 @@ public class ReportRepository(
             {
                 Id = invoice.Id,
                 InvoiceDate = invoice.InvoiceDate,
-                Sequential = invoice.Sequential,
+                Sequential = (invoice.Establishment?.Code ?? "000") + "-" + (invoice.EmissionPoint?.Code ?? "000") + "-" + invoice.Sequential,
                 PaymentTermDays = invoice.PaymentTermDays,
                 UserFullName = invoice.User?.FullName ?? string.Empty,
                 CustomerName = invoice.Customer?.Name ?? string.Empty,
@@ -179,6 +183,171 @@ public class ReportRepository(
         {
             response.Success = false;
             response.Message = "Error al obtener el detalle de la venta";
+            response.Error = ex.Message;
+        }
+
+        return response;
+    }
+
+    // ─── Compras ────────────────────────────────────────────────────────────
+
+    public async Task<ApiResponse<List<PurchasesReportResDto>>> GetPurchasesReportAsync(
+        string? keyword,
+        DateTime? dateFrom,
+        DateTime? dateTo,
+        int page,
+        int limit)
+    {
+        var response = new ApiResponse<List<PurchasesReportResDto>>();
+
+        try
+        {
+            if (currentUser.BusinessId == 0)
+            {
+                response.Success = false;
+                response.Message = "Negocio no encontrado";
+                response.Error = "No existe un negocio asociado a este usuario";
+                return response;
+            }
+
+            var query = context.Purchases
+                .Include(p => p.Supplier)
+                .Include(p => p.User)
+                .Where(p => p.BusinessId == currentUser.BusinessId)
+                .AsQueryable();
+
+            if (!string.IsNullOrWhiteSpace(keyword))
+            {
+                var kw = keyword.Trim();
+                query = query.Where(p =>
+                    EF.Functions.ILike(p.Supplier!.BusinessName, $"%{kw}%") ||
+                    EF.Functions.ILike(p.Supplier!.Document, $"%{kw}%"));
+            }
+
+            if (dateFrom.HasValue)
+            {
+                query = query.Where(p => p.IssueDate >= dateFrom.Value);
+            }
+
+            if (dateTo.HasValue)
+            {
+                var endOfDay = dateTo.Value.Date.AddDays(1).AddTicks(-1);
+                query = query.Where(p => p.IssueDate <= endOfDay);
+            }
+
+            var total = await query.CountAsync();
+            var skip = (page - 1) * limit;
+
+            var purchases = await query
+                .OrderByDescending(p => p.IssueDate)
+                .Skip(skip)
+                .Take(limit)
+                .Select(p => new PurchasesReportResDto
+                {
+                    Id = p.Id,
+                    IssueDate = p.IssueDate,
+                    Sequential = p.EstablishmentCode + "-" + p.EmissionPointCode + "-" + p.Sequential,
+                    UserFullName = p.User != null ? p.User.FullName : string.Empty,
+                    SupplierName = p.Supplier != null ? p.Supplier.BusinessName : string.Empty,
+                    SupplierDocument = p.Supplier != null ? p.Supplier.Document : string.Empty,
+                    TotalPurchase = p.TotalPurchase,
+                    Status = p.Status
+                })
+                .ToListAsync();
+
+            response.Success = true;
+            response.Message = "Reporte de compras obtenido correctamente";
+            response.Data = purchases;
+            response.Pagination = new Pagination
+            {
+                Total = total,
+                Page = page,
+                Limit = limit
+            };
+        }
+        catch (Exception ex)
+        {
+            response.Success = false;
+            response.Message = "Error al obtener el reporte de compras";
+            response.Error = ex.Message;
+        }
+
+        return response;
+    }
+
+    public async Task<ApiResponse<PurchasesReportDetailResDto>> GetPurchasesReportDetailAsync(int purchaseId)
+    {
+        var response = new ApiResponse<PurchasesReportDetailResDto>();
+
+        try
+        {
+            if (currentUser.BusinessId == 0)
+            {
+                response.Success = false;
+                response.Message = "Negocio no encontrado";
+                response.Error = "No existe un negocio asociado a este usuario";
+                return response;
+            }
+
+            var purchase = await context.Purchases
+                .Include(p => p.Supplier)
+                .Include(p => p.User)
+                .Include(p => p.PurchaseDetails)
+                    .ThenInclude(d => d.Product)
+                .Include(p => p.PurchaseDetails)
+                    .ThenInclude(d => d.UnitMeasure)
+                .Include(p => p.PurchaseDetails)
+                    .ThenInclude(d => d.Warehouse)
+                .Where(p =>
+                    p.Id == purchaseId &&
+                    p.BusinessId == currentUser.BusinessId)
+                .FirstOrDefaultAsync();
+
+            if (purchase == null)
+            {
+                response.Success = false;
+                response.Message = "Compra no encontrada";
+                response.Error = "No existe una compra con el ID proporcionado";
+                return response;
+            }
+
+            response.Success = true;
+            response.Message = "Detalle de compra obtenido correctamente";
+            response.Data = new PurchasesReportDetailResDto
+            {
+                Id = purchase.Id,
+                IssueDate = purchase.IssueDate,
+                Sequential = purchase.EstablishmentCode + "-" + purchase.EmissionPointCode + "-" + purchase.Sequential,
+                UserFullName = purchase.User?.FullName ?? string.Empty,
+                SupplierName = purchase.Supplier?.BusinessName ?? string.Empty,
+                SupplierDocument = purchase.Supplier?.Document ?? string.Empty,
+                SubtotalWithoutTaxes = purchase.SubtotalWithoutTaxes,
+                SubtotalWithTaxes = purchase.SubtotalWithTaxes,
+                DiscountTotal = purchase.DiscountTotal,
+                TaxTotal = purchase.TaxTotal,
+                TotalPurchase = purchase.TotalPurchase,
+                Status = purchase.Status,
+                Items = purchase.PurchaseDetails.Select(d => new PurchasesReportDetailItemResDto
+                {
+                    Id = d.Id,
+                    ProductCode = d.Product?.Sku ?? string.Empty,
+                    ProductName = d.Product?.Name ?? string.Empty,
+                    UnitMeasureName = d.UnitMeasure?.Name ?? string.Empty,
+                    WarehouseName = d.Warehouse?.Name ?? string.Empty,
+                    Quantity = d.Quantity,
+                    UnitCost = d.UnitCost,
+                    Discount = d.Discount,
+                    TaxRate = d.TaxRate,
+                    TaxValue = d.TaxValue,
+                    Subtotal = d.Subtotal,
+                    Total = d.Total
+                }).ToList()
+            };
+        }
+        catch (Exception ex)
+        {
+            response.Success = false;
+            response.Message = "Error al obtener el detalle de la compra";
             response.Error = ex.Message;
         }
 

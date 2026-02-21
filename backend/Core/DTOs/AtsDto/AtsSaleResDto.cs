@@ -11,10 +11,11 @@ public class AtsSaleResDto
     public decimal BaseNoGraIva { get; set; }
     public decimal BaseImponible { get; set; }
     public decimal BaseImpGrav { get; set; }
-    public decimal BaseImpExe { get; set; }
-    public decimal MontoIce { get; set; }
     public decimal MontoIva { get; set; }
+    public decimal MontoIce { get; set; }
+    public decimal ValorRetIva { get; set; }
+    public decimal ValorRetRenta { get; set; }
+    public string? FormaPago { get; set; }
     public decimal Total { get; set; }
     public string ClienteRazonSocial { get; set; } = string.Empty;
 }
-

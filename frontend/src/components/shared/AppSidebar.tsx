@@ -51,9 +51,22 @@ const data = {
       { to: "/puntos-emision", label: "Puntos de emisión", icon: List },
     ],
   },
-  product: { to: "/productos", label: "Productos", icon: List },
-  kardex: { to: "/kardex", label: "Kardex", icon: ClipboardList },
-  salesReport: { to: "/reportes/ventas", label: "Reporte Ventas", icon: BarChart2 },
+  inventory: {
+    label: "Inventario",
+    icon: ClipboardList,
+    items: [
+      { to: "/productos", label: "Productos", icon: List },
+      { to: "/kardex", label: "Kardex", icon: ClipboardList },
+    ],
+  },
+  reports: {
+    label: "Reporte",
+    icon: BarChart2,
+    items: [
+      { to: "/reportes/ventas", label: "Venta", icon: BarChart2 },
+      { to: "/reportes/compras", label: "Compra", icon: BarChart2 },
+    ],
+  },
   invoices: {
     label: "Facturas",
     icon: DollarSign,
@@ -91,7 +104,7 @@ export default function AppSidebar() {
   const { setOpenMobile } = useSidebar();
   const { pathname } = useLocation();
   const [openNav, setOpenNav] = useState<
-    "organization" | "invoices" | "purchases" | null
+    "organization" | "invoices" | "purchases" | "inventory" | "reports" | null
   >(null);
 
   const { logout, user } = useAuth();
@@ -146,40 +159,17 @@ export default function AppSidebar() {
               open={openNav === "purchases"}
               onOpenChange={(open) => setOpenNav(open ? "purchases" : null)}
             />
+            <NavFinance
+              items={data.inventory}
+              open={openNav === "inventory"}
+              onOpenChange={(open) => setOpenNav(open ? "inventory" : null)}
+            />
+            <NavFinance
+              items={data.reports}
+              open={openNav === "reports"}
+              onOpenChange={(open) => setOpenNav(open ? "reports" : null)}
+            />
             <SidebarMenu>
-              <SidebarMenuItem key={data.product.to}>
-                <SidebarMenuButton
-                  asChild
-                  isActive={isPathActive(pathname, data.product.to)}
-                >
-                  <Link to={data.product.to}>
-                    <data.product.icon />
-                    <span>{data.product.label}</span>
-                  </Link>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-              <SidebarMenuItem key={data.kardex.to}>
-                <SidebarMenuButton
-                  asChild
-                  isActive={isPathActive(pathname, data.kardex.to)}
-                >
-                  <Link to={data.kardex.to}>
-                    <data.kardex.icon />
-                    <span>{data.kardex.label}</span>
-                  </Link>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-              <SidebarMenuItem key={data.salesReport.to}>
-                <SidebarMenuButton
-                  asChild
-                  isActive={isPathActive(pathname, data.salesReport.to)}
-                >
-                  <Link to={data.salesReport.to}>
-                    <data.salesReport.icon />
-                    <span>{data.salesReport.label}</span>
-                  </Link>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
               {showAts && (
                 <SidebarMenuItem key="/ats">
                   <SidebarMenuButton

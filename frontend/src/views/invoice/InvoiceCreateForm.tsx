@@ -45,6 +45,7 @@ interface InvoiceCreateFormProps {
   onContinue: () => void;
   savingDraft: boolean;
   savingAndContinuing: boolean;
+  canConfirmPayment?: boolean;
 }
 
 export default function InvoiceCreateForm({
@@ -72,6 +73,7 @@ export default function InvoiceCreateForm({
   onContinue,
   savingDraft,
   savingAndContinuing,
+  canConfirmPayment = true,
 }: InvoiceCreateFormProps) {
   const canProceed = customer !== null && products.length > 0;
 
@@ -329,19 +331,21 @@ export default function InvoiceCreateForm({
             <div className="flex flex-col gap-2 mt-4">
               <Button
                 type="button"
-                variant="outline"
+                variant={canConfirmPayment ? "outline" : "default"}
                 onClick={onSaveDraft}
                 disabled={savingDraft || !canProceed}
               >
                 {savingDraft ? "Guardando borrador..." : "Guardar borrador"}
               </Button>
-              <Button
-                type="button"
-                onClick={onContinue}
-                disabled={savingAndContinuing || !canProceed}
-              >
-                {savingAndContinuing ? "Cargando pago..." : "Método de pago"}
-              </Button>
+              {canConfirmPayment && (
+                <Button
+                  type="button"
+                  onClick={onContinue}
+                  disabled={savingAndContinuing || !canProceed}
+                >
+                  {savingAndContinuing ? "Cargando pago..." : "Método de pago"}
+                </Button>
+              )}
             </div>
           </CardContent>
         </Card>

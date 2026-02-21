@@ -25,22 +25,6 @@ public class AtsController(IAtsRepository atsRepository) : ControllerBase
         return Ok(response);
     }
 
-    [HttpGet("purchases/xml")]
-    [Authorize]
-    public async Task<IActionResult> GetAtsPurchasesXml([FromQuery] int year, [FromQuery] int month)
-    {
-        var response = await atsRepository.GetAtsPurchasesXmlAsync(year, month);
-
-        if (!response.Success)
-        {
-            return BadRequest(response);
-        }
-
-        var xml = response.Data ?? string.Empty;
-        var fileName = $"ATS_Compras_{year}_{month:D2}.xml";
-        return File(Encoding.UTF8.GetBytes(xml), "application/xml", fileName);
-    }
-
     [HttpGet("sales")]
     [Authorize]
     public async Task<ActionResult<ApiResponse<List<AtsSaleResDto>>>> GetAtsSales([FromQuery] int year, [FromQuery] int month)
@@ -55,11 +39,11 @@ public class AtsController(IAtsRepository atsRepository) : ControllerBase
         return Ok(response);
     }
 
-    [HttpGet("sales/xml")]
+    [HttpGet("xml")]
     [Authorize]
-    public async Task<IActionResult> GetAtsSalesXml([FromQuery] int year, [FromQuery] int month)
+    public async Task<IActionResult> GetAtsXml([FromQuery] int year, [FromQuery] int month)
     {
-        var response = await atsRepository.GetAtsSalesXmlAsync(year, month);
+        var response = await atsRepository.GetAtsXmlAsync(year, month);
 
         if (!response.Success)
         {
@@ -67,7 +51,7 @@ public class AtsController(IAtsRepository atsRepository) : ControllerBase
         }
 
         var xml = response.Data ?? string.Empty;
-        var fileName = $"ATS_Ventas_{year}_{month:D2}.xml";
+        var fileName = $"{month:D2}{year}.xml";
         return File(Encoding.UTF8.GetBytes(xml), "application/xml", fileName);
     }
 }

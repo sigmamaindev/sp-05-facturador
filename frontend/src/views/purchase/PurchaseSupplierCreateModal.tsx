@@ -1,8 +1,10 @@
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
+import { Loader2, Search } from "lucide-react";
 
 import { useAuth } from "@/contexts/AuthContext";
+import { useDocumentLookup } from "@/hooks/useDocumentLookup";
 
 import { createSupplier } from "@/api/supplier";
 
@@ -32,10 +34,14 @@ export default function PurchaseSupplierCreateModal({
   const { token } = useAuth();
   const [savingSupplier, setSavingSupplier] = useState(false);
 
+  const { lookup, isSearching } = useDocumentLookup(token);
+
   const {
     register,
     handleSubmit,
     reset,
+    setValue,
+    getValues,
     formState: { errors },
   } = useForm<CreateSupplierForm>({
     defaultValues: {
@@ -78,12 +84,44 @@ export default function PurchaseSupplierCreateModal({
         >
           <div className="grid gap-2">
             <Label htmlFor="document">Documento</Label>
-            <Input
-              id="document"
-              type="text"
-              placeholder="Documento de identidad"
-              {...register("document", { required: "El documento es obligatorio" })}
-            />
+            <div className="flex gap-2">
+              <Input
+                id="document"
+                type="text"
+                placeholder="Documento de identidad"
+                {...register("document", {
+                  required: "El documento es obligatorio",
+                  onBlur: async (e) => {
+                    const doc = e.target.value;
+                    if (doc && doc.length >= 10) {
+                      const result = await lookup(doc);
+                      if (result) {
+                        setValue("businessName", result.name);
+                        setValue("document", result.document);
+                      }
+                    }
+                  },
+                })}
+              />
+              <Button
+                type="button"
+                variant="outline"
+                disabled={isSearching}
+                onClick={async () => {
+                  const result = await lookup(getValues("document"));
+                  if (result) {
+                    setValue("businessName", result.name);
+                    setValue("document", result.document);
+                  }
+                }}
+              >
+                {isSearching ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <Search className="h-4 w-4" />
+                )}
+              </Button>
+            </div>
             {errors.document && (
               <p className="text-red-500 text-sm">{errors.document.message}</p>
             )}

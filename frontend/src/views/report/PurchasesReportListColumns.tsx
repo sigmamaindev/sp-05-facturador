@@ -1,6 +1,6 @@
 import type { ColumnDef } from "@tanstack/react-table";
 
-import type { SalesReport } from "@/types/report.types";
+import type { PurchasesReport } from "@/types/report.types";
 
 import { Badge } from "@/components/ui/badge";
 import RowActions from "@/components/shared/RowActions";
@@ -15,13 +15,13 @@ function formatDate(dateValue: string) {
   });
 }
 
-export const columns: ColumnDef<SalesReport>[] = [
+export const columns: ColumnDef<PurchasesReport>[] = [
   {
-    accessorKey: "invoiceDate",
+    accessorKey: "issueDate",
     header: "Fecha",
     cell: ({ row }) => (
       <span className="whitespace-nowrap">
-        {formatDate(row.original.invoiceDate)}
+        {formatDate(row.original.issueDate)}
       </span>
     ),
   },
@@ -39,11 +39,11 @@ export const columns: ColumnDef<SalesReport>[] = [
       const status = row.original.status ?? "Sin estado";
       const normalized = status.toUpperCase();
 
-      const variant = normalized.includes("AUTORIZADO")
+      const variant = normalized.includes("ISSUED")
         ? "default"
-        : normalized.includes("RECIBIDO")
+        : normalized.includes("DRAFT")
         ? "secondary"
-        : normalized.includes("RECHAZADO") || normalized.includes("DEVUELTO")
+        : normalized.includes("RECHAZADO") || normalized.includes("CANCELED")
         ? "destructive"
         : "outline";
 
@@ -51,35 +51,30 @@ export const columns: ColumnDef<SalesReport>[] = [
     },
   },
   {
-    id: "customer",
-    header: "Cliente",
-    accessorFn: (row) => `${row.customerDocument} ${row.customerName}`,
+    id: "supplier",
+    header: "Proveedor",
+    accessorFn: (row) => `${row.supplierDocument} ${row.supplierName}`,
     cell: ({ row }) => (
       <div className="flex flex-col">
-        <span className="font-semibold">{row.original.customerDocument}</span>
-        <span className="text-muted-foreground">{row.original.customerName}</span>
+        <span className="font-semibold">{row.original.supplierDocument}</span>
+        <span className="text-muted-foreground">{row.original.supplierName}</span>
       </div>
     ),
   },
   {
     accessorKey: "userFullName",
-    header: "Vendedor",
+    header: "Comprador",
     cell: ({ row }) => (
       <span className="text-muted-foreground">{row.original.userFullName}</span>
     ),
   },
   {
-    accessorKey: "paymentTermDays",
-    header: () => <div className="text-right">Plazo (días)</div>,
-    cell: ({ row }) => (
-      <p className="text-right">{row.original.paymentTermDays}</p>
-    ),
-  },
-  {
-    accessorKey: "totalInvoice",
+    accessorKey: "totalPurchase",
     header: () => <div className="text-right">Total</div>,
     cell: ({ row }) => (
-      <p className="text-right">{Number(row.original.totalInvoice).toFixed(2)}</p>
+      <p className="text-right">
+        {Number(row.original.totalPurchase).toFixed(2)}
+      </p>
     ),
   },
   {
@@ -91,7 +86,7 @@ export const columns: ColumnDef<SalesReport>[] = [
           actions={[
             {
               label: "Ver detalle",
-              to: `/reportes/ventas/${row.original.id}`,
+              to: `/reportes/compras/${row.original.id}`,
             },
           ]}
         />

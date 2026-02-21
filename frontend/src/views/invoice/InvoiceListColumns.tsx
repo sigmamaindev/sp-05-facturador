@@ -1,7 +1,7 @@
 import { Link } from "react-router-dom";
 import type { ColumnDef } from "@tanstack/react-table";
 
-import { downloadInvoicePdf } from "@/api/invoice";
+import { confirmInvoice, downloadInvoicePdf } from "@/api/invoice";
 import type { Invoice } from "@/types/invoice.type";
 
 import { useAuth } from "@/contexts/AuthContext";
@@ -26,9 +26,9 @@ import {
 
 import { cn } from "@/lib/utils";
 
-import { AlertCircleIcon, Eye, FileDown, Pencil } from "lucide-react";
+import { AlertCircleIcon, CheckCircle, Eye, FileDown, Pencil } from "lucide-react";
 
-export const columns: ColumnDef<Invoice>[] = [
+export const getColumns = (onRefresh?: () => void): ColumnDef<Invoice>[] => [
   {
     accessorKey: "invoiceDate",
     header: "Fecha",
@@ -140,6 +140,20 @@ export const columns: ColumnDef<Invoice>[] = [
       const isPending =
         normalizedStatus.includes("PENDIENTE") ||
         normalizedStatus.includes("PENDING");
+
+      const isDraft =
+        normalizedStatus.includes("BORRADOR") ||
+        normalizedStatus.includes("DRAFT");
+
+      const handleConfirm = async () => {
+        if (!token) return;
+        try {
+          await confirmInvoice(invoice.id, token);
+          onRefresh?.();
+        } catch (error: any) {
+          alert(error.message ?? "No se pudo confirmar la factura");
+        }
+      };
 
       const handlePdfDownload = async () => {
         if (!token) return;
@@ -260,6 +274,27 @@ export const columns: ColumnDef<Invoice>[] = [
               </TooltipTrigger>
               <TooltipContent side="top" sideOffset={6}>
                 Editar
+              </TooltipContent>
+            </Tooltip>
+          ) : null}
+
+          {hasPermission && isDraft ? (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <button
+                  type="button"
+                  onClick={handleConfirm}
+                  aria-label="Confirmar factura"
+                  className={cn(
+                    buttonVariants({ size: "icon-sm" }),
+                    "bg-amber-600 text-white hover:bg-amber-700 dark:bg-amber-500 dark:hover:bg-amber-600"
+                  )}
+                >
+                  <CheckCircle className="size-4 text-white" />
+                </button>
+              </TooltipTrigger>
+              <TooltipContent side="top" sideOffset={6}>
+                Confirmar
               </TooltipContent>
             </Tooltip>
           ) : null}

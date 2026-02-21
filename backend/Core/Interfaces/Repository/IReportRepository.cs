@@ -14,4 +14,13 @@ public interface IReportRepository
         int limit);
 
     Task<ApiResponse<SalesReportDetailResDto>> GetSalesReportDetailAsync(int invoiceId);
+
+    Task<ApiResponse<List<PurchasesReportResDto>>> GetPurchasesReportAsync(
+        string? keyword,
+        DateTime? dateFrom,
+        DateTime? dateTo,
+        int page,
+        int limit);
+
+    Task<ApiResponse<PurchasesReportDetailResDto>> GetPurchasesReportDetailAsync(int purchaseId);
 }

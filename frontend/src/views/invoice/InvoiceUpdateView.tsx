@@ -42,7 +42,10 @@ export default function InvoiceUpdateView() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
 
-  const { token } = useAuth();
+  const { token, user } = useAuth();
+
+  const isAdmin =
+    user?.roles?.includes("SuperAdmin") || user?.roles?.includes("Admin");
 
   const [invoice, setInvoice] = useState<Invoice | null>(null);
   const [savingDraft, setSavingDraft] = useState(false);
@@ -520,6 +523,7 @@ export default function InvoiceUpdateView() {
               onContinue={handleContinueToPayment}
               savingDraft={savingDraft}
                 savingAndContinuing={savingAndContinue}
+                canConfirmPayment={!!isAdmin}
               />
             ) : (
               <InvoicePaymentStep

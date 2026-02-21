@@ -39,7 +39,7 @@ public class PurchaseController(IPurchaseRepository purchaseRepository) : Contro
     }
 
     [HttpPost]
-    [Authorize(Roles = "SuperAdmin, Admin")]
+    [Authorize]
     public async Task<ActionResult<ApiResponse<PurchaseSimpleResDto>>> CreatePurchase([FromBody] PurchaseCreateReqDto purchaseCreateReqDto)
     {
         var response = await purchaseRepository.CreatePurchaseAsync(purchaseCreateReqDto);

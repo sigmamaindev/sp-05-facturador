@@ -14,6 +14,10 @@ public class UserContextService(IHttpContextAccessor http) : IUserContextService
 
     public int UserId => GetContextValue(ClaimTypes.NameIdentifier);
 
+    public string Role => http.HttpContext?.User.FindFirst(ClaimTypes.Role)?.Value ?? "";
+
+    public bool IsAdmin => Role == "SuperAdmin" || Role == "Admin";
+
     private int GetContextValue(string type)
     {
         var val = http.HttpContext?.User.FindFirst(type)?.Value;

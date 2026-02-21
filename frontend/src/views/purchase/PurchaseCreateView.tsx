@@ -46,6 +46,9 @@ export default function PurchaseCreateView() {
 
   const { token, user } = useAuth();
 
+  const isAdmin =
+    user?.roles?.includes("SuperAdmin") || user?.roles?.includes("Admin");
+
   const [saving, setSaving] = useState(false);
   const [openSupplierModal, setOpenSupplierModal] = useState(false);
   const [supplier, setSupplier] = useState<PurchaseSupplier | null>(null);
@@ -702,6 +705,7 @@ export default function PurchaseCreateView() {
           onCancel={() => navigate("/compras")}
           saving={saving}
           canProceed={canProceed}
+          canConfirmPayment={!!isAdmin}
         />
       </CardContent>
     </Card>
