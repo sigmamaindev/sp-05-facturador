@@ -51,4 +51,18 @@ public class PurchaseController(IPurchaseRepository purchaseRepository) : Contro
 
         return Ok(response);
     }
+
+    [HttpPut("{id:int}")]
+    [Authorize(Roles = "SuperAdmin, Admin")]
+    public async Task<ActionResult<ApiResponse<PurchaseComplexResDto>>> UpdatePurchase(int id, [FromBody] PurchaseUpdateReqDto purchaseUpdateReqDto)
+    {
+        var response = await purchaseRepository.UpdatePurchaseAsync(id, purchaseUpdateReqDto);
+
+        if (!response.Success)
+        {
+            return BadRequest(response);
+        }
+
+        return Ok(response);
+    }
 }

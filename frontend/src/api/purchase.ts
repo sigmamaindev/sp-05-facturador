@@ -4,9 +4,9 @@ import api from "@/utils/axios";
 
 import type { ApiResponseList, ApiResponseSingle } from "@/types/api.types";
 import type {
-  CreatePurchaseForm,
   CreatePurchasePayload,
   Purchase,
+  UpdatePurchasePayload,
 } from "@/types/purchase.type";
 
 export async function getPurchases(
@@ -83,7 +83,7 @@ export async function createPurchase(
 
 export async function updatePurchase(
   id: number,
-  body: CreatePurchaseForm,
+  body: UpdatePurchasePayload,
   token: string
 ): Promise<ApiResponseSingle<Purchase>> {
   try {

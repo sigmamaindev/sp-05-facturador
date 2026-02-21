@@ -62,6 +62,7 @@ builder.Services.AddScoped<ISupplierRepository, SupplierRepository>();
 builder.Services.AddScoped<ICertificateRepository, CertificateRepository>();
 builder.Services.AddScoped<IPurchaseRepository, PurchaseRepository>();
 builder.Services.AddScoped<IAtsRepository, AtsRepository>();
+builder.Services.AddScoped<IReportRepository, ReportRepository>();
 // Invoice Services
 builder.Services.AddScoped<IInvoiceXmlBuilderService, InvoiceXmlBuilderService>();
 builder.Services.AddScoped<IAtsXmlBuilderService, AtsXmlBuilderService>();

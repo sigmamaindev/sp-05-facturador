@@ -17,6 +17,7 @@ import {
   Edit,
   ClipboardList,
   FileText,
+  BarChart2,
 } from "lucide-react";
 
 import {
@@ -52,6 +53,7 @@ const data = {
   },
   product: { to: "/productos", label: "Productos", icon: List },
   kardex: { to: "/kardex", label: "Kardex", icon: ClipboardList },
+  salesReport: { to: "/reportes/ventas", label: "Reporte Ventas", icon: BarChart2 },
   invoices: {
     label: "Facturas",
     icon: DollarSign,
@@ -164,6 +166,17 @@ export default function AppSidebar() {
                   <Link to={data.kardex.to}>
                     <data.kardex.icon />
                     <span>{data.kardex.label}</span>
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+              <SidebarMenuItem key={data.salesReport.to}>
+                <SidebarMenuButton
+                  asChild
+                  isActive={isPathActive(pathname, data.salesReport.to)}
+                >
+                  <Link to={data.salesReport.to}>
+                    <data.salesReport.icon />
+                    <span>{data.salesReport.label}</span>
                   </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>

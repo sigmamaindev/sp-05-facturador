@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Core.Constants;
 using Core.Entities;
 using Core.DTOs;
 using Core.DTOs.PurchaseDto;
@@ -178,6 +179,99 @@ public class PurchaseRepository(
         {
             response.Success = false;
             response.Message = "Error al obtener las compras";
+            response.Error = ex.Message;
+        }
+
+        return response;
+    }
+
+    public async Task<ApiResponse<PurchaseComplexResDto>> UpdatePurchaseAsync(int purchaseId, PurchaseUpdateReqDto purchaseUpdateReqDto)
+    {
+        var response = new ApiResponse<PurchaseComplexResDto>();
+
+        using var transaction = await context.Database.BeginTransactionAsync();
+
+        try
+        {
+            ValidateCurrentUser();
+
+            var existingPurchase = await edition.CheckPurchaseExistenceAsync(purchaseId, currentUser.BusinessId);
+
+            if (existingPurchase == null)
+            {
+                response.Success = false;
+                response.Message = "Compra no encontrada";
+                response.Error = "No existe una compra con el ID especificado";
+
+                return response;
+            }
+
+            var supplier = await validate.ValidateSupplierAsync(purchaseUpdateReqDto.SupplierId);
+
+            existingPurchase.SupplierId = supplier.Id;
+            existingPurchase.BusinessName = supplier.BusinessName;
+            existingPurchase.Name = supplier.BusinessName;
+            existingPurchase.Document = supplier.Document;
+            existingPurchase.AccessKey = purchaseUpdateReqDto.AccessKey;
+            existingPurchase.ReceiptType = purchaseUpdateReqDto.ReceiptType;
+            existingPurchase.SupportingCode = purchaseUpdateReqDto.SupportingCode;
+            existingPurchase.SupportingDocumentCode = purchaseUpdateReqDto.SupportingDocumentCode;
+            existingPurchase.EstablishmentCode = purchaseUpdateReqDto.EstablishmentCode;
+            existingPurchase.EmissionPointCode = purchaseUpdateReqDto.EmissionPointCode;
+            existingPurchase.Sequential = purchaseUpdateReqDto.Sequential;
+            existingPurchase.MainAddress = purchaseUpdateReqDto.MainAddress;
+            existingPurchase.IssueDate = purchaseUpdateReqDto.IssueDate;
+            existingPurchase.EstablishmentAddress = purchaseUpdateReqDto.EstablishmentAddress;
+            existingPurchase.SpecialTaxpayer = purchaseUpdateReqDto.SpecialTaxpayer;
+            existingPurchase.MandatoryAccounting = purchaseUpdateReqDto.MandatoryAccounting;
+            existingPurchase.TypeDocumentSubjectDetained = purchaseUpdateReqDto.TypeDocumentSubjectDetained;
+            existingPurchase.TypeSubjectDetained = purchaseUpdateReqDto.TypeSubjectDetained;
+            existingPurchase.RelatedParty = purchaseUpdateReqDto.RelatedParty;
+            existingPurchase.BusinessNameSubjectDetained = purchaseUpdateReqDto.BusinessNameSubjectDetained;
+            existingPurchase.DocumentSubjectDetained = purchaseUpdateReqDto.DocumentSubjectDetained;
+            existingPurchase.FiscalPeriod = purchaseUpdateReqDto.FiscalPeriod;
+            existingPurchase.IsElectronic = purchaseUpdateReqDto.IsElectronic;
+            existingPurchase.AuthorizationNumber = purchaseUpdateReqDto.AuthorizationNumber;
+            existingPurchase.AuthorizationDate = purchaseUpdateReqDto.AuthorizationDate;
+
+            await edition.UpsertPurchaseDetailsAsync(existingPurchase, purchaseUpdateReqDto.Details);
+
+            var totals = calc.Calculate(existingPurchase);
+
+            existingPurchase.SubtotalWithoutTaxes = totals.SubtotalWithoutTaxes;
+            existingPurchase.SubtotalWithTaxes = totals.SubtotalWithTaxes;
+            existingPurchase.DiscountTotal = totals.DiscountTotal;
+            existingPurchase.TaxTotal = totals.TaxTotal;
+            existingPurchase.TotalPurchase = totals.SubtotalWithTaxes;
+
+            var apDto = new APCreateFromPurchaseReqDto
+            {
+                TermDays = purchaseUpdateReqDto.PaymentTermDays,
+                ExpectedPaymentDate = purchaseUpdateReqDto.ExpectedPaymentDate,
+                InitialPaymentAmount = purchaseUpdateReqDto.InitialPaymentAmount,
+                InitialPaymentMethodCode = purchaseUpdateReqDto.InitialPaymentMethodCode,
+                Reference = purchaseUpdateReqDto.Reference,
+                Notes = purchaseUpdateReqDto.Notes
+            };
+
+            await accountsPayableService.UpsertFromPurchaseAsync(existingPurchase, apDto);
+
+            await context.SaveChangesAsync();
+
+            await transaction.CommitAsync();
+
+            var updatedPurchase = await edition.CheckPurchaseExistenceAsync(purchaseId, currentUser.BusinessId);
+
+            response.Success = true;
+            response.Message = "Compra actualizada correctamente";
+            response.Data = MapPurchaseComplexRes(updatedPurchase!);
+        }
+        catch (Exception ex)
+        {
+            await transaction.RollbackAsync();
+
+            response.Success = false;
+            response.Message = "Error al actualizar la compra";
             response.Error = ex.Message;
         }
 

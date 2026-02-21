@@ -184,6 +184,50 @@ export const createPurchaseSchema = z.object({
 
 export type CreatePurchaseForm = z.infer<typeof createPurchaseSchema>;
 
+export type UpdatePurchasePayload = {
+  supplierId: number;
+  accessKey: string;
+  receiptType: string;
+  supportingCode?: string | null;
+  supportingDocumentCode?: string | null;
+  establishmentCode: string;
+  emissionPointCode: string;
+  sequential: string;
+  mainAddress: string;
+  issueDate: Date;
+  establishmentAddress?: string | null;
+  specialTaxpayer?: string | null;
+  mandatoryAccounting?: string | null;
+  typeDocumentSubjectDetained: string;
+  typeSubjectDetained: string;
+  relatedParty: string;
+  businessNameSubjectDetained: string;
+  documentSubjectDetained: string;
+  fiscalPeriod: string;
+  isElectronic: boolean;
+  authorizationNumber?: string | null;
+  authorizationDate?: Date | null;
+  paymentTermDays: number;
+  initialPaymentMethodCode?: string | null;
+  reference?: string | null;
+  notes?: string | null;
+  details: Array<{
+    productId: number;
+    warehouseId: number;
+    unitMeasureId: number;
+    taxId: number;
+    taxRate: number;
+    taxValue: number;
+    quantity: number;
+    netWeight: number;
+    grossWeight: number;
+    unitCost: number;
+    discount: number;
+    subtotal: number;
+    total: number;
+  }>;
+};
+
 export type CreatePurchasePayload = {
   businessId: number;
   userId: number;
