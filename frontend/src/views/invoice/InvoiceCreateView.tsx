@@ -503,7 +503,7 @@ export default function InvoiceCreateView() {
             onContinue={handleContinueToPayment}
             savingDraft={savingDraft}
             savingAndContinuing={savingAndContinue}
-            canConfirmPayment={!!isAdmin}
+            canConfirmPayment
           />
         ) : (
           <InvoiceCreatePayment
@@ -518,6 +518,7 @@ export default function InvoiceCreateView() {
             onConfirmPayment={handleConfirmPayment}
             loading={savingPayment}
             sequential={draftInvoice?.sequential}
+            isAdmin={!!isAdmin}
           />
         )}
         <InvoiceAdditionalInfoModal

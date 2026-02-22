@@ -34,3 +34,25 @@ export async function uploadCertificate(
   }
 }
 
+export async function getCertificateByBusiness(
+  businessId: number,
+  token: string
+): Promise<ApiResponseSingle<Certificate>> {
+  try {
+    const url = `/certificate/business/${businessId}`;
+
+    const { data } = await api.get<ApiResponseSingle<Certificate>>(url, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    return data;
+  } catch (error) {
+    if (isAxiosError(error) && error.response) {
+      throw new Error(error.response.data.error ?? "Error en la API");
+    }
+    throw new Error("Error desconocido");
+  }
+}
+

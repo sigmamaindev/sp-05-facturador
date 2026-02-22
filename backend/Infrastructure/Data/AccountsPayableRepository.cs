@@ -80,8 +80,12 @@ public class AccountsPayableRepository(
                 .Include(ap => ap.Purchase)
                 .Where(ap =>
                     ap.BusinessId == currentUser.BusinessId &&
-                    ap.Purchase != null &&
-                    ap.Purchase.UserId == currentUser.UserId);
+                    ap.Purchase != null);
+
+            if (!currentUser.IsAdmin)
+            {
+                query = query.Where(ap => ap.Purchase!.UserId == currentUser.UserId);
+            }
 
             if (!string.IsNullOrEmpty(keyword))
             {
@@ -147,8 +151,12 @@ public class AccountsPayableRepository(
                 .Where(ap =>
                     ap.BusinessId == currentUser.BusinessId &&
                     ap.Supplier != null &&
-                    ap.Purchase != null &&
-                    ap.Purchase.UserId == currentUser.UserId);
+                    ap.Purchase != null);
+
+            if (!currentUser.IsAdmin)
+            {
+                query = query.Where(ap => ap.Purchase!.UserId == currentUser.UserId);
+            }
 
             if (!string.IsNullOrWhiteSpace(keyword))
             {
@@ -241,8 +249,12 @@ public class AccountsPayableRepository(
                 .Where(ap =>
                     ap.BusinessId == currentUser.BusinessId &&
                     ap.SupplierId == supplierId &&
-                    ap.Purchase != null &&
-                    ap.Purchase.UserId == currentUser.UserId);
+                    ap.Purchase != null);
+
+            if (!currentUser.IsAdmin)
+            {
+                query = query.Where(ap => ap.Purchase!.UserId == currentUser.UserId);
+            }
 
             if (!string.IsNullOrWhiteSpace(keyword))
             {
@@ -334,15 +346,21 @@ public class AccountsPayableRepository(
                 return response;
             }
 
-            var existingAP = await context.AccountsPayables
+            var apQuery = context.AccountsPayables
                 .Include(ap => ap.Supplier)
                 .Include(ap => ap.Purchase)
                 .Include(ap => ap.Transactions)
-                .FirstOrDefaultAsync(ap =>
+                .Where(ap =>
                     ap.Id == accountsPayableId &&
                     ap.BusinessId == currentUser.BusinessId &&
-                    ap.Purchase != null &&
-                    ap.Purchase.UserId == currentUser.UserId);
+                    ap.Purchase != null);
+
+            if (!currentUser.IsAdmin)
+            {
+                apQuery = apQuery.Where(ap => ap.Purchase!.UserId == currentUser.UserId);
+            }
+
+            var existingAP = await apQuery.FirstOrDefaultAsync();
 
             if (existingAP == null)
             {
@@ -442,16 +460,21 @@ public class AccountsPayableRepository(
 
             var apIds = paymentsByApId.Keys.ToList();
 
-            var accountsPayables = await context.AccountsPayables
+            var bulkQuery = context.AccountsPayables
                 .Include(ap => ap.Supplier)
                 .Include(ap => ap.Purchase)
                 .Include(ap => ap.Transactions)
                 .Where(ap =>
                     ap.BusinessId == currentUser.BusinessId &&
                     ap.Purchase != null &&
-                    ap.Purchase.UserId == currentUser.UserId &&
-                    apIds.Contains(ap.Id))
-                .ToListAsync();
+                    apIds.Contains(ap.Id));
+
+            if (!currentUser.IsAdmin)
+            {
+                bulkQuery = bulkQuery.Where(ap => ap.Purchase!.UserId == currentUser.UserId);
+            }
+
+            var accountsPayables = await bulkQuery.ToListAsync();
 
             var foundIds = accountsPayables.Select(ap => ap.Id).ToHashSet();
             var missingIds = apIds.Where(id => !foundIds.Contains(id)).ToList();

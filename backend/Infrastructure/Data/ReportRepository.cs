@@ -35,12 +35,16 @@ public class ReportRepository(
                 .Include(i => i.User)
                 .Include(i => i.Establishment)
                 .Include(i => i.EmissionPoint)
-                .Where(i =>
-                    i.BusinessId == currentUser.BusinessId &&
+                .Where(i => i.BusinessId == currentUser.BusinessId)
+                .AsQueryable();
+
+            if (!currentUser.IsAdmin)
+            {
+                query = query.Where(i =>
                     i.EstablishmentId == currentUser.EstablishmentId &&
                     i.EmissionPointId == currentUser.EmissionPointId &&
-                    i.UserId == currentUser.UserId)
-                .AsQueryable();
+                    i.UserId == currentUser.UserId);
+            }
 
             if (!string.IsNullOrWhiteSpace(keyword))
             {
@@ -121,7 +125,7 @@ public class ReportRepository(
                 return response;
             }
 
-            var invoice = await context.Invoices
+            var detailQuery = context.Invoices
                 .Include(i => i.Customer)
                 .Include(i => i.User)
                 .Include(i => i.Establishment)
@@ -132,11 +136,17 @@ public class ReportRepository(
                     .ThenInclude(d => d.UnitMeasure)
                 .Where(i =>
                     i.Id == invoiceId &&
-                    i.BusinessId == currentUser.BusinessId &&
+                    i.BusinessId == currentUser.BusinessId);
+
+            if (!currentUser.IsAdmin)
+            {
+                detailQuery = detailQuery.Where(i =>
                     i.EstablishmentId == currentUser.EstablishmentId &&
                     i.EmissionPointId == currentUser.EmissionPointId &&
-                    i.UserId == currentUser.UserId)
-                .FirstOrDefaultAsync();
+                    i.UserId == currentUser.UserId);
+            }
+
+            var invoice = await detailQuery.FirstOrDefaultAsync();
 
             if (invoice == null)
             {

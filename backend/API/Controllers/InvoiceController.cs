@@ -56,7 +56,7 @@ namespace API.Controllers
         }
 
         [HttpPut("{id:int}/payment")]
-        [Authorize(Roles = "SuperAdmin, Admin")]
+        [Authorize]
         public async Task<ActionResult<ApiResponse<InvoiceComplexResDto>>> UpdateInvoicePayment(int id, [FromBody] InvoicePaymentUpdateReqDto invoicePaymentUpdateReqDto)
         {
             var response = await invoiceRepository.UpdateInvoicePaymentAsync(id, invoicePaymentUpdateReqDto);

@@ -85,13 +85,15 @@ public class AccountsReceivableRepository(
             .Include(ar => ar.Invoice).ThenInclude(i => i!.Establishment)
             .Include(ar => ar.Invoice).ThenInclude(i => i!.EmissionPoint)
             .Include(ar => ar.Invoice).ThenInclude(i => i!.User)
-            .Where(
-                ar =>
-                ar.BusinessId == currentUser.BusinessId &&
-                ar.Invoice != null &&
-                ar.Invoice.EstablishmentId == currentUser.EstablishmentId &&
-                ar.Invoice.EmissionPointId == currentUser.EmissionPointId &&
-                ar.Invoice.UserId == currentUser.UserId);
+            .Where(ar => ar.BusinessId == currentUser.BusinessId && ar.Invoice != null);
+
+            if (!currentUser.IsAdmin)
+            {
+                query = query.Where(ar =>
+                    ar.Invoice!.EstablishmentId == currentUser.EstablishmentId &&
+                    ar.Invoice.EmissionPointId == currentUser.EmissionPointId &&
+                    ar.Invoice.UserId == currentUser.UserId);
+            }
 
             if (!string.IsNullOrEmpty(keyword))
             {
@@ -160,10 +162,15 @@ public class AccountsReceivableRepository(
                 .Where(ar =>
                     ar.BusinessId == currentUser.BusinessId &&
                     ar.Customer != null &&
-                    ar.Invoice != null &&
-                    ar.Invoice.EstablishmentId == currentUser.EstablishmentId &&
+                    ar.Invoice != null);
+
+            if (!currentUser.IsAdmin)
+            {
+                query = query.Where(ar =>
+                    ar.Invoice!.EstablishmentId == currentUser.EstablishmentId &&
                     ar.Invoice.EmissionPointId == currentUser.EmissionPointId &&
                     ar.Invoice.UserId == currentUser.UserId);
+            }
 
             if (!string.IsNullOrWhiteSpace(keyword))
             {
@@ -261,10 +268,15 @@ public class AccountsReceivableRepository(
                 .Where(ar =>
                     ar.BusinessId == currentUser.BusinessId &&
                     ar.CustomerId == customerId &&
-                    ar.Invoice != null &&
-                    ar.Invoice.EstablishmentId == currentUser.EstablishmentId &&
+                    ar.Invoice != null);
+
+            if (!currentUser.IsAdmin)
+            {
+                query = query.Where(ar =>
+                    ar.Invoice!.EstablishmentId == currentUser.EstablishmentId &&
                     ar.Invoice.EmissionPointId == currentUser.EmissionPointId &&
                     ar.Invoice.UserId == currentUser.UserId);
+            }
 
             if (!string.IsNullOrWhiteSpace(keyword))
             {
@@ -358,7 +370,7 @@ public class AccountsReceivableRepository(
 
             var arIds = paymentsByArId.Keys.ToList();
 
-            var accountsReceivables = await context.AccountsReceivables
+            var bulkQuery = context.AccountsReceivables
                 .Include(ar => ar.Customer)
                 .Include(ar => ar.Invoice).ThenInclude(i => i!.Business)
                 .Include(ar => ar.Invoice).ThenInclude(i => i!.Establishment)
@@ -368,11 +380,17 @@ public class AccountsReceivableRepository(
                 .Where(ar =>
                     ar.BusinessId == currentUser.BusinessId &&
                     ar.Invoice != null &&
-                    ar.Invoice.EstablishmentId == currentUser.EstablishmentId &&
+                    arIds.Contains(ar.Id));
+
+            if (!currentUser.IsAdmin)
+            {
+                bulkQuery = bulkQuery.Where(ar =>
+                    ar.Invoice!.EstablishmentId == currentUser.EstablishmentId &&
                     ar.Invoice.EmissionPointId == currentUser.EmissionPointId &&
-                    ar.Invoice.UserId == currentUser.UserId &&
-                    arIds.Contains(ar.Id))
-                .ToListAsync();
+                    ar.Invoice.UserId == currentUser.UserId);
+            }
+
+            var accountsReceivables = await bulkQuery.ToListAsync();
 
             var foundIds = accountsReceivables.Select(ar => ar.Id).ToHashSet();
             var missingIds = arIds.Where(id => !foundIds.Contains(id)).ToList();
@@ -475,20 +493,27 @@ public class AccountsReceivableRepository(
                 return response;
             }
 
-            var existingAR = await context.AccountsReceivables
+            var arQuery = context.AccountsReceivables
                 .Include(ar => ar.Customer)
                 .Include(ar => ar.Invoice).ThenInclude(i => i!.Business)
                 .Include(ar => ar.Invoice).ThenInclude(i => i!.Establishment)
                 .Include(ar => ar.Invoice).ThenInclude(i => i!.EmissionPoint)
                 .Include(ar => ar.Invoice).ThenInclude(i => i!.User)
                 .Include(ar => ar.Transactions)
-                .FirstOrDefaultAsync(ar =>
+                .Where(ar =>
                     ar.Id == accountsReceivableId &&
                     ar.BusinessId == currentUser.BusinessId &&
-                    ar.Invoice != null &&
-                    ar.Invoice.EstablishmentId == currentUser.EstablishmentId &&
+                    ar.Invoice != null);
+
+            if (!currentUser.IsAdmin)
+            {
+                arQuery = arQuery.Where(ar =>
+                    ar.Invoice!.EstablishmentId == currentUser.EstablishmentId &&
                     ar.Invoice.EmissionPointId == currentUser.EmissionPointId &&
                     ar.Invoice.UserId == currentUser.UserId);
+            }
+
+            var existingAR = await arQuery.FirstOrDefaultAsync();
 
             if (existingAR == null)
             {

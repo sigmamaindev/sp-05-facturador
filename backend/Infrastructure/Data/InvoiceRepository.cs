@@ -375,26 +375,30 @@ public class InvoiceRepository(
                 return response;
             }
 
-            await kardex.DecreaseStockForSaleAsync(existingInvoice);
-
-            if (existingInvoice.TotalInvoice <= 0)
-            {
-                response.Success = false;
-                response.Message = "Total en 0 o negativo";
-                response.Error = "El total enviado no puede ser 0 o negativo";
-
-                return response;
-            }
-
-            var requiresAR = invoicePaymentUpdateReqDto.PaymentTermDays > 0 ||
-            !invoicePaymentUpdateReqDto.PaymentMethod.Equals(
-                PaymentMethod.NFS,
-                StringComparison.OrdinalIgnoreCase);
-
             existingInvoice.PaymentMethod = invoicePaymentUpdateReqDto.PaymentMethod;
             existingInvoice.PaymentType = normalizedPaymentType;
             existingInvoice.PaymentTermDays = invoicePaymentUpdateReqDto.PaymentTermDays;
-            existingInvoice.Status = InvoiceStatus.PENDING;
+
+            var requiresAR = invoicePaymentUpdateReqDto.PaymentTermDays > 0 ||
+                !invoicePaymentUpdateReqDto.PaymentMethod.Equals(
+                    PaymentMethod.NFS,
+                    StringComparison.OrdinalIgnoreCase);
+
+            if (currentUser.IsAdmin)
+            {
+                await kardex.DecreaseStockForSaleAsync(existingInvoice);
+
+                if (existingInvoice.TotalInvoice <= 0)
+                {
+                    response.Success = false;
+                    response.Message = "Total en 0 o negativo";
+                    response.Error = "El total enviado no puede ser 0 o negativo";
+
+                    return response;
+                }
+
+                existingInvoice.Status = InvoiceStatus.PENDING;
+            }
 
             if (requiresAR)
             {
@@ -417,7 +421,9 @@ public class InvoiceRepository(
             await transaction.CommitAsync();
 
             response.Success = true;
-            response.Message = "Pago registrado en factura";
+            response.Message = currentUser.IsAdmin
+                ? "Pago registrado en factura"
+                : "Método de pago guardado en borrador";
             response.Data = invoiceDtoFactory.InvoiceComplexRes(existingInvoice);
 
         }

@@ -1,14 +1,15 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { toast } from "sonner";
-import { Loader2 } from "lucide-react";
+import { BadgeCheck, Loader2 } from "lucide-react";
 
 import { useAuth } from "@/contexts/AuthContext";
 
 import { getBusiness } from "@/api/business";
-import { uploadCertificate } from "@/api/certificate";
+import { getCertificateByBusiness, uploadCertificate } from "@/api/certificate";
 
 import type { Business } from "@/types/business.types";
+import type { Certificate } from "@/types/certificate.types";
 
 import AlertMessage from "@/components/shared/AlertMessage";
 
@@ -39,6 +40,9 @@ export default function CertificateListView() {
   const [uploading, setUploading] = useState(false);
   const [fileInputKey, setFileInputKey] = useState(0);
 
+  const [existingCertificate, setExistingCertificate] = useState<Certificate | null>(null);
+  const [loadingCertificate, setLoadingCertificate] = useState(false);
+
   const {
     register,
     control,
@@ -54,6 +58,7 @@ export default function CertificateListView() {
   });
 
   const selectedFile = watch("certificate")?.[0] ?? null;
+  const selectedBusinessId = watch("businessId");
 
   const businessOptions = useMemo(
     () =>
@@ -83,6 +88,28 @@ export default function CertificateListView() {
 
     fetchBusinesses();
   }, [token]);
+
+  const fetchCertificate = useCallback(async (businessId: string) => {
+    if (!token || !businessId) {
+      setExistingCertificate(null);
+      return;
+    }
+
+    setLoadingCertificate(true);
+
+    try {
+      const response = await getCertificateByBusiness(Number(businessId), token);
+      setExistingCertificate(response.data ?? null);
+    } catch {
+      setExistingCertificate(null);
+    } finally {
+      setLoadingCertificate(false);
+    }
+  }, [token]);
+
+  useEffect(() => {
+    fetchCertificate(selectedBusinessId);
+  }, [selectedBusinessId, fetchCertificate]);
 
   const onSubmit = async (data: CertificateUploadForm) => {
     if (!token) {
@@ -116,12 +143,16 @@ export default function CertificateListView() {
 
       setFileInputKey((prev) => prev + 1);
       reset({ businessId: data.businessId, password: "", certificate: undefined });
+
+      fetchCertificate(data.businessId);
     } catch (err: any) {
       toast.error(err.message);
     } finally {
       setUploading(false);
     }
   };
+
+  const hasExistingCertificate = existingCertificate !== null;
 
   return (
     <Card>
@@ -142,6 +173,18 @@ export default function CertificateListView() {
             description="No se pudieron cargar las empresas."
           />
         ) : null}
+
+        {hasExistingCertificate && (
+          <div className="flex items-center gap-2 rounded-md border p-3 bg-muted/50 max-w-xl">
+            <BadgeCheck className="h-5 w-5 text-green-600 shrink-0" />
+            <div className="text-sm">
+              <span className="font-medium">Certificado actual:</span>{" "}
+              <span className="text-muted-foreground">
+                {existingCertificate.fileName ?? "Certificado cargado"}
+              </span>
+            </div>
+          </div>
+        )}
 
         <form onSubmit={handleSubmit(onSubmit)} className="grid gap-4 max-w-xl">
           <Controller
@@ -232,6 +275,7 @@ export default function CertificateListView() {
               disabled={
                 uploading ||
                 loadingBusinesses ||
+                loadingCertificate ||
                 businessOptions.length === 0 ||
                 !!businessError
               }
@@ -241,6 +285,8 @@ export default function CertificateListView() {
                   <Loader2 className="h-4 w-4 mr-2 animate-spin" />
                   Subiendo...
                 </>
+              ) : hasExistingCertificate ? (
+                "Actualizar certificado"
               ) : (
                 "Guardar certificado"
               )}

@@ -18,7 +18,20 @@ namespace API.Controllers
             await certificate.CopyToAsync(ms);
             var bytes = ms.ToArray();
 
-            var response = await certificateRepository.SaveCertificateAsync(businessId, bytes, password);
+            var response = await certificateRepository.SaveCertificateAsync(businessId, bytes, password, certificate.FileName);
+
+            if (!response.Success)
+            {
+                return BadRequest(response);
+            }
+
+            return Ok(response);
+        }
+
+        [HttpGet("business/{businessId}")]
+        public async Task<IActionResult> GetCertificateByBusinessId(int businessId)
+        {
+            var response = await certificateRepository.GetCertificateByBusinessIdAsync(businessId);
 
             if (!response.Success)
             {

@@ -9,7 +9,7 @@ namespace Infrastructure.Data;
 
 public class CertificateRepository(StoreContext context, IAesEncryptionService aes) : ICertificateRepository
 {
-    public async Task<ApiResponse<CertificateResDto>> SaveCertificateAsync(int businessId, byte[] pfxBytes, string password)
+    public async Task<ApiResponse<CertificateResDto>> SaveCertificateAsync(int businessId, byte[] pfxBytes, string password, string? fileName)
     {
         var response = new ApiResponse<CertificateResDto>();
 
@@ -28,6 +28,7 @@ public class CertificateRepository(StoreContext context, IAesEncryptionService a
                     BusinessId = businessId,
                     CertificateBase64 = base64,
                     Password = encryptedPwd,
+                    FileName = fileName,
                     CreatedAt = DateTime.UtcNow
                 };
 
@@ -37,6 +38,7 @@ public class CertificateRepository(StoreContext context, IAesEncryptionService a
             {
                 existing.CertificateBase64 = base64;
                 existing.Password = encryptedPwd;
+                existing.FileName = fileName;
                 existing.CreatedAt = DateTime.UtcNow;
             }
 
@@ -48,6 +50,7 @@ public class CertificateRepository(StoreContext context, IAesEncryptionService a
             {
                 Id = existing.Id,
                 BusinessId = existing.BusinessId,
+                FileName = existing.FileName,
                 CreatedAt = existing.CreatedAt
             };
 
@@ -57,6 +60,44 @@ public class CertificateRepository(StoreContext context, IAesEncryptionService a
         {
             response.Success = false;
             response.Message = "Error al guardar el certificado.";
+            response.Error = ex.Message;
+
+            return response;
+        }
+    }
+
+    public async Task<ApiResponse<CertificateResDto>> GetCertificateByBusinessIdAsync(int businessId)
+    {
+        var response = new ApiResponse<CertificateResDto>();
+
+        try
+        {
+            var existing = await context.BusinessCertificates
+                .FirstOrDefaultAsync(c => c.BusinessId == businessId);
+
+            if (existing == null)
+            {
+                response.Success = true;
+                response.Message = "No se encontró un certificado para esta empresa.";
+                response.Data = null;
+                return response;
+            }
+
+            response.Success = true;
+            response.Data = new CertificateResDto
+            {
+                Id = existing.Id,
+                BusinessId = existing.BusinessId,
+                FileName = existing.FileName,
+                CreatedAt = existing.CreatedAt
+            };
+
+            return response;
+        }
+        catch (Exception ex)
+        {
+            response.Success = false;
+            response.Message = "Error al consultar el certificado.";
             response.Error = ex.Message;
 
             return response;

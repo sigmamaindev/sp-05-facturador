@@ -523,7 +523,7 @@ export default function InvoiceUpdateView() {
               onContinue={handleContinueToPayment}
               savingDraft={savingDraft}
                 savingAndContinuing={savingAndContinue}
-                canConfirmPayment={!!isAdmin}
+                canConfirmPayment
               />
             ) : (
               <InvoicePaymentStep
@@ -538,6 +538,7 @@ export default function InvoiceUpdateView() {
                 onConfirmPayment={handleConfirmPayment}
                 loading={savingPayment}
                 sequential={invoice?.sequential}
+                isAdmin={!!isAdmin}
               />
             )}
           </>
