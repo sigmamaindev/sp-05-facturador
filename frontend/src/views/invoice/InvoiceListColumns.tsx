@@ -6,7 +6,9 @@ import type { Invoice } from "@/types/invoice.type";
 
 import { useAuth } from "@/contexts/AuthContext";
 
-import { buttonVariants } from "@/components/ui/button";
+import { useState } from "react";
+
+import { Button, buttonVariants } from "@/components/ui/button";
 import {
   Tooltip,
   TooltipContent,
@@ -74,14 +76,25 @@ export const getColumns = (onRefresh?: () => void): ColumnDef<Invoice>[] => [
     accessorKey: "status",
     header: "Estado",
     cell: ({ row }) => {
-      const status = row.original.status ?? "Sin estado";
+      const raw = (row.original.status ?? "").trim();
+      const status = raw.length === 0 ? "Error desconocido" : raw;
       const normalized = status.toUpperCase();
 
-      const variant = normalized.includes("AUTORIZADO")
+      const isError =
+        normalized.includes("ERROR") ||
+        normalized.includes("RECHAZADO") ||
+        normalized.includes("DEVUELTO") ||
+        normalized.includes("NO AUTORIZADO") ||
+        normalized.includes("NO RESPONDE") ||
+        normalized.includes("NO DISPONIBLE") ||
+        normalized.includes("SIN ESTADO") ||
+        normalized.includes("INVALIDA");
+
+      const variant = normalized.includes("AUTORIZADO") && !isError
         ? "default"
-        : normalized.includes("RECIBIDO")
+        : normalized.includes("RECIBID")
         ? "secondary"
-        : normalized.includes("RECHAZADO") || normalized.includes("DEVUELTO")
+        : isError
         ? "destructive"
         : "outline";
 
@@ -127,7 +140,12 @@ export const getColumns = (onRefresh?: () => void): ColumnDef<Invoice>[] => [
         normalizedStatus.length === 0 ||
         normalizedStatus.includes("ERROR") ||
         normalizedStatus.includes("RECHAZADO") ||
-        normalizedStatus.includes("DEVUELTO");
+        normalizedStatus.includes("DEVUELTO") ||
+        normalizedStatus.includes("NO AUTORIZADO") ||
+        normalizedStatus.includes("NO RESPONDE") ||
+        normalizedStatus.includes("NO DISPONIBLE") ||
+        normalizedStatus.includes("SIN ESTADO") ||
+        normalizedStatus.includes("INVALIDA");
 
       const sriMessage =
         (invoice.sriMessage ?? "").trim() || "Sin mensaje del SRI";
@@ -145,13 +163,15 @@ export const getColumns = (onRefresh?: () => void): ColumnDef<Invoice>[] => [
         normalizedStatus.includes("BORRADOR") ||
         normalizedStatus.includes("DRAFT");
 
+      const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
       const handleConfirm = async () => {
         if (!token) return;
         try {
           await confirmInvoice(invoice.id, token);
           onRefresh?.();
         } catch (error: any) {
-          alert(error.message ?? "No se pudo confirmar la factura");
+          setErrorMessage(error.message ?? "No se pudo confirmar la factura");
         }
       };
 
@@ -171,11 +191,22 @@ export const getColumns = (onRefresh?: () => void): ColumnDef<Invoice>[] => [
 
           window.URL.revokeObjectURL(url);
         } catch (error: any) {
-          alert(error.message ?? "No se pudo generar el PDF de la factura");
+          setErrorMessage(error.message ?? "No se pudo generar el PDF de la factura");
         }
       };
       return (
         <div className="flex flex-col sm:flex-row items-center justify-center gap-2">
+          <AlertDialog open={!!errorMessage} onOpenChange={(open) => { if (!open) setErrorMessage(null); }}>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Error</AlertDialogTitle>
+                <AlertDialogDescription>{errorMessage}</AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cerrar</AlertDialogCancel>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
           <Tooltip>
             <TooltipTrigger asChild>
               <Link
@@ -278,25 +309,45 @@ export const getColumns = (onRefresh?: () => void): ColumnDef<Invoice>[] => [
             </Tooltip>
           ) : null}
 
-          {hasPermission && isDraft ? (
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <button
-                  type="button"
-                  onClick={handleConfirm}
-                  aria-label="Confirmar factura"
-                  className={cn(
-                    buttonVariants({ size: "icon-sm" }),
-                    "bg-amber-600 text-white hover:bg-amber-700 dark:bg-amber-500 dark:hover:bg-amber-600"
-                  )}
-                >
-                  <CheckCircle className="size-4 text-white" />
-                </button>
-              </TooltipTrigger>
-              <TooltipContent side="top" sideOffset={6}>
-                Confirmar
-              </TooltipContent>
-            </Tooltip>
+          {hasPermission && (isDraft || hasSriErrorStatus) ? (
+            <AlertDialog>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <span className="inline-flex">
+                    <AlertDialogTrigger asChild>
+                      <button
+                        type="button"
+                        aria-label="Confirmar factura"
+                        className={cn(
+                          buttonVariants({ size: "icon-sm" }),
+                          "bg-amber-600 text-white hover:bg-amber-700 dark:bg-amber-500 dark:hover:bg-amber-600"
+                        )}
+                      >
+                        <CheckCircle className="size-4 text-white" />
+                      </button>
+                    </AlertDialogTrigger>
+                  </span>
+                </TooltipTrigger>
+                <TooltipContent side="top" sideOffset={6}>
+                  Confirmar
+                </TooltipContent>
+              </Tooltip>
+
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Confirmar factura</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    La factura pasará a estado pendiente y se descontará el stock del inventario. ¿Desea continuar?
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                  <Button onClick={handleConfirm}>
+                    Confirmar
+                  </Button>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
           ) : null}
         </div>
       );

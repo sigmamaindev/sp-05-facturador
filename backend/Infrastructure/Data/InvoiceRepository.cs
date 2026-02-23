@@ -42,11 +42,26 @@ public class InvoiceRepository(
                 return response;
             }
 
-            if (existingInvoice.Status != InvoiceStatus.DRAFT)
+            var confirmableStatuses = new[]
+            {
+                InvoiceStatus.DRAFT,
+                InvoiceStatus.SRI_REJECTED,
+                InvoiceStatus.SRI_RETURNED,
+                InvoiceStatus.SRI_NOT_AUTHORIZED,
+                InvoiceStatus.SRI_TIMEOUT,
+                InvoiceStatus.SRI_UNAVAILABLE,
+                InvoiceStatus.SRI_INVALID_RESPONSE,
+                InvoiceStatus.SRI_NO_STATE,
+                InvoiceStatus.ERROR
+            };
+
+            var isUnknown = string.IsNullOrWhiteSpace(existingInvoice.Status);
+
+            if (!isUnknown && !confirmableStatuses.Contains(existingInvoice.Status))
             {
                 response.Success = false;
-                response.Message = "La factura no está en estado borrador";
-                response.Error = "Solo se pueden confirmar facturas en estado borrador";
+                response.Message = "La factura no se puede confirmar en su estado actual";
+                response.Error = "Solo se pueden confirmar facturas en estado borrador o con error del SRI";
 
                 return response;
             }
@@ -384,22 +399,6 @@ public class InvoiceRepository(
                     PaymentMethod.NFS,
                     StringComparison.OrdinalIgnoreCase);
 
-            if (currentUser.IsAdmin)
-            {
-                await kardex.DecreaseStockForSaleAsync(existingInvoice);
-
-                if (existingInvoice.TotalInvoice <= 0)
-                {
-                    response.Success = false;
-                    response.Message = "Total en 0 o negativo";
-                    response.Error = "El total enviado no puede ser 0 o negativo";
-
-                    return response;
-                }
-
-                existingInvoice.Status = InvoiceStatus.PENDING;
-            }
-
             if (requiresAR)
             {
                 var arDto = new ARCreateFromInvoiceReqDto
@@ -421,9 +420,7 @@ public class InvoiceRepository(
             await transaction.CommitAsync();
 
             response.Success = true;
-            response.Message = currentUser.IsAdmin
-                ? "Pago registrado en factura"
-                : "Método de pago guardado en borrador";
+            response.Message = "Método de pago guardado en borrador";
             response.Data = invoiceDtoFactory.InvoiceComplexRes(existingInvoice);
 
         }

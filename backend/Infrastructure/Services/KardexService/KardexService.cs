@@ -10,6 +10,38 @@ public class KardexService(StoreContext context) : IKardexService
 {
     public async Task DecreaseStockForSaleAsync(Invoice invoice)
     {
+        var reference = $"Factura #{invoice.Sequential}";
+
+        var existingMovements = await context.Kardexes
+            .Where(k => k.Reference == reference && k.MovementType == MovementType.SALE)
+            .ToListAsync();
+
+        if (existingMovements.Count > 0)
+        {
+            var restorePairs = existingMovements
+                .Select(k => new { k.ProductId, k.WarehouseId, k.QuantityOut })
+                .ToList();
+
+            var restoreProductIds = restorePairs.Select(p => p.ProductId).Distinct().ToList();
+            var restoreWarehouseIds = restorePairs.Select(p => p.WarehouseId).Distinct().ToList();
+
+            var stocksToRestore = await context.ProductWarehouses
+                .Where(pw => restoreProductIds.Contains(pw.ProductId) && restoreWarehouseIds.Contains(pw.WarehouseId))
+                .ToListAsync();
+
+            var restoreStockByKey = stocksToRestore.ToDictionary(pw => (pw.ProductId, pw.WarehouseId));
+
+            foreach (var movement in restorePairs)
+            {
+                if (restoreStockByKey.TryGetValue((movement.ProductId, movement.WarehouseId), out var stock))
+                {
+                    stock.Stock += movement.QuantityOut;
+                }
+            }
+
+            context.Kardexes.RemoveRange(existingMovements);
+        }
+
         var details = invoice.InvoiceDetails.Count > 0
             ? invoice.InvoiceDetails.ToList()
             : await context.InvoiceDetails

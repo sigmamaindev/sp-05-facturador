@@ -45,7 +45,6 @@ interface InvoiceCreatePaymentProps {
   onConfirmPayment: () => void;
   loading: boolean;
   sequential?: string;
-  isAdmin?: boolean;
 }
 
 export default function InvoiceCreatePayment({
@@ -60,7 +59,6 @@ export default function InvoiceCreatePayment({
   onConfirmPayment,
   loading,
   sequential,
-  isAdmin = true,
 }: InvoiceCreatePaymentProps) {
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [paymentCondition, setPaymentCondition] = useState<
@@ -247,18 +245,14 @@ export default function InvoiceCreatePayment({
                   className="w-full"
                   disabled={loading || totals.total <= 0}
                 >
-                  {isAdmin ? "Confirmar pago" : "Guardar método de pago"}
+                  Guardar método de pago
                 </Button>
               </AlertDialogTrigger>
               <AlertDialogContent>
                 <AlertDialogHeader>
-                  <AlertDialogTitle>
-                    {isAdmin ? "Confirmar pago" : "Guardar método de pago"}
-                  </AlertDialogTitle>
+                  <AlertDialogTitle>Guardar método de pago</AlertDialogTitle>
                   <AlertDialogDescription>
-                    {isAdmin
-                      ? "Se actualizará el pago y la factura pasará de borrador a pendiente para ser enviada al SRI. ¿Desea continuar?"
-                      : "Se guardará el método de pago seleccionado. La factura se mantendrá como borrador hasta que un administrador confirme el pago. ¿Desea continuar?"}
+                    Se guardará el método de pago seleccionado. La factura se mantendrá como borrador hasta que un administrador la confirme. ¿Desea continuar?
                   </AlertDialogDescription>
                 </AlertDialogHeader>
                 <AlertDialogFooter>
@@ -271,11 +265,7 @@ export default function InvoiceCreatePayment({
                       }}
                       disabled={loading}
                     >
-                      {loading
-                        ? "Guardando..."
-                        : isAdmin
-                          ? "Pagar"
-                          : "Guardar"}
+                      {loading ? "Guardando..." : "Guardar"}
                     </Button>
                   </AlertDialogAction>
                 </AlertDialogFooter>
