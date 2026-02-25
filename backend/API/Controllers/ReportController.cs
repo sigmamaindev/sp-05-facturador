@@ -29,46 +29,40 @@ public class ReportController(IReportRepository reportRepository, IReportExportS
         return Ok(response);
     }
 
-    [HttpGet("sales/{id:int}")]
+    [HttpGet("sales/pdf")]
     [Authorize]
-    public async Task<ActionResult<ApiResponse<SalesReportDetailResDto>>> GetSalesReportDetail(int id)
+    public async Task<IActionResult> GetSalesReportPdf(
+        [FromQuery] string? keyword = null,
+        [FromQuery] int? creditDays = null,
+        [FromQuery] DateTime? dateFrom = null,
+        [FromQuery] DateTime? dateTo = null)
     {
-        var response = await reportRepository.GetSalesReportDetailAsync(id);
-        if (!response.Success)
-        {
-            return BadRequest(response);
-        }
-        return Ok(response);
-    }
-
-    [HttpGet("sales/{id:int}/pdf")]
-    [Authorize]
-    public async Task<IActionResult> GetSalesReportDetailPdf(int id)
-    {
-        var response = await reportRepository.GetSalesReportDetailAsync(id);
+        var response = await reportRepository.GetSalesReportAsync(keyword, creditDays, dateFrom, dateTo, 1, int.MaxValue);
         if (!response.Success || response.Data is null)
         {
             return BadRequest(response);
         }
 
-        var pdfBytes = reportExport.GenerateSalesDetailPdf(response.Data);
-        var fileName = $"ReporteVenta_{response.Data.Sequential}.pdf";
-        return File(pdfBytes, "application/pdf", fileName);
+        var pdfBytes = reportExport.GenerateSalesReportPdf(response.Data);
+        return File(pdfBytes, "application/pdf", "ReporteVentas.pdf");
     }
 
-    [HttpGet("sales/{id:int}/excel")]
+    [HttpGet("sales/excel")]
     [Authorize]
-    public async Task<IActionResult> GetSalesReportDetailExcel(int id)
+    public async Task<IActionResult> GetSalesReportExcel(
+        [FromQuery] string? keyword = null,
+        [FromQuery] int? creditDays = null,
+        [FromQuery] DateTime? dateFrom = null,
+        [FromQuery] DateTime? dateTo = null)
     {
-        var response = await reportRepository.GetSalesReportDetailAsync(id);
+        var response = await reportRepository.GetSalesReportAsync(keyword, creditDays, dateFrom, dateTo, 1, int.MaxValue);
         if (!response.Success || response.Data is null)
         {
             return BadRequest(response);
         }
 
-        var excelBytes = reportExport.GenerateSalesDetailExcel(response.Data);
-        var fileName = $"ReporteVenta_{response.Data.Sequential}.xlsx";
-        return File(excelBytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", fileName);
+        var excelBytes = reportExport.GenerateSalesReportExcel(response.Data);
+        return File(excelBytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "ReporteVentas.xlsx");
     }
 
     // ─── Compras ────────────────────────────────────────────────────────────
@@ -90,45 +84,37 @@ public class ReportController(IReportRepository reportRepository, IReportExportS
         return Ok(response);
     }
 
-    [HttpGet("purchases/{id:int}")]
+    [HttpGet("purchases/pdf")]
     [Authorize]
-    public async Task<ActionResult<ApiResponse<PurchasesReportDetailResDto>>> GetPurchasesReportDetail(int id)
+    public async Task<IActionResult> GetPurchasesReportPdf(
+        [FromQuery] string? keyword = null,
+        [FromQuery] DateTime? dateFrom = null,
+        [FromQuery] DateTime? dateTo = null)
     {
-        var response = await reportRepository.GetPurchasesReportDetailAsync(id);
-        if (!response.Success)
-        {
-            return BadRequest(response);
-        }
-        return Ok(response);
-    }
-
-    [HttpGet("purchases/{id:int}/pdf")]
-    [Authorize]
-    public async Task<IActionResult> GetPurchasesReportDetailPdf(int id)
-    {
-        var response = await reportRepository.GetPurchasesReportDetailAsync(id);
+        var response = await reportRepository.GetPurchasesReportAsync(keyword, dateFrom, dateTo, 1, int.MaxValue);
         if (!response.Success || response.Data is null)
         {
             return BadRequest(response);
         }
 
-        var pdfBytes = reportExport.GeneratePurchasesDetailPdf(response.Data);
-        var fileName = $"ReporteCompra_{response.Data.Sequential}.pdf";
-        return File(pdfBytes, "application/pdf", fileName);
+        var pdfBytes = reportExport.GeneratePurchasesReportPdf(response.Data);
+        return File(pdfBytes, "application/pdf", "ReporteCompras.pdf");
     }
 
-    [HttpGet("purchases/{id:int}/excel")]
+    [HttpGet("purchases/excel")]
     [Authorize]
-    public async Task<IActionResult> GetPurchasesReportDetailExcel(int id)
+    public async Task<IActionResult> GetPurchasesReportExcel(
+        [FromQuery] string? keyword = null,
+        [FromQuery] DateTime? dateFrom = null,
+        [FromQuery] DateTime? dateTo = null)
     {
-        var response = await reportRepository.GetPurchasesReportDetailAsync(id);
+        var response = await reportRepository.GetPurchasesReportAsync(keyword, dateFrom, dateTo, 1, int.MaxValue);
         if (!response.Success || response.Data is null)
         {
             return BadRequest(response);
         }
 
-        var excelBytes = reportExport.GeneratePurchasesDetailExcel(response.Data);
-        var fileName = $"ReporteCompra_{response.Data.Sequential}.xlsx";
-        return File(excelBytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", fileName);
+        var excelBytes = reportExport.GeneratePurchasesReportExcel(response.Data);
+        return File(excelBytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "ReporteCompras.xlsx");
     }
 }

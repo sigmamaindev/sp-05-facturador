@@ -50,16 +50,17 @@ public class SriReceptionBackgroundService(IServiceScopeFactory serviceScopeFact
                             continue;
                         }
 
-                        invoice.AccessKey = string.IsNullOrWhiteSpace(invoice.AccessKey)
-                            ? GenerateAccessKey(
-                                invoice.InvoiceDate,
-                                invoice.ReceiptType,
-                                invoice.Business.Document,
-                                invoice.Environment,
-                                invoice.Establishment?.Code ?? string.Empty,
-                                invoice.EmissionPoint?.Code ?? string.Empty,
-                                invoice.Sequential)
-                            : invoice.AccessKey;
+                        var ecTime = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow,
+                            TimeZoneInfo.FindSystemTimeZoneById("America/Guayaquil"));
+
+                        invoice.AccessKey = GenerateAccessKey(
+                            ecTime,
+                            invoice.ReceiptType,
+                            invoice.Business.Document,
+                            invoice.Environment,
+                            invoice.Establishment?.Code ?? string.Empty,
+                            invoice.EmissionPoint?.Code ?? string.Empty,
+                            invoice.Sequential);
 
                         var xml = invoiceXmlBuilder.BuildXMLInvoice(
                             invoice,

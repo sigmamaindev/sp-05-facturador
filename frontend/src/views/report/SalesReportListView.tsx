@@ -70,6 +70,7 @@ export default function SalesReportListView() {
           creditDays={creditDays}
           dateFrom={dateFrom}
           dateTo={dateTo}
+          token={token ?? ""}
           setPage={setPage}
           setKeyword={setKeyword}
           setCreditDays={setCreditDays}

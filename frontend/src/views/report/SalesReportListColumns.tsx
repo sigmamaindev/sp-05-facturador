@@ -2,9 +2,6 @@ import type { ColumnDef } from "@tanstack/react-table";
 
 import type { SalesReport } from "@/types/report.types";
 
-import { Badge } from "@/components/ui/badge";
-import RowActions from "@/components/shared/RowActions";
-
 function formatDate(dateValue: string) {
   const date = new Date(dateValue);
 
@@ -27,38 +24,23 @@ export const columns: ColumnDef<SalesReport>[] = [
   },
   {
     accessorKey: "sequential",
-    header: "Comprobante",
+    header: "Id",
     cell: ({ row }) => (
       <span className="font-semibold">{row.original.sequential}</span>
     ),
   },
   {
-    accessorKey: "status",
-    header: "Estado",
-    cell: ({ row }) => {
-      const status = row.original.status ?? "Sin estado";
-      const normalized = status.toUpperCase();
-
-      const variant = normalized.includes("AUTORIZADO")
-        ? "default"
-        : normalized.includes("RECIBIDO")
-        ? "secondary"
-        : normalized.includes("RECHAZADO") || normalized.includes("DEVUELTO")
-        ? "destructive"
-        : "outline";
-
-      return <Badge variant={variant}>{status}</Badge>;
-    },
+    accessorKey: "customerName",
+    header: "Nombre",
+    cell: ({ row }) => (
+      <span>{row.original.customerName}</span>
+    ),
   },
   {
-    id: "customer",
-    header: "Cliente",
-    accessorFn: (row) => `${row.customerDocument} ${row.customerName}`,
+    accessorKey: "paymentTermDays",
+    header: () => <div className="text-right">Crédito</div>,
     cell: ({ row }) => (
-      <div className="flex flex-col">
-        <span className="font-semibold">{row.original.customerDocument}</span>
-        <span className="text-muted-foreground">{row.original.customerName}</span>
-      </div>
+      <p className="text-right">{row.original.paymentTermDays}</p>
     ),
   },
   {
@@ -69,33 +51,76 @@ export const columns: ColumnDef<SalesReport>[] = [
     ),
   },
   {
-    accessorKey: "paymentTermDays",
-    header: () => <div className="text-right">Plazo (días)</div>,
+    accessorKey: "productName",
+    header: "Producto",
     cell: ({ row }) => (
-      <p className="text-right">{row.original.paymentTermDays}</p>
+      <span>{row.original.productName}</span>
     ),
   },
   {
-    accessorKey: "totalInvoice",
+    accessorKey: "quantity",
+    header: () => <div className="text-right">Cant</div>,
+    cell: ({ row }) => (
+      <p className="text-right">{row.original.quantity}</p>
+    ),
+  },
+  {
+    accessorKey: "grossWeight",
+    header: () => <div className="text-right">P Bruto</div>,
+    cell: ({ row }) => (
+      <p className="text-right whitespace-nowrap">
+        Lb {Number(row.original.grossWeight).toFixed(2)}
+      </p>
+    ),
+  },
+  {
+    id: "merma",
+    header: () => <div className="text-right">Merma</div>,
+    cell: ({ row }) => {
+      const merma = row.original.grossWeight - row.original.netWeight;
+      return (
+        <p className="text-right whitespace-nowrap">
+          Lb {merma.toFixed(2)}
+        </p>
+      );
+    },
+  },
+  {
+    accessorKey: "netWeight",
+    header: () => <div className="text-right">P Neto</div>,
+    cell: ({ row }) => (
+      <p className="text-right whitespace-nowrap">
+        Lb {Number(row.original.netWeight).toFixed(2)}
+      </p>
+    ),
+  },
+  {
+    accessorKey: "unitPrice",
+    header: () => <div className="text-right">Precio</div>,
+    cell: ({ row }) => (
+      <p className="text-right">$ {Number(row.original.unitPrice).toFixed(2)}</p>
+    ),
+  },
+  {
+    accessorKey: "total",
     header: () => <div className="text-right">Total</div>,
     cell: ({ row }) => (
-      <p className="text-right">{Number(row.original.totalInvoice).toFixed(2)}</p>
+      <p className="text-right">$ {Number(row.original.total).toFixed(2)}</p>
     ),
   },
   {
-    id: "actions",
-    header: () => <div className="text-center">Acciones</div>,
-    cell: ({ row }) => (
-      <div className="flex justify-center">
-        <RowActions
-          actions={[
-            {
-              label: "Ver detalle",
-              to: `/reportes/ventas/${row.original.id}`,
-            },
-          ]}
-        />
-      </div>
-    ),
+    id: "promedio",
+    header: () => <div className="text-right">Promedio</div>,
+    cell: ({ row }) => {
+      const promedio =
+        row.original.quantity !== 0
+          ? row.original.netWeight / row.original.quantity
+          : 0;
+      return (
+        <p className="text-right whitespace-nowrap">
+          % {promedio.toFixed(2)}
+        </p>
+      );
+    },
   },
 ];

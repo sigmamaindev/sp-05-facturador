@@ -2,9 +2,6 @@ import type { ColumnDef } from "@tanstack/react-table";
 
 import type { PurchasesReport } from "@/types/report.types";
 
-import { Badge } from "@/components/ui/badge";
-import RowActions from "@/components/shared/RowActions";
-
 function formatDate(dateValue: string) {
   const date = new Date(dateValue);
 
@@ -27,38 +24,16 @@ export const columns: ColumnDef<PurchasesReport>[] = [
   },
   {
     accessorKey: "sequential",
-    header: "Comprobante",
+    header: "Id",
     cell: ({ row }) => (
       <span className="font-semibold">{row.original.sequential}</span>
     ),
   },
   {
-    accessorKey: "status",
-    header: "Estado",
-    cell: ({ row }) => {
-      const status = row.original.status ?? "Sin estado";
-      const normalized = status.toUpperCase();
-
-      const variant = normalized.includes("ISSUED")
-        ? "default"
-        : normalized.includes("DRAFT")
-        ? "secondary"
-        : normalized.includes("RECHAZADO") || normalized.includes("CANCELED")
-        ? "destructive"
-        : "outline";
-
-      return <Badge variant={variant}>{status}</Badge>;
-    },
-  },
-  {
-    id: "supplier",
-    header: "Proveedor",
-    accessorFn: (row) => `${row.supplierDocument} ${row.supplierName}`,
+    accessorKey: "supplierName",
+    header: "Nombre",
     cell: ({ row }) => (
-      <div className="flex flex-col">
-        <span className="font-semibold">{row.original.supplierDocument}</span>
-        <span className="text-muted-foreground">{row.original.supplierName}</span>
-      </div>
+      <span>{row.original.supplierName}</span>
     ),
   },
   {
@@ -69,28 +44,76 @@ export const columns: ColumnDef<PurchasesReport>[] = [
     ),
   },
   {
-    accessorKey: "totalPurchase",
-    header: () => <div className="text-right">Total</div>,
+    accessorKey: "productName",
+    header: "Producto",
     cell: ({ row }) => (
-      <p className="text-right">
-        {Number(row.original.totalPurchase).toFixed(2)}
+      <span>{row.original.productName}</span>
+    ),
+  },
+  {
+    accessorKey: "quantity",
+    header: () => <div className="text-right">Cant</div>,
+    cell: ({ row }) => (
+      <p className="text-right">{row.original.quantity}</p>
+    ),
+  },
+  {
+    accessorKey: "grossWeight",
+    header: () => <div className="text-right">P Bruto</div>,
+    cell: ({ row }) => (
+      <p className="text-right whitespace-nowrap">
+        Lb {Number(row.original.grossWeight).toFixed(2)}
       </p>
     ),
   },
   {
-    id: "actions",
-    header: () => <div className="text-center">Acciones</div>,
+    id: "merma",
+    header: () => <div className="text-right">Merma</div>,
+    cell: ({ row }) => {
+      const merma = row.original.grossWeight - row.original.netWeight;
+      return (
+        <p className="text-right whitespace-nowrap">
+          Lb {merma.toFixed(2)}
+        </p>
+      );
+    },
+  },
+  {
+    accessorKey: "netWeight",
+    header: () => <div className="text-right">P Neto</div>,
     cell: ({ row }) => (
-      <div className="flex justify-center">
-        <RowActions
-          actions={[
-            {
-              label: "Ver detalle",
-              to: `/reportes/compras/${row.original.id}`,
-            },
-          ]}
-        />
-      </div>
+      <p className="text-right whitespace-nowrap">
+        Lb {Number(row.original.netWeight).toFixed(2)}
+      </p>
     ),
+  },
+  {
+    accessorKey: "unitCost",
+    header: () => <div className="text-right">Precio</div>,
+    cell: ({ row }) => (
+      <p className="text-right">$ {Number(row.original.unitCost).toFixed(2)}</p>
+    ),
+  },
+  {
+    accessorKey: "total",
+    header: () => <div className="text-right">Total</div>,
+    cell: ({ row }) => (
+      <p className="text-right">$ {Number(row.original.total).toFixed(2)}</p>
+    ),
+  },
+  {
+    id: "promedio",
+    header: () => <div className="text-right">Promedio</div>,
+    cell: ({ row }) => {
+      const promedio =
+        row.original.quantity !== 0
+          ? row.original.netWeight / row.original.quantity
+          : 0;
+      return (
+        <p className="text-right whitespace-nowrap">
+          % {promedio.toFixed(2)}
+        </p>
+      );
+    },
   },
 ];

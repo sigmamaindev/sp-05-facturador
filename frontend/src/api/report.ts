@@ -2,12 +2,10 @@ import { isAxiosError } from "axios";
 
 import api from "@/utils/axios";
 
-import type { ApiResponseList, ApiResponseSingle } from "@/types/api.types";
+import type { ApiResponseList } from "@/types/api.types";
 import type {
   SalesReport,
-  SalesReportDetail,
   PurchasesReport,
-  PurchasesReportDetail,
 } from "@/types/report.types";
 
 export async function getSalesReport(
@@ -47,17 +45,28 @@ export async function getSalesReport(
   }
 }
 
-export async function getSalesReportDetail(
-  id: number,
+export async function downloadSalesReportPdf(
+  keyword: string,
+  creditDays: number | null,
+  dateFrom: string,
+  dateTo: string,
   token: string
-): Promise<ApiResponseSingle<SalesReportDetail>> {
+): Promise<Blob> {
   try {
-    const { data } = await api.get<ApiResponseSingle<SalesReportDetail>>(
-      `/report/sales/${id}`,
+    const params = new URLSearchParams();
+
+    if (keyword) params.append("keyword", keyword);
+    if (creditDays !== null) params.append("creditDays", String(creditDays));
+    if (dateFrom) params.append("dateFrom", dateFrom);
+    if (dateTo) params.append("dateTo", dateTo);
+
+    const { data } = await api.get<Blob>(
+      `/report/sales/pdf?${params.toString()}`,
       {
         headers: {
           Authorization: `Bearer ${token}`,
         },
+        responseType: "blob",
       }
     );
 
@@ -70,38 +79,30 @@ export async function getSalesReportDetail(
   }
 }
 
-export async function downloadSalesReportPdf(
-  id: number,
-  token: string
-): Promise<Blob> {
-  try {
-    const { data } = await api.get<Blob>(`/report/sales/${id}/pdf`, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-      responseType: "blob",
-    });
-
-    return data;
-  } catch (error) {
-    if (isAxiosError(error) && error.response) {
-      throw new Error(error.response.data.error ?? "Error en la API");
-    }
-    throw new Error("Error desconocido");
-  }
-}
-
 export async function downloadSalesReportExcel(
-  id: number,
+  keyword: string,
+  creditDays: number | null,
+  dateFrom: string,
+  dateTo: string,
   token: string
 ): Promise<Blob> {
   try {
-    const { data } = await api.get<Blob>(`/report/sales/${id}/excel`, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-      responseType: "blob",
-    });
+    const params = new URLSearchParams();
+
+    if (keyword) params.append("keyword", keyword);
+    if (creditDays !== null) params.append("creditDays", String(creditDays));
+    if (dateFrom) params.append("dateFrom", dateFrom);
+    if (dateTo) params.append("dateTo", dateTo);
+
+    const { data } = await api.get<Blob>(
+      `/report/sales/excel?${params.toString()}`,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+        responseType: "blob",
+      }
+    );
 
     return data;
   } catch (error) {
@@ -149,17 +150,26 @@ export async function getPurchasesReport(
   }
 }
 
-export async function getPurchasesReportDetail(
-  id: number,
+export async function downloadPurchasesReportPdf(
+  keyword: string,
+  dateFrom: string,
+  dateTo: string,
   token: string
-): Promise<ApiResponseSingle<PurchasesReportDetail>> {
+): Promise<Blob> {
   try {
-    const { data } = await api.get<ApiResponseSingle<PurchasesReportDetail>>(
-      `/report/purchases/${id}`,
+    const params = new URLSearchParams();
+
+    if (keyword) params.append("keyword", keyword);
+    if (dateFrom) params.append("dateFrom", dateFrom);
+    if (dateTo) params.append("dateTo", dateTo);
+
+    const { data } = await api.get<Blob>(
+      `/report/purchases/pdf?${params.toString()}`,
       {
         headers: {
           Authorization: `Bearer ${token}`,
         },
+        responseType: "blob",
       }
     );
 
@@ -172,38 +182,28 @@ export async function getPurchasesReportDetail(
   }
 }
 
-export async function downloadPurchasesReportPdf(
-  id: number,
-  token: string
-): Promise<Blob> {
-  try {
-    const { data } = await api.get<Blob>(`/report/purchases/${id}/pdf`, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-      responseType: "blob",
-    });
-
-    return data;
-  } catch (error) {
-    if (isAxiosError(error) && error.response) {
-      throw new Error(error.response.data.error ?? "Error en la API");
-    }
-    throw new Error("Error desconocido");
-  }
-}
-
 export async function downloadPurchasesReportExcel(
-  id: number,
+  keyword: string,
+  dateFrom: string,
+  dateTo: string,
   token: string
 ): Promise<Blob> {
   try {
-    const { data } = await api.get<Blob>(`/report/purchases/${id}/excel`, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-      responseType: "blob",
-    });
+    const params = new URLSearchParams();
+
+    if (keyword) params.append("keyword", keyword);
+    if (dateFrom) params.append("dateFrom", dateFrom);
+    if (dateTo) params.append("dateTo", dateTo);
+
+    const { data } = await api.get<Blob>(
+      `/report/purchases/excel?${params.toString()}`,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+        responseType: "blob",
+      }
+    );
 
     return data;
   } catch (error) {

@@ -67,6 +67,7 @@ export default function PurchasesReportListView() {
           keyword={keyword}
           dateFrom={dateFrom}
           dateTo={dateTo}
+          token={token ?? ""}
           setPage={setPage}
           setKeyword={setKeyword}
           setDateFrom={setDateFrom}
