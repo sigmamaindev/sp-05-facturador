@@ -131,35 +131,25 @@ public class KardexRepository(StoreContext context, IHttpContextAccessor httpCon
                 .SumAsync() ?? 0m;
 
             // Movements from dateFrom onward (to calculate initial balance by working backwards)
-            var movementsFromDate = await context.Kardexes
+            var fromDateQuery = context.Kardexes
                 .AsNoTracking()
-                .Where(k => k.BusinessId == businessId && k.ProductId == productId && k.MovementDate >= dateFrom)
-                .GroupBy(k => 1)
-                .Select(g => new
-                {
-                    TotalIn = g.Sum(k => k.QuantityIn),
-                    TotalOut = g.Sum(k => k.QuantityOut),
-                    TotalValueIn = g.Sum(k => k.QuantityIn > 0 ? k.TotalCost : 0m),
-                    TotalValueOut = g.Sum(k => k.QuantityOut > 0 ? k.TotalCost : 0m)
-                })
-                .FirstOrDefaultAsync();
+                .Where(k => k.BusinessId == businessId && k.ProductId == productId && k.MovementDate >= dateFrom);
+
+            var totalInFromDate = await fromDateQuery.Select(k => (decimal?)k.QuantityIn).SumAsync() ?? 0m;
+            var totalOutFromDate = await fromDateQuery.Select(k => (decimal?)k.QuantityOut).SumAsync() ?? 0m;
 
             // Initial stock = current real stock - net movements from dateFrom onward
-            var initialStock = currentStock - (movementsFromDate?.TotalIn ?? 0) + (movementsFromDate?.TotalOut ?? 0);
+            var initialStock = currentStock - totalInFromDate + totalOutFromDate;
 
             // Initial value: calculated from Kardex movements before dateFrom
-            var initialValueData = await context.Kardexes
+            var beforeDateQuery = context.Kardexes
                 .AsNoTracking()
-                .Where(k => k.BusinessId == businessId && k.ProductId == productId && k.MovementDate < dateFrom)
-                .GroupBy(k => 1)
-                .Select(g => new
-                {
-                    TotalValueIn = g.Sum(k => k.QuantityIn > 0 ? k.TotalCost : 0m),
-                    TotalValueOut = g.Sum(k => k.QuantityOut > 0 ? k.TotalCost : 0m)
-                })
-                .FirstOrDefaultAsync();
+                .Where(k => k.BusinessId == businessId && k.ProductId == productId && k.MovementDate < dateFrom);
 
-            var initialValue = (initialValueData?.TotalValueIn ?? 0) - (initialValueData?.TotalValueOut ?? 0);
+            var totalValueIn = await beforeDateQuery.Where(k => k.QuantityIn > 0).Select(k => (decimal?)k.TotalCost).SumAsync() ?? 0m;
+            var totalValueOut = await beforeDateQuery.Where(k => k.QuantityOut > 0).Select(k => (decimal?)k.TotalCost).SumAsync() ?? 0m;
+
+            var initialValue = totalValueIn - totalValueOut;
 
             // Movements in range
             var endOfDay = dateTo.Date.AddDays(1).AddTicks(-1);
