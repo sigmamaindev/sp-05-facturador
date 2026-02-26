@@ -123,10 +123,16 @@ public class KardexRepository(StoreContext context, IHttpContextAccessor httpCon
                 return response;
             }
 
-            // Initial balance before dateFrom
-            var initialData = await context.Kardexes
+            // Current real stock from ProductWarehouse (Existencia en ProductoBodega)
+            var currentStock = await context.ProductWarehouses
                 .AsNoTracking()
-                .Where(k => k.BusinessId == businessId && k.ProductId == productId && k.MovementDate < dateFrom)
+                .Where(pw => pw.Product!.BusinessId == businessId && pw.ProductId == productId)
+                .SumAsync(pw => pw.Stock);
+
+            // Movements from dateFrom onward (to calculate initial balance by working backwards)
+            var movementsFromDate = await context.Kardexes
+                .AsNoTracking()
+                .Where(k => k.BusinessId == businessId && k.ProductId == productId && k.MovementDate >= dateFrom)
                 .GroupBy(k => 1)
                 .Select(g => new
                 {
@@ -137,8 +143,22 @@ public class KardexRepository(StoreContext context, IHttpContextAccessor httpCon
                 })
                 .FirstOrDefaultAsync();
 
-            var initialStock = (initialData?.TotalIn ?? 0) - (initialData?.TotalOut ?? 0);
-            var initialValue = (initialData?.TotalValueIn ?? 0) - (initialData?.TotalValueOut ?? 0);
+            // Initial stock = current real stock - net movements from dateFrom onward
+            var initialStock = currentStock - (movementsFromDate?.TotalIn ?? 0) + (movementsFromDate?.TotalOut ?? 0);
+
+            // Initial value: calculated from Kardex movements before dateFrom
+            var initialValueData = await context.Kardexes
+                .AsNoTracking()
+                .Where(k => k.BusinessId == businessId && k.ProductId == productId && k.MovementDate < dateFrom)
+                .GroupBy(k => 1)
+                .Select(g => new
+                {
+                    TotalValueIn = g.Sum(k => k.QuantityIn > 0 ? k.TotalCost : 0m),
+                    TotalValueOut = g.Sum(k => k.QuantityOut > 0 ? k.TotalCost : 0m)
+                })
+                .FirstOrDefaultAsync();
+
+            var initialValue = (initialValueData?.TotalValueIn ?? 0) - (initialValueData?.TotalValueOut ?? 0);
 
             // Movements in range
             var endOfDay = dateTo.Date.AddDays(1).AddTicks(-1);
