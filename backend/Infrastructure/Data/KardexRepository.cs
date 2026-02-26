@@ -127,7 +127,8 @@ public class KardexRepository(StoreContext context, IHttpContextAccessor httpCon
             var currentStock = await context.ProductWarehouses
                 .AsNoTracking()
                 .Where(pw => pw.Product!.BusinessId == businessId && pw.ProductId == productId)
-                .SumAsync(pw => pw.Stock);
+                .Select(pw => (decimal?)pw.Stock)
+                .SumAsync() ?? 0m;
 
             // Movements from dateFrom onward (to calculate initial balance by working backwards)
             var movementsFromDate = await context.Kardexes
