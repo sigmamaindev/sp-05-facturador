@@ -2,8 +2,8 @@ import { isAxiosError } from "axios";
 
 import api from "@/utils/axios";
 
-import type { ApiResponseList } from "@/types/api.types";
-import type { KardexMovement } from "@/types/kardex.types";
+import type { ApiResponseList, ApiResponseSingle } from "@/types/api.types";
+import type { KardexMovement, KardexReportWrapper } from "@/types/kardex.types";
 
 export async function getKardexMovements(
   keyword: string,
@@ -22,6 +22,98 @@ export async function getKardexMovements(
         Authorization: `Bearer ${token}`,
       },
     });
+
+    return data;
+  } catch (error) {
+    if (isAxiosError(error) && error.response) {
+      throw new Error(error.response.data.error ?? "Error en la API");
+    }
+    throw new Error("Error desconocido");
+  }
+}
+
+export async function getKardexReport(
+  productId: number,
+  dateFrom: string,
+  dateTo: string,
+  token: string
+): Promise<ApiResponseSingle<KardexReportWrapper>> {
+  try {
+    const params = new URLSearchParams();
+    params.append("productId", String(productId));
+    params.append("dateFrom", dateFrom);
+    params.append("dateTo", dateTo);
+
+    const { data } = await api.get<ApiResponseSingle<KardexReportWrapper>>(
+      `/kardex/report?${params.toString()}`,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+
+    return data;
+  } catch (error) {
+    if (isAxiosError(error) && error.response) {
+      throw new Error(error.response.data.error ?? "Error en la API");
+    }
+    throw new Error("Error desconocido");
+  }
+}
+
+export async function downloadKardexReportPdf(
+  productId: number,
+  dateFrom: string,
+  dateTo: string,
+  token: string
+): Promise<Blob> {
+  try {
+    const params = new URLSearchParams();
+    params.append("productId", String(productId));
+    params.append("dateFrom", dateFrom);
+    params.append("dateTo", dateTo);
+
+    const { data } = await api.get<Blob>(
+      `/kardex/report/pdf?${params.toString()}`,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+        responseType: "blob",
+      }
+    );
+
+    return data;
+  } catch (error) {
+    if (isAxiosError(error) && error.response) {
+      throw new Error(error.response.data.error ?? "Error en la API");
+    }
+    throw new Error("Error desconocido");
+  }
+}
+
+export async function downloadKardexReportExcel(
+  productId: number,
+  dateFrom: string,
+  dateTo: string,
+  token: string
+): Promise<Blob> {
+  try {
+    const params = new URLSearchParams();
+    params.append("productId", String(productId));
+    params.append("dateFrom", dateFrom);
+    params.append("dateTo", dateTo);
+
+    const { data } = await api.get<Blob>(
+      `/kardex/report/excel?${params.toString()}`,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+        responseType: "blob",
+      }
+    );
 
     return data;
   } catch (error) {

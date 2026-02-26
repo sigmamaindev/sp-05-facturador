@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { Eye, Pencil } from "lucide-react";
+import { CreditCard, Eye } from "lucide-react";
 
 import type { AccountsPayable } from "@/types/accountsPayable.types";
 
@@ -49,17 +49,17 @@ export default function AccountsPayableActionsCell({
           <TooltipTrigger asChild>
             <Link
               to={`/cuentas-por-pagar/actualizar/${accountsPayable.id}`}
-              aria-label="Editar cuenta por pagar"
+              aria-label="Registrar pago"
               className={cn(
                 buttonVariants({ size: "icon-sm" }),
-                "bg-blue-600 text-white hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600"
+                "bg-emerald-600 text-white hover:bg-emerald-700 dark:bg-emerald-500 dark:hover:bg-emerald-600"
               )}
             >
-              <Pencil className="size-4 text-white" />
+              <CreditCard className="size-4 text-white" />
             </Link>
           </TooltipTrigger>
           <TooltipContent side="top" sideOffset={6}>
-            Editar
+            Pago
           </TooltipContent>
         </Tooltip>
       ) : null}
