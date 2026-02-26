@@ -513,10 +513,10 @@ public class StoreContext(DbContextOptions options) : DbContext(options)
             entity.Property(k => k.ProductId).HasColumnName("ProductoId");
             entity.Property(k => k.WarehouseId).HasColumnName("BodegaId");
             entity.Property(k => k.MovementDate).HasColumnName("FechaMovimiento").HasColumnType("timestamp without time zone");
-            entity.Property(k => k.QuantityIn).HasColumnName("CantidadEntrada");
-            entity.Property(k => k.QuantityOut).HasColumnName("CantidadSalida");
-            entity.Property(k => k.UnitCost).HasColumnName("CostoUnitario");
-            entity.Property(k => k.TotalCost).HasColumnName("CostoTotal");
+            entity.Property(k => k.QuantityIn).HasColumnName("CantidadEntrada").HasColumnType("numeric(18,4)");
+            entity.Property(k => k.QuantityOut).HasColumnName("CantidadSalida").HasColumnType("numeric(18,4)");
+            entity.Property(k => k.UnitCost).HasColumnName("CostoUnitario").HasColumnType("numeric(18,4)");
+            entity.Property(k => k.TotalCost).HasColumnName("CostoTotal").HasColumnType("numeric(18,4)");
             entity.Property(k => k.MovementType).HasColumnName("TipoMovimiento");
             entity.Property(k => k.Reference).HasColumnName("Referencia");
 

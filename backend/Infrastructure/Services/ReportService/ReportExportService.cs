@@ -493,7 +493,7 @@ public class ReportExportService : IReportExportService
                             table.Cell().Element(c => DataCell(c, bg)).Text("");
                             table.Cell().Element(c => DataCell(c, bg)).Text("");
                             // Totals
-                            table.Cell().Element(c => DataCell(c, bg)).AlignRight().Text(item.RunningStock.ToString("0.000"));
+                            table.Cell().Element(c => DataCell(c, bg)).AlignRight().Text(item.RunningStock.ToString("0.00"));
                             table.Cell().Element(c => DataCell(c, bg)).AlignRight().Text(FormatCurrency(item.RunningValue));
                         }
                         else
@@ -504,17 +504,17 @@ public class ReportExportService : IReportExportService
                             table.Cell().Element(c => DataCell(c, bg)).Text(item.Reference);
 
                             // Entradas
-                            table.Cell().Element(c => DataCell(c, bg)).AlignRight().Text(item.EntryQuantity > 0 ? item.EntryQuantity.ToString("0.000") : "");
-                            table.Cell().Element(c => DataCell(c, bg)).AlignRight().Text(item.EntryQuantity > 0 ? item.EntryCost.ToString("0.0000") : "");
+                            table.Cell().Element(c => DataCell(c, bg)).AlignRight().Text(item.EntryQuantity > 0 ? item.EntryQuantity.ToString("0.00") : "");
+                            table.Cell().Element(c => DataCell(c, bg)).AlignRight().Text(item.EntryQuantity > 0 ? item.EntryCost.ToString("0.00") : "");
                             table.Cell().Element(c => DataCell(c, bg)).AlignRight().Text(item.EntryQuantity > 0 ? FormatCurrency(item.EntryTotal) : "");
 
                             // Salidas
-                            table.Cell().Element(c => DataCell(c, bg)).AlignRight().Text(item.ExitQuantity > 0 ? item.ExitQuantity.ToString("0.000") : "");
-                            table.Cell().Element(c => DataCell(c, bg)).AlignRight().Text(item.ExitQuantity > 0 ? item.ExitCost.ToString("0.0000") : "");
+                            table.Cell().Element(c => DataCell(c, bg)).AlignRight().Text(item.ExitQuantity > 0 ? item.ExitQuantity.ToString("0.00") : "");
+                            table.Cell().Element(c => DataCell(c, bg)).AlignRight().Text(item.ExitQuantity > 0 ? item.ExitCost.ToString("0.00") : "");
                             table.Cell().Element(c => DataCell(c, bg)).AlignRight().Text(item.ExitQuantity > 0 ? FormatCurrency(item.ExitTotal) : "");
 
                             // Totales
-                            table.Cell().Element(c => DataCell(c, bg)).AlignRight().Text(item.RunningStock.ToString("0.000"));
+                            table.Cell().Element(c => DataCell(c, bg)).AlignRight().Text(item.RunningStock.ToString("0.00"));
                             table.Cell().Element(c => DataCell(c, bg)).AlignRight().Text(FormatCurrency(item.RunningValue));
                         }
                     }
@@ -652,7 +652,7 @@ public class ReportExportService : IReportExportService
             range.Style.Fill.SetBackgroundColor(rowColor);
 
             foreach (int col in new[] { 5, 6, 7, 8, 9, 10, 11, 12 })
-                ws.Cell(dataRow, col).Style.NumberFormat.Format = "#,##0.0000";
+                ws.Cell(dataRow, col).Style.NumberFormat.Format = "#,##0.00";
 
             dataRow++;
         }

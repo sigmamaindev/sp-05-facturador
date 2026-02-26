@@ -11,7 +11,7 @@ function formatDate(dateValue: string) {
   });
 }
 
-function formatNumber(value: number, decimals = 4) {
+function formatNumber(value: number, decimals = 2) {
   return value !== 0 ? value.toFixed(decimals) : "";
 }
 
@@ -76,7 +76,7 @@ export const kardexReportColumns: ColumnDef<KardexReportRow>[] = [
       const item = row.original;
       if (item.movementType === "SALDO_INICIAL") return null;
       return (
-        <p className="text-right">{formatNumber(item.entryQuantity, 3)}</p>
+        <p className="text-right">{formatNumber(item.entryQuantity)}</p>
       );
     },
   },
@@ -110,7 +110,7 @@ export const kardexReportColumns: ColumnDef<KardexReportRow>[] = [
       const item = row.original;
       if (item.movementType === "SALDO_INICIAL") return null;
       return (
-        <p className="text-right">{formatNumber(item.exitQuantity, 3)}</p>
+        <p className="text-right">{formatNumber(item.exitQuantity)}</p>
       );
     },
   },
@@ -142,7 +142,7 @@ export const kardexReportColumns: ColumnDef<KardexReportRow>[] = [
     header: () => <div className="text-right">Existencia</div>,
     cell: ({ row }) => (
       <p className="text-right font-medium">
-        {row.original.runningStock.toFixed(3)}
+        {row.original.runningStock.toFixed(2)}
       </p>
     ),
   },

@@ -129,7 +129,7 @@ public class KardexService(StoreContext context) : IKardexService
                 throw new InvalidOperationException($"Factor de unidad inválido para el producto {productName}");
             }
 
-            var quantityBase = detail.Quantity * factorBase;
+            var quantityBase = Math.Round(detail.Quantity * factorBase, 4);
 
             if (stock.Stock < quantityBase)
             {
@@ -138,7 +138,7 @@ public class KardexService(StoreContext context) : IKardexService
 
             stock.Stock -= quantityBase;
 
-            var unitCostBase = detail.UnitPrice / factorBase;
+            var unitCostBase = Math.Round(detail.UnitPrice / factorBase, 4);
 
             movements.Add(new Kardex
             {
@@ -149,7 +149,7 @@ public class KardexService(StoreContext context) : IKardexService
                 QuantityOut = quantityBase,
                 QuantityIn = 0,
                 UnitCost = unitCostBase,
-                TotalCost = quantityBase * unitCostBase,
+                TotalCost = Math.Round(quantityBase * unitCostBase, 4),
                 MovementDate = movementDate,
                 Reference = $"Factura #{invoice.Sequential}"
             });
@@ -243,10 +243,10 @@ public class KardexService(StoreContext context) : IKardexService
                 throw new InvalidOperationException($"Factor de unidad inválido para el producto {productName}");
             }
 
-            var quantityBase = detail.Quantity * factorBase;
+            var quantityBase = Math.Round(detail.Quantity * factorBase, 4);
             stock.Stock += quantityBase;
 
-            var unitCostBase = detail.UnitCost / factorBase;
+            var unitCostBase = Math.Round(detail.UnitCost / factorBase, 4);
 
             movements.Add(new Kardex
             {
@@ -257,7 +257,7 @@ public class KardexService(StoreContext context) : IKardexService
                 QuantityIn = quantityBase,
                 QuantityOut = 0,
                 UnitCost = unitCostBase,
-                TotalCost = quantityBase * unitCostBase,
+                TotalCost = Math.Round(quantityBase * unitCostBase, 4),
                 MovementDate = movementDate,
                 Reference = $"Compra #{purchase.Sequential}"
             });

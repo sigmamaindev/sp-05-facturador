@@ -107,14 +107,14 @@ export const columns: ColumnDef<KardexMovement>[] = [
     accessorKey: "quantityIn",
     header: () => <div className="text-right">Entrada</div>,
     cell: ({ row }) => (
-      <p className="text-right">{Number(row.original.quantityIn)}</p>
+      <p className="text-right">{Number(row.original.quantityIn).toFixed(2)}</p>
     ),
   },
   {
     accessorKey: "quantityOut",
     header: () => <div className="text-right">Salida</div>,
     cell: ({ row }) => (
-      <p className="text-right">{Number(row.original.quantityOut)}</p>
+      <p className="text-right">{Number(row.original.quantityOut).toFixed(2)}</p>
     ),
   },
   {
