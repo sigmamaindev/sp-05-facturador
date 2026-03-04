@@ -105,9 +105,9 @@ public class KardexService(StoreContext context) : IKardexService
                 ? p.Name
                 : detail.ProductId.ToString();
 
-            if (detail.Quantity <= 0)
+            if (detail.NetWeight <= 0)
             {
-                throw new InvalidOperationException($"Cantidad inválida para el producto {productName}");
+                throw new InvalidOperationException($"Tara inválida para el producto {productName}");
             }
 
             var warehouseId = detail.WarehouseId!.Value;
@@ -129,7 +129,7 @@ public class KardexService(StoreContext context) : IKardexService
                 throw new InvalidOperationException($"Factor de unidad inválido para el producto {productName}");
             }
 
-            var quantityBase = detail.Quantity * factorBase;
+            var quantityBase = detail.NetWeight * factorBase;
 
             if (stock.Stock < quantityBase)
             {
@@ -213,9 +213,9 @@ public class KardexService(StoreContext context) : IKardexService
                 ? p.Name
                 : detail.ProductId.ToString();
 
-            if (detail.Quantity <= 0)
+            if (detail.NetWeight <= 0)
             {
-                throw new InvalidOperationException($"Cantidad inválida para el producto {productName}");
+                throw new InvalidOperationException($"Tara inválida para el producto {productName}");
             }
 
             if (!stockByKey.TryGetValue((detail.ProductId, detail.WarehouseId), out var stock))
@@ -243,7 +243,7 @@ public class KardexService(StoreContext context) : IKardexService
                 throw new InvalidOperationException($"Factor de unidad inválido para el producto {productName}");
             }
 
-            var quantityBase = detail.Quantity * factorBase;
+            var quantityBase = detail.NetWeight * factorBase;
             stock.Stock += quantityBase;
 
             var unitCostBase = detail.UnitCost / factorBase;

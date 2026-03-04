@@ -21,6 +21,7 @@ public class PurchaseDetailResDto
     public decimal Quantity { get; set; }
     public decimal NetWeight { get; set; }
     public decimal GrossWeight { get; set; }
+    public decimal Shrinkage { get; set; }
     public decimal UnitCost { get; set; }
     public decimal Discount { get; set; }
     public decimal Subtotal { get; set; }

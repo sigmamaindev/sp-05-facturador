@@ -57,6 +57,7 @@ export type InvoiceDetail = {
   warehouseName: string;
   netWeight?: number;
   grossWeight?: number;
+  shrinkage?: number;
   taxId: number;
   taxCode: string;
   taxName: string;
@@ -76,6 +77,7 @@ export interface InvoiceProduct extends Product {
   priceTier?: 1 | 2 | 3 | 4;
   netWeight: number;
   grossWeight: number;
+  shrinkage: number;
   quantity: number;
   discount: number;
   subtotal: number;
@@ -115,6 +117,11 @@ export const invoiceDetailSchema = z.object({
   grossWeight: z
     .number()
     .min(0, "El peso bruto no puede ser negativo")
+    .optional()
+    .default(0),
+  shrinkage: z
+    .number()
+    .min(0, "La merma no puede ser negativa")
     .optional()
     .default(0),
   quantity: z

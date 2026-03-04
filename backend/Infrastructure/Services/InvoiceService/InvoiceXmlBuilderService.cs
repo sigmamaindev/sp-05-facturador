@@ -135,7 +135,7 @@ public class InvoiceXmlBuilderService : IInvoiceXmlBuilderService
             var detailElement = new XElement("detalle",
                 new XElement("codigoPrincipal", detail.Product?.Sku ?? detail.ProductId.ToString()),
                 new XElement("descripcion", detail.Product?.Name ?? "Producto"),
-                new XElement("cantidad", FormatDecimal(detail.Quantity, 6)),
+                new XElement("cantidad", FormatDecimal(detail.NetWeight, 6)),
                 new XElement("precioUnitario", FormatDecimal(detail.UnitPrice)),
                 new XElement("descuento", FormatDecimal(detail.Discount)),
                 new XElement("precioTotalSinImpuesto", FormatDecimal(detail.Subtotal))

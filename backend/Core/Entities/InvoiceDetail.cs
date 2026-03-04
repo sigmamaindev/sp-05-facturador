@@ -19,6 +19,7 @@ public class InvoiceDetail : BaseEntity
     public decimal Quantity { get; set; }
     public decimal NetWeight { get; set; }
     public decimal GrossWeight { get; set; }
+    public decimal Shrinkage { get; set; }
     public decimal UnitPrice { get; set; }
     public int PriceLevel { get; set; }
     public decimal Discount { get; set; }

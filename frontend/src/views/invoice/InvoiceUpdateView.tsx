@@ -92,14 +92,10 @@ export default function InvoiceUpdateView() {
 	    invoiceData.details.map((detail) => {
 	      const netWeight = detail.netWeight ?? 0;
 	      const grossWeight = detail.grossWeight ?? 0;
-	      const computedQuantity = Number((grossWeight - netWeight).toFixed(2));
-	      const calculatedQuantity = Number.isFinite(computedQuantity)
-	        ? Math.max(0, computedQuantity)
-	        : 0;
-	      const shouldUseCalculated = netWeight !== 0 || grossWeight !== 0;
-	      const quantity = shouldUseCalculated ? calculatedQuantity : detail.quantity;
+	      const shrinkage = detail.shrinkage ?? 0;
+	      const quantity = detail.quantity;
 
-	      const base = (detail.unitPrice - detail.discount) * quantity;
+	      const base = (detail.unitPrice - detail.discount) * netWeight;
 	      const taxValue = base * (detail.taxRate / 100);
 
       return {
@@ -110,6 +106,7 @@ export default function InvoiceUpdateView() {
         price: detail.unitPrice,
         netWeight,
         grossWeight,
+        shrinkage,
         iva: detail.taxRate > 0,
         isActive: true,
         tax: {
@@ -204,8 +201,9 @@ export default function InvoiceUpdateView() {
 	      const discount = 0;
 	      const netWeight = 0;
 	      const grossWeight = 0;
-	      const quantity = 1;
-	      const base = (price - discount) * quantity;
+	      const shrinkage = 0;
+	      const quantity = 0;
+	      const base = (price - discount) * netWeight;
 	      const ivaRate = product.tax?.rate ?? 12;
 	      const taxValue = base * (ivaRate / 100);
 
@@ -214,6 +212,7 @@ export default function InvoiceUpdateView() {
         price,
         netWeight,
         grossWeight,
+        shrinkage,
         quantity,
         discount: discount,
         subtotal: base,
@@ -226,7 +225,7 @@ export default function InvoiceUpdateView() {
 
 	  const handleWeightChange = (
 	    productId: number,
-	    field: "netWeight" | "grossWeight",
+	    field: "grossWeight" | "shrinkage",
 	    value: number
 	  ) => {
 	    const nextValue = Number.isFinite(value) ? value : 0;
@@ -234,28 +233,34 @@ export default function InvoiceUpdateView() {
 	      prev.map((p) => {
 	        if (p.id !== productId) return p;
 
-	        const netWeight = field === "netWeight" ? nextValue : p.netWeight ?? 0;
 	        const grossWeight =
 	          field === "grossWeight" ? nextValue : p.grossWeight ?? 0;
-	        const computedQuantity = Number((grossWeight - netWeight).toFixed(2));
-	        const calculatedQuantity = Number.isFinite(computedQuantity)
-	          ? Math.max(0, computedQuantity)
-	          : 0;
-	        const shouldUseCalculated = netWeight !== 0 || grossWeight !== 0;
-	        const quantity = shouldUseCalculated ? calculatedQuantity : p.quantity;
+	        const shrinkage =
+	          field === "shrinkage" ? nextValue : p.shrinkage ?? 0;
+	        const netWeight = Math.max(0, Number((grossWeight - shrinkage).toFixed(2)));
 
-	        const base = (p.price - p.discount) * quantity;
+	        const base = (p.price - p.discount) * netWeight;
 	        const ivaRate = p.tax?.rate ?? 12;
 	        const taxValue = base * (ivaRate / 100);
 
         return {
           ...p,
-          netWeight,
           grossWeight,
-          quantity,
+          shrinkage,
+          netWeight,
           subtotal: base,
           taxValue,
         };
+      })
+    );
+  };
+
+  const handleQuantityChange = (productId: number, value: number) => {
+    const next = Number.isFinite(value) ? value : 0;
+    setProducts((prev) =>
+      prev.map((p) => {
+        if (p.id !== productId) return p;
+        return { ...p, quantity: next };
       })
     );
   };
@@ -333,13 +338,20 @@ export default function InvoiceUpdateView() {
 
         const price = getPriceForTier(presentation, priceTier);
         const unitMeasure = presentation.unitMeasure ?? p.unitMeasure;
-        const base = (price - p.discount) * p.quantity;
+        const grossWeight = Number(presentation.grossWeight ?? p.grossWeight ?? 0);
+        const presNetWeight = Number(presentation.netWeight ?? p.netWeight ?? 0);
+        const shrinkage = Math.max(0, Number((grossWeight - presNetWeight).toFixed(2)));
+        const netWeight = Math.max(0, Number((grossWeight - shrinkage).toFixed(2)));
+        const base = (price - p.discount) * netWeight;
         const ivaRate = p.tax?.rate ?? 12;
         const taxValue = base * (ivaRate / 100);
 
         return {
           ...p,
           unitMeasure,
+          grossWeight,
+          shrinkage,
+          netWeight,
           price,
           priceMode: "manual",
           priceTier,
@@ -380,6 +392,7 @@ export default function InvoiceUpdateView() {
       unitMeasureId: p.unitMeasure?.id ?? 0,
       netWeight: p.netWeight ?? 0,
       grossWeight: p.grossWeight ?? 0,
+      shrinkage: p.shrinkage ?? 0,
     }));
 
     const emissionDate = data.invoiceDate ?? new Date();
@@ -515,6 +528,7 @@ export default function InvoiceUpdateView() {
               onClosePresentationModal={handleClosePresentationModal}
               handleSelectPresentation={handleSelectPresentation}
               handleWeightChange={handleWeightChange}
+              handleQuantityChange={handleQuantityChange}
               handleRemoveProduct={handleRemoveProduct}
               onSaveDraft={handleUpdateDraft}
               onContinue={handleContinueToPayment}

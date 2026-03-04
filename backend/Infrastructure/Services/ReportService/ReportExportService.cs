@@ -99,6 +99,28 @@ public class ReportExportService : IReportExportService
                         table.Cell().Element(c => DataCell(c, bg)).AlignRight().Text(FormatCurrency(item.Total));
                         table.Cell().Element(c => DataCell(c, bg)).AlignRight().Text($"% {promedio:0.00}");
                     }
+
+                    // Fila de totales
+                    if (data.Count > 0)
+                    {
+                        var totalQuantity = data.Sum(x => x.Quantity);
+                        var totalGrossWeight = data.Sum(x => x.GrossWeight);
+                        var totalNetWeight = data.Sum(x => x.NetWeight);
+                        var totalMerma = totalGrossWeight - totalNetWeight;
+                        var totalAmount = data.Sum(x => x.Total);
+
+                        static IContainer TotalsCell(IContainer c) =>
+                            c.Background(Colors.Blue.Lighten4).Padding(3);
+
+                        table.Cell().ColumnSpan(6).Element(TotalsCell).AlignRight().Text("TOTALES").SemiBold();
+                        table.Cell().Element(TotalsCell).AlignRight().Text(totalQuantity.ToString("0.##")).SemiBold();
+                        table.Cell().Element(TotalsCell).AlignRight().Text($"Lb {totalGrossWeight:0.00}").SemiBold();
+                        table.Cell().Element(TotalsCell).AlignRight().Text($"Lb {totalMerma:0.00}").SemiBold();
+                        table.Cell().Element(TotalsCell).AlignRight().Text($"Lb {totalNetWeight:0.00}").SemiBold();
+                        table.Cell().Element(TotalsCell).AlignRight().Text("").SemiBold();
+                        table.Cell().Element(TotalsCell).AlignRight().Text(FormatCurrency(totalAmount)).SemiBold();
+                        table.Cell().Element(TotalsCell).AlignRight().Text("").SemiBold();
+                    }
                 });
 
                 page.Footer().AlignCenter().Text(text =>
@@ -176,6 +198,34 @@ public class ReportExportService : IReportExportService
             dataRange.Style.Fill.SetBackgroundColor(rowColor);
 
             foreach (int col in new[] { 7, 8, 9, 10, 11, 12, 13 })
+                ws.Cell(dataRow, col).Style.NumberFormat.Format = "#,##0.00";
+
+            dataRow++;
+        }
+
+        // Fila de totales
+        if (data.Count > 0)
+        {
+            var totalQuantity = data.Sum(x => x.Quantity);
+            var totalGrossWeight = data.Sum(x => x.GrossWeight);
+            var totalNetWeight = data.Sum(x => x.NetWeight);
+            var totalMerma = totalGrossWeight - totalNetWeight;
+            var totalAmount = data.Sum(x => x.Total);
+
+            ws.Cell(dataRow, 6).Value = "TOTALES";
+            ws.Cell(dataRow, 6).Style.Font.SetBold(true).Alignment.SetHorizontal(XLAlignmentHorizontalValues.Right);
+            ws.Cell(dataRow, 7).Value = (double)totalQuantity;
+            ws.Cell(dataRow, 8).Value = (double)totalGrossWeight;
+            ws.Cell(dataRow, 9).Value = (double)totalMerma;
+            ws.Cell(dataRow, 10).Value = (double)totalNetWeight;
+            ws.Cell(dataRow, 12).Value = (double)totalAmount;
+
+            var totalsRange = ws.Range(dataRow, 1, dataRow, 13);
+            totalsRange.Style
+                .Font.SetBold(true)
+                .Fill.SetBackgroundColor(XLColor.FromHtml("#D6E4F0"));
+
+            foreach (int col in new[] { 7, 8, 9, 10, 12 })
                 ws.Cell(dataRow, col).Style.NumberFormat.Format = "#,##0.00";
 
             dataRow++;
@@ -279,6 +329,28 @@ public class ReportExportService : IReportExportService
                         table.Cell().Element(c => DataCell(c, bg)).AlignRight().Text(FormatCurrency(item.Total));
                         table.Cell().Element(c => DataCell(c, bg)).AlignRight().Text($"% {promedio:0.00}");
                     }
+
+                    // Fila de totales
+                    if (data.Count > 0)
+                    {
+                        var totalQuantity = data.Sum(x => x.Quantity);
+                        var totalGrossWeight = data.Sum(x => x.GrossWeight);
+                        var totalNetWeight = data.Sum(x => x.NetWeight);
+                        var totalMerma = totalGrossWeight - totalNetWeight;
+                        var totalAmount = data.Sum(x => x.Total);
+
+                        static IContainer TotalsCellP(IContainer c) =>
+                            c.Background(Colors.Green.Lighten4).Padding(3);
+
+                        table.Cell().ColumnSpan(5).Element(TotalsCellP).AlignRight().Text("TOTALES").SemiBold();
+                        table.Cell().Element(TotalsCellP).AlignRight().Text(totalQuantity.ToString("0.##")).SemiBold();
+                        table.Cell().Element(TotalsCellP).AlignRight().Text($"Lb {totalGrossWeight:0.00}").SemiBold();
+                        table.Cell().Element(TotalsCellP).AlignRight().Text($"Lb {totalMerma:0.00}").SemiBold();
+                        table.Cell().Element(TotalsCellP).AlignRight().Text($"Lb {totalNetWeight:0.00}").SemiBold();
+                        table.Cell().Element(TotalsCellP).AlignRight().Text("").SemiBold();
+                        table.Cell().Element(TotalsCellP).AlignRight().Text(FormatCurrency(totalAmount)).SemiBold();
+                        table.Cell().Element(TotalsCellP).AlignRight().Text("").SemiBold();
+                    }
                 });
 
                 page.Footer().AlignCenter().Text(text =>
@@ -355,6 +427,34 @@ public class ReportExportService : IReportExportService
             dataRange.Style.Fill.SetBackgroundColor(rowColor);
 
             foreach (int col in new[] { 6, 7, 8, 9, 10, 11, 12 })
+                ws.Cell(dataRow, col).Style.NumberFormat.Format = "#,##0.00";
+
+            dataRow++;
+        }
+
+        // Fila de totales
+        if (data.Count > 0)
+        {
+            var totalQuantity = data.Sum(x => x.Quantity);
+            var totalGrossWeight = data.Sum(x => x.GrossWeight);
+            var totalNetWeight = data.Sum(x => x.NetWeight);
+            var totalMerma = totalGrossWeight - totalNetWeight;
+            var totalAmount = data.Sum(x => x.Total);
+
+            ws.Cell(dataRow, 5).Value = "TOTALES";
+            ws.Cell(dataRow, 5).Style.Font.SetBold(true).Alignment.SetHorizontal(XLAlignmentHorizontalValues.Right);
+            ws.Cell(dataRow, 6).Value = (double)totalQuantity;
+            ws.Cell(dataRow, 7).Value = (double)totalGrossWeight;
+            ws.Cell(dataRow, 8).Value = (double)totalMerma;
+            ws.Cell(dataRow, 9).Value = (double)totalNetWeight;
+            ws.Cell(dataRow, 11).Value = (double)totalAmount;
+
+            var totalsRange = ws.Range(dataRow, 1, dataRow, 12);
+            totalsRange.Style
+                .Font.SetBold(true)
+                .Fill.SetBackgroundColor(XLColor.FromHtml("#C8E6C9"));
+
+            foreach (int col in new[] { 6, 7, 8, 9, 11 })
                 ws.Cell(dataRow, col).Style.NumberFormat.Format = "#,##0.00";
 
             dataRow++;
