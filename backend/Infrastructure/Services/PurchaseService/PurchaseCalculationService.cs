@@ -15,7 +15,7 @@ public class PurchaseCalculationService : IPurchaseCalculationService
 
         foreach (var detail in purchase.PurchaseDetails)
         {
-            var taxableBase = (detail.Quantity * detail.UnitCost) - detail.Discount;
+            var taxableBase = (detail.NetWeight * detail.UnitCost) - detail.Discount;
             var taxRate = detail.Tax?.Rate ?? detail.TaxRate;
             var taxValue = taxableBase * (taxRate / 100);
             var total = taxableBase + taxValue;

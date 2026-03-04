@@ -24,6 +24,7 @@ public class InvoiceEditionService(StoreContext context) : IInvoiceEditionServic
                 d.Quantity,
                 d.NetWeight,
                 d.GrossWeight,
+                d.Shrinkage,
                 d.UnitPrice,
                 d.Discount))
             .ToList();
@@ -51,6 +52,7 @@ public class InvoiceEditionService(StoreContext context) : IInvoiceEditionServic
                 Quantity = resolved.Quantity,
                 NetWeight = resolved.NetWeight,
                 GrossWeight = resolved.GrossWeight,
+                Shrinkage = resolved.Shrinkage,
                 UnitPrice = resolved.UnitPrice,
                 PriceLevel = resolved.PriceLevel,
                 Discount = resolved.Discount,
@@ -157,6 +159,7 @@ public class InvoiceEditionService(StoreContext context) : IInvoiceEditionServic
                 d.Quantity,
                 d.NetWeight,
                 d.GrossWeight,
+                d.Shrinkage,
                 d.UnitPrice,
                 d.Discount))
             .ToList();
@@ -199,6 +202,7 @@ public class InvoiceEditionService(StoreContext context) : IInvoiceEditionServic
                 existingDetail.Quantity = resolved.Quantity;
                 existingDetail.NetWeight = resolved.NetWeight;
                 existingDetail.GrossWeight = resolved.GrossWeight;
+                existingDetail.Shrinkage = resolved.Shrinkage;
                 existingDetail.UnitPrice = resolved.UnitPrice;
                 existingDetail.PriceLevel = resolved.PriceLevel;
                 existingDetail.Discount = resolved.Discount;
@@ -240,6 +244,7 @@ public class InvoiceEditionService(StoreContext context) : IInvoiceEditionServic
         decimal Quantity,
         decimal NetWeight,
         decimal GrossWeight,
+        decimal Shrinkage,
         decimal UnitPrice,
         decimal Discount);
 
@@ -254,7 +259,8 @@ public class InvoiceEditionService(StoreContext context) : IInvoiceEditionServic
         int PriceLevel,
         decimal Discount,
         decimal NetWeight,
-        decimal GrossWeight);
+        decimal GrossWeight,
+        decimal Shrinkage);
 
     private async Task<List<ResolvedInvoiceLine>> ResolveLinesAsync(int businessId, IReadOnlyList<InvoiceLineInput> inputs)
     {
@@ -429,7 +435,8 @@ public class InvoiceEditionService(StoreContext context) : IInvoiceEditionServic
                 priceLevel,
                 input.Discount,
                 netWeight,
-                grossWeight));
+                grossWeight,
+                input.Shrinkage));
         }
 
         var duplicateKeys = resolved

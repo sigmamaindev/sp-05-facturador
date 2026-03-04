@@ -15,7 +15,7 @@ public class InvoiceCalculationService : IInvoiceCalculationService
 
         foreach (var detail in invoice.InvoiceDetails)
         {
-            var taxableBase = (detail.Quantity * detail.UnitPrice) - detail.Discount;
+            var taxableBase = (detail.NetWeight * detail.UnitPrice) - detail.Discount;
             var taxRate = detail.Tax?.Rate ?? detail.TaxRate;
             var taxValue = taxableBase * (taxRate / 100);
             var total = taxableBase + taxValue;

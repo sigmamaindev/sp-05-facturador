@@ -139,8 +139,9 @@ export default function InvoiceCreateView() {
       const discount = 0;
       const netWeight = 0;
       const grossWeight = 0;
-      const quantity = 1;
-      const base = (price - discount) * quantity;
+      const shrinkage = 0;
+      const quantity = 0;
+      const base = (price - discount) * netWeight;
       const ivaRate = product.tax?.rate ?? 12;
       const taxValue = base * (ivaRate / 100);
 
@@ -151,6 +152,7 @@ export default function InvoiceCreateView() {
         priceTier,
         netWeight,
         grossWeight,
+        shrinkage,
         quantity,
         discount: discount,
         subtotal: base,
@@ -230,13 +232,20 @@ export default function InvoiceCreateView() {
 
 	        const price = getPriceForTier(presentation, priceTier);
 	        const unitMeasure = presentation.unitMeasure ?? p.unitMeasure;
-	        const base = (price - p.discount) * p.quantity;
+	        const grossWeight = Number(presentation.grossWeight ?? p.grossWeight ?? 0);
+	        const presNetWeight = Number(presentation.netWeight ?? p.netWeight ?? 0);
+	        const shrinkage = Math.max(0, Number((grossWeight - presNetWeight).toFixed(2)));
+	        const netWeight = Math.max(0, Number((grossWeight - shrinkage).toFixed(2)));
+	        const base = (price - p.discount) * netWeight;
 	        const ivaRate = p.tax?.rate ?? 12;
 	        const taxValue = base * (ivaRate / 100);
 
 	        return {
 	          ...p,
 	          unitMeasure,
+	          grossWeight,
+	          shrinkage,
+	          netWeight,
 	          price,
 	          priceMode: "manual",
 	          priceTier,
@@ -257,7 +266,7 @@ export default function InvoiceCreateView() {
         if (p.id !== productId) return p;
 
         const price = next;
-        const base = (price - p.discount) * p.quantity;
+        const base = (price - p.discount) * (p.netWeight ?? 0);
         const ivaRate = p.tax?.rate ?? 12;
         const taxValue = base * (ivaRate / 100);
 
@@ -278,25 +287,14 @@ export default function InvoiceCreateView() {
     setProducts((prev) =>
       prev.map((p) => {
         if (p.id !== productId) return p;
-
-        const quantity = next;
-        const base = (p.price - p.discount) * quantity;
-        const ivaRate = p.tax?.rate ?? 12;
-        const taxValue = base * (ivaRate / 100);
-
-        return {
-          ...p,
-          quantity,
-          subtotal: base,
-          taxValue,
-        };
+        return { ...p, quantity: next };
       })
     );
   };
 
   const handleWeightChange = (
     productId: number,
-    field: "netWeight" | "grossWeight",
+    field: "grossWeight" | "shrinkage",
     value: number
   ) => {
     const nextValue = Number.isFinite(value) ? value : 0;
@@ -304,26 +302,21 @@ export default function InvoiceCreateView() {
       prev.map((p) => {
         if (p.id !== productId) return p;
 
-        const netWeight = field === "netWeight" ? nextValue : p.netWeight ?? 0;
         const grossWeight =
           field === "grossWeight" ? nextValue : p.grossWeight ?? 0;
+        const shrinkage =
+          field === "shrinkage" ? nextValue : p.shrinkage ?? 0;
+        const netWeight = Math.max(0, Number((grossWeight - shrinkage).toFixed(2)));
 
-        const computedQuantity = Number((grossWeight - netWeight).toFixed(2));
-        const calculatedQuantity = Number.isFinite(computedQuantity)
-          ? Math.max(0, computedQuantity)
-          : 0;
-        const shouldUseCalculated = netWeight !== 0 || grossWeight !== 0;
-        const quantity = shouldUseCalculated ? calculatedQuantity : p.quantity;
-
-        const base = (p.price - p.discount) * quantity;
+        const base = (p.price - p.discount) * netWeight;
         const ivaRate = p.tax?.rate ?? 12;
         const taxValue = base * (ivaRate / 100);
 
         return {
           ...p,
-          netWeight,
           grossWeight,
-          quantity,
+          shrinkage,
+          netWeight,
           subtotal: base,
           taxValue,
         };
@@ -363,6 +356,7 @@ export default function InvoiceCreateView() {
       unitMeasureId: p.unitMeasure?.id ?? 0,
       netWeight: p.netWeight ?? 0,
       grossWeight: p.grossWeight ?? 0,
+      shrinkage: p.shrinkage ?? 0,
     }));
 
     return {

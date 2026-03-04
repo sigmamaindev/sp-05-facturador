@@ -80,6 +80,7 @@ public class InvoiceDtoFactory : IInvoiceDtoFactory
                 Quantity = d.Quantity,
                 NetWeight = d.NetWeight,
                 GrossWeight = d.GrossWeight,
+                Shrinkage = d.Shrinkage,
                 UnitPrice = d.UnitPrice,
                 Discount = d.Discount,
                 Subtotal = d.Subtotal,

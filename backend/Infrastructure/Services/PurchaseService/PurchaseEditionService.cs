@@ -37,8 +37,9 @@ public class PurchaseEditionService(StoreContext context) : IPurchaseEditionServ
             var taxValue = taxableBase * (taxRate / 100);
             var total = taxableBase + taxValue;
 
-            var netWeight = detail.Quantity;
-            var grossWeight = netWeight;
+            var netWeight = detail.NetWeight;
+            var grossWeight = detail.GrossWeight;
+            var shrinkage = detail.Shrinkage;
 
             purchase.PurchaseDetails.Add(new PurchaseDetail
             {
@@ -48,6 +49,7 @@ public class PurchaseEditionService(StoreContext context) : IPurchaseEditionServ
                 UnitMeasureId = unitMeasure.Id,
                 NetWeight = netWeight,
                 GrossWeight = grossWeight,
+                Shrinkage = shrinkage,
                 Quantity = detail.Quantity,
                 UnitCost = detail.UnitCost,
                 Subtotal = taxableBase,
@@ -149,8 +151,9 @@ public class PurchaseEditionService(StoreContext context) : IPurchaseEditionServ
             var taxRate = product.Tax?.Rate ?? 0;
             var taxValue = taxableBase * (taxRate / 100);
             var total = taxableBase + taxValue;
-            var netWeight = detail.Quantity;
-            var grossWeight = netWeight;
+            var netWeight = detail.NetWeight;
+            var grossWeight = detail.GrossWeight;
+            var shrinkage = detail.Shrinkage;
 
             var existingDetail = purchase.PurchaseDetails.FirstOrDefault(d =>
                 d.ProductId == detail.ProductId &&
@@ -164,6 +167,7 @@ public class PurchaseEditionService(StoreContext context) : IPurchaseEditionServ
                 existingDetail.Discount = detail.Discount;
                 existingDetail.NetWeight = netWeight;
                 existingDetail.GrossWeight = grossWeight;
+                existingDetail.Shrinkage = shrinkage;
                 existingDetail.Subtotal = taxableBase;
                 existingDetail.TaxId = product.TaxId;
                 existingDetail.TaxRate = taxRate;
@@ -180,6 +184,7 @@ public class PurchaseEditionService(StoreContext context) : IPurchaseEditionServ
                     UnitMeasureId = unitMeasure.Id,
                     NetWeight = netWeight,
                     GrossWeight = grossWeight,
+                    Shrinkage = shrinkage,
                     Quantity = detail.Quantity,
                     UnitCost = detail.UnitCost,
                     Subtotal = taxableBase,

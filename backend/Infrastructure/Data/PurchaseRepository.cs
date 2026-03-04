@@ -408,6 +408,7 @@ public class PurchaseRepository(
                     Quantity = d.Quantity,
                     NetWeight = d.NetWeight,
                     GrossWeight = d.GrossWeight,
+                    Shrinkage = d.Shrinkage,
                     UnitCost = d.UnitCost,
                     Discount = d.Discount,
                     Subtotal = d.Subtotal,

@@ -156,14 +156,12 @@ export default function PurchaseCreateView() {
       const unitCost = product.price ?? 0;
       const discount = 0;
       const ivaRate = product.tax?.rate ?? 12;
-      const netWeight = product.defaultPresentation?.netWeight ?? 0;
       const grossWeight = product.defaultPresentation?.grossWeight ?? 0;
+      const shrinkage = 0;
+      const netWeight = Math.max(0, grossWeight - shrinkage);
       const unitMeasure =
         product.defaultPresentation?.unitMeasure ?? product.unitMeasure;
-      const computedQuantity = Number((grossWeight - netWeight).toFixed(2));
-      const quantity = Number.isFinite(computedQuantity)
-        ? Math.max(0, computedQuantity)
-        : 0;
+      const quantity = 0;
 
       const newProduct: PurchaseProduct = {
         ...product,
@@ -173,8 +171,9 @@ export default function PurchaseCreateView() {
         discount,
         netWeight,
         grossWeight,
-        subtotal: unitCost * quantity - discount,
-        taxValue: (unitCost * quantity - discount) * (ivaRate / 100),
+        shrinkage,
+        subtotal: unitCost * netWeight - discount,
+        taxValue: (unitCost * netWeight - discount) * (ivaRate / 100),
       };
 
       return [...prev, newProduct];
@@ -232,24 +231,21 @@ export default function PurchaseCreateView() {
         if (p.id !== productIdForPresentation) return p;
 
         const unitMeasure = presentation.unitMeasure ?? p.unitMeasure;
-        const netWeight = Number(presentation.netWeight ?? p.netWeight ?? 0);
         const grossWeight = Number(
           presentation.grossWeight ?? p.grossWeight ?? 0
         );
-        const computedQuantity = Number((grossWeight - netWeight).toFixed(2));
-        const quantity = Number.isFinite(computedQuantity)
-          ? Math.max(0, computedQuantity)
-          : 0;
-        const base = p.unitCost * quantity - p.discount;
+        const netWeight = Number(presentation.netWeight ?? p.netWeight ?? 0);
+        const shrinkage = Math.max(0, Number((grossWeight - netWeight).toFixed(2)));
+        const base = p.unitCost * netWeight - p.discount;
         const ivaRate = p.tax?.rate ?? 12;
         const taxValue = base * (ivaRate / 100);
 
         return {
           ...p,
           unitMeasure,
-          netWeight,
           grossWeight,
-          quantity,
+          shrinkage,
+          netWeight,
           subtotal: base,
           taxValue,
         };
@@ -263,7 +259,7 @@ export default function PurchaseCreateView() {
     setProducts((prev) =>
       prev.map((p) => {
         if (p.id !== productId) return p;
-        const base = newUnitCost * p.quantity - p.discount;
+        const base = newUnitCost * (p.netWeight ?? 0) - p.discount;
         const ivaRate = p.tax?.rate ?? 12;
         const taxValue = base * (ivaRate / 100);
         return { ...p, unitCost: newUnitCost, subtotal: base, taxValue };
@@ -275,7 +271,7 @@ export default function PurchaseCreateView() {
     setProducts((prev) =>
       prev.map((p) => {
         if (p.id !== productId) return p;
-        const base = p.unitCost * p.quantity - newDiscount;
+        const base = p.unitCost * (p.netWeight ?? 0) - newDiscount;
         const ivaRate = p.tax?.rate ?? 12;
         const taxValue = base * (ivaRate / 100);
         return { ...p, discount: newDiscount, subtotal: base, taxValue };
@@ -283,9 +279,19 @@ export default function PurchaseCreateView() {
     );
   };
 
+  const handleQuantityChange = (productId: number, value: number) => {
+    const next = Number.isFinite(value) ? value : 0;
+    setProducts((prev) =>
+      prev.map((p) => {
+        if (p.id !== productId) return p;
+        return { ...p, quantity: next };
+      })
+    );
+  };
+
   const handleWeightChange = (
     productId: number,
-    field: "netWeight" | "grossWeight",
+    field: "grossWeight" | "shrinkage",
     value: number
   ) => {
     const nextValue = Number.isFinite(value) ? value : 0;
@@ -293,22 +299,20 @@ export default function PurchaseCreateView() {
       prev.map((p) => {
         if (p.id !== productId) return p;
 
-        const netWeight = field === "netWeight" ? nextValue : p.netWeight ?? 0;
         const grossWeight =
           field === "grossWeight" ? nextValue : p.grossWeight ?? 0;
-        const computedQuantity = Number((grossWeight - netWeight).toFixed(2));
-        const quantity = Number.isFinite(computedQuantity)
-          ? Math.max(0, computedQuantity)
-          : 0;
-        const base = p.unitCost * quantity - p.discount;
+        const shrinkage =
+          field === "shrinkage" ? nextValue : p.shrinkage ?? 0;
+        const netWeight = Math.max(0, Number((grossWeight - shrinkage).toFixed(2)));
+        const base = p.unitCost * netWeight - p.discount;
         const ivaRate = p.tax?.rate ?? 12;
         const taxValue = base * (ivaRate / 100);
 
         return {
           ...p,
-          netWeight,
           grossWeight,
-          quantity,
+          shrinkage,
+          netWeight,
           subtotal: base,
           taxValue,
         };
@@ -387,7 +391,7 @@ export default function PurchaseCreateView() {
 
     const details = products.map((p) => {
       const taxRate = p.tax?.rate ?? 0;
-      const subtotal = p.unitCost * p.quantity - p.discount;
+      const subtotal = p.unitCost * (p.netWeight ?? 0) - p.discount;
       const taxValue = subtotal * (taxRate / 100);
       const total = subtotal + taxValue;
       return {
@@ -400,6 +404,7 @@ export default function PurchaseCreateView() {
         quantity: p.quantity,
         netWeight: p.netWeight ?? 0,
         grossWeight: p.grossWeight ?? 0,
+        shrinkage: p.shrinkage ?? 0,
         unitCost: p.unitCost,
         discount: p.discount,
         subtotal,
@@ -694,6 +699,7 @@ export default function PurchaseCreateView() {
           handleSelectProduct={handleSelectProduct}
           handleUnitCostChange={handleUnitCostChange}
           handleDiscountChange={handleDiscountChange}
+          handleQuantityChange={handleQuantityChange}
           handleWeightChange={handleWeightChange}
           handleRemoveProduct={handleRemoveProduct}
           openPresentationModal={openPresentationModal}

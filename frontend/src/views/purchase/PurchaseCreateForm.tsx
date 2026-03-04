@@ -50,9 +50,10 @@ interface PurchaseCreateFormProps {
   handleSelectProduct: (product: Product) => void;
   handleUnitCostChange: (productId: number, unitCost: number) => void;
   handleDiscountChange: (productId: number, discount: number) => void;
+  handleQuantityChange: (productId: number, quantity: number) => void;
   handleWeightChange: (
     productId: number,
-    field: "netWeight" | "grossWeight",
+    field: "grossWeight" | "shrinkage",
     value: number
   ) => void;
   handleRemoveProduct: (productId: number) => void;
@@ -86,6 +87,7 @@ export default function PurchaseCreateForm({
   handleSelectProduct,
   handleUnitCostChange,
   handleDiscountChange,
+  handleQuantityChange,
   handleWeightChange,
   handleRemoveProduct,
   openPresentationModal,
@@ -132,10 +134,13 @@ export default function PurchaseCreateForm({
                         P. Bruto
                       </th>
                       <th className="text-right py-2 px-2 font-semibold">
-                        Tara
+                        Merma
+                      </th>
+                      <th className="text-right py-2 px-2 font-semibold">
+                        Peso Neto
                       </th>
                       <th className="text-left py-2 px-2 font-semibold">
-                        Cant. / U.M.
+                        Cantidad
                       </th>
                       <th className="text-right py-2 px-2 font-semibold">
                         Desc.
@@ -158,7 +163,7 @@ export default function PurchaseCreateForm({
                     {products.length === 0 ? (
                       <tr>
                         <td
-                          colSpan={10}
+                          colSpan={11}
                           className="text-center py-4 text-muted-foreground"
                         >
                           No hay productos agregados
@@ -177,64 +182,19 @@ export default function PurchaseCreateForm({
                           </td>
 
                           <td className="py-2 px-2 text-right whitespace-nowrap">
-                            <Input
-                              type="number"
-                              step="0.01"
-                              min={0}
-                              value={p.unitCost}
-                              onChange={(e) =>
-                                handleUnitCostChange(
-                                  p.id,
-                                  Number(e.target.value)
-                                )
-                              }
-                              className="h-8 w-24 px-1 text-right text-sm"
-                            />
-                          </td>
-
-                          <td className="py-2 px-2 text-right whitespace-nowrap">
-                            <Input
-                              type="number"
-                              step="0.01"
-                              min={0}
-                              value={p.grossWeight ?? 0}
-                              onChange={(e) =>
-                                handleWeightChange(
-                                  p.id,
-                                  "grossWeight",
-                                  Number(e.target.value)
-                                )
-                              }
-                              className="h-8 w-20 px-1 text-right text-sm"
-                            />
-                          </td>
-
-                          <td className="py-2 px-2 text-right whitespace-nowrap">
-                            <Input
-                              type="number"
-                              step="0.01"
-                              min={0}
-                              value={p.netWeight ?? 0}
-                              onChange={(e) =>
-                                handleWeightChange(
-                                  p.id,
-                                  "netWeight",
-                                  Number(e.target.value)
-                                )
-                              }
-                              className="h-8 w-20 px-1 text-right text-sm"
-                            />
-                          </td>
-
-                          <td className="py-2 px-2">
-                            <div className="flex items-center gap-2 whitespace-nowrap">
+                            <div className="flex items-center gap-1 justify-end">
                               <Input
                                 type="number"
                                 step="0.01"
                                 min={0}
-                                value={p.quantity}
-                                readOnly
-                                className="h-8 w-16 px-1 text-center text-sm"
+                                value={p.unitCost}
+                                onChange={(e) =>
+                                  handleUnitCostChange(
+                                    p.id,
+                                    Number(e.target.value)
+                                  )
+                                }
+                                className="h-8 w-24 px-1 text-right text-sm"
                               />
                               <Button
                                 type="button"
@@ -246,12 +206,69 @@ export default function PurchaseCreateForm({
                                 {p.unitMeasure?.code ?? "UND"}
                               </Button>
                             </div>
+                          </td>
 
-                            {p.unitMeasure?.name && (
-                              <p className="mt-1 text-xs text-muted-foreground">
-                                {p.unitMeasure.name}
-                              </p>
-                            )}
+                          <td className="py-2 px-2 text-right whitespace-nowrap">
+                            <div className="flex items-center gap-1 justify-end">
+                              <Input
+                                type="number"
+                                step="0.01"
+                                min={0}
+                                value={p.grossWeight ?? 0}
+                                onChange={(e) =>
+                                  handleWeightChange(
+                                    p.id,
+                                    "grossWeight",
+                                    Number(e.target.value)
+                                  )
+                                }
+                                className="h-8 w-20 px-1 text-right text-sm"
+                              />
+                              <span className="text-xs text-muted-foreground">{p.unitMeasure?.code ?? "UND"}</span>
+                            </div>
+                          </td>
+
+                          <td className="py-2 px-2 text-right whitespace-nowrap">
+                            <div className="flex items-center gap-1 justify-end">
+                              <Input
+                                type="number"
+                                step="0.01"
+                                min={0}
+                                value={p.shrinkage ?? 0}
+                                onChange={(e) =>
+                                  handleWeightChange(
+                                    p.id,
+                                    "shrinkage",
+                                    Number(e.target.value)
+                                  )
+                                }
+                                className="h-8 w-20 px-1 text-right text-sm"
+                              />
+                              <span className="text-xs text-muted-foreground">{p.unitMeasure?.code ?? "UND"}</span>
+                            </div>
+                          </td>
+
+                          <td className="py-2 px-2 text-right whitespace-nowrap">
+                            <div className="flex items-center gap-1 justify-end">
+                              <span className="text-sm">{(p.netWeight ?? 0).toFixed(2)}</span>
+                              <span className="text-xs text-muted-foreground">{p.unitMeasure?.code ?? "UND"}</span>
+                            </div>
+                          </td>
+
+                          <td className="py-2 px-2">
+                            <Input
+                              type="number"
+                              step="1"
+                              min={0}
+                              value={p.quantity}
+                              onChange={(e) =>
+                                handleQuantityChange(
+                                  p.id,
+                                  Number(e.target.value)
+                                )
+                              }
+                              className="h-8 w-16 px-1 text-center text-sm"
+                            />
                           </td>
 
                           <td className="py-2 px-2 text-right whitespace-nowrap">

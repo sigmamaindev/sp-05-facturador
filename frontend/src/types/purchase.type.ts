@@ -64,6 +64,7 @@ export type PurchaseDetail = {
   quantity: number;
   netWeight: number;
   grossWeight: number;
+  shrinkage: number;
   unitCost: number;
   discount: number;
   subtotal: number;
@@ -78,6 +79,7 @@ export interface PurchaseProduct extends Product {
   discount: number;
   netWeight: number;
   grossWeight: number;
+  shrinkage: number;
   subtotal: number;
   taxValue: number;
 }
@@ -221,6 +223,7 @@ export type UpdatePurchasePayload = {
     quantity: number;
     netWeight: number;
     grossWeight: number;
+    shrinkage: number;
     unitCost: number;
     discount: number;
     subtotal: number;
@@ -276,6 +279,7 @@ export type CreatePurchasePayload = {
     quantity: number;
     netWeight: number;
     grossWeight: number;
+    shrinkage: number;
     unitCost: number;
     discount: number;
     subtotal: number;
