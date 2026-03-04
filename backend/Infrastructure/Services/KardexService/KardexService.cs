@@ -130,7 +130,7 @@ public class KardexService(StoreContext context) : IKardexService
             }
 
             var quantityBase = detail.NetWeight * factorBase;
-            var quantityBase = Math.Round(detail.Quantity * factorBase, 4);
+            
 
             if (stock.Stock < quantityBase)
             {
